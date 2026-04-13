@@ -2,240 +2,401 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XuePilot Command - 派乐伴学总指挥中心</title>
+    <title>XuePilot Pro - 核心星际教室</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- 引入 Quill 富文本编辑器 -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
-        body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
+        body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: absolute; transform: translate(-50%, -50%); z-index: 10; }
+        .planet:hover { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.2); }
+        .orbit { border: 1px dashed rgba(59, 130, 246, 0.1); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
+        .btn-nav { @apply w-full flex items-center justify-between px-4 py-3 rounded-xl transition text-left text-sm font-bold; }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .drag-over { background-color: rgba(59, 130, 246, 0.2) !important; border-color: #3b82f6 !important; }
         
-        /* 侧边栏平滑折叠动画 */
-        .glass-sidebar { 
-            background: rgba(15, 23, 42, 0.4); 
-            backdrop-filter: blur(16px); 
-            border-right: 1px solid rgba(255,255,255,0.05); 
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 16rem;
-        }
-        .sidebar-hidden { 
-            transform: translateX(-100%); 
-            width: 0 !important; 
-            opacity: 0; 
-            pointer-events: none; 
-        }
-
-        .nav-item { transition: all 0.3s ease; position: relative; cursor: pointer; }
-        .nav-item.active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent); border-left: 4px solid #3b82f6; color: #fff; }
-        
-        /* 🚀 NOVA 磁吸拖拽与防误触 UI */
-        .nova-float { 
-            width: 64px; height: 64px; 
-            position: fixed; 
-            z-index: 100; 
-            cursor: grab; 
-            user-select: none;
-            touch-action: none;
-        }
-        .nova-float:active { cursor: grabbing; }
-        .nova-orb-inner { 
-            width: 100%; height: 100%; border-radius: 50%; 
-            background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); 
-            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); 
-            animation: novaBreath 3s infinite alternate; 
-            border: 2px solid rgba(255,255,255,0.2); 
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
-        @keyframes novaBreath { from { transform: scale(1); } to { transform: scale(1.05); } }
-        
-        .nova-chat-panel { 
-            position: fixed; width: 360px; height: 500px; z-index: 99; 
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(25px); 
-            border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; 
-            display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        
-        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        /* 深度定制 Quill 暗黑模式主题 */
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.8); border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; background: rgba(0,0,0,0.4); font-family: -apple-system, sans-serif; font-size: 0.875rem; color: #e2e8f0; }
+        .ql-snow .ql-stroke { stroke: #94a3b8; } .ql-snow .ql-fill { fill: #94a3b8; }
+        .ql-snow .ql-picker { color: #94a3b8; }
+        .ql-editor { min-height: 400px; line-height: 1.8; }
+        .ql-editor h3 { color: #60a5fa; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .ql-editor ul { padding-left: 1.5rem; }
+        .ql-editor p { margin-bottom: 0.75rem; }
+        .ql-editor strong { color: #38bdf8; }
     </style>
 </head>
-<body x-data="osApp()" @message.window="handleChildMessage($event)" class="flex h-screen w-screen relative overflow-hidden">
+<body x-data="proApp()" class="flex h-screen overflow-hidden">
 
-    <!-- 主侧边栏：进入教室后自动折叠 -->
-    <aside class="flex flex-col glass-sidebar z-20 shrink-0" :class="activeApp === 'pro' ? 'sidebar-hidden' : ''">
-        <div class="h-20 flex items-center px-6 border-b border-slate-800/50">
-            <span class="text-3xl mr-3 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
+    <aside class="w-64 border-r border-slate-800 flex flex-col py-6 glass z-20 shrink-0 shadow-2xl">
+        <div class="px-6 mb-2">
+            <button @click="goHome()" class="text-[10px] text-slate-500 hover:text-blue-400 flex items-center gap-2 mb-4 font-mono transition">← BACK TO COMMAND CENTER</button>
+            <div class="font-black text-blue-400 text-xl tracking-tighter">XuePilot PRO</div>
+        </div>
+
+        <nav class="flex-1 px-3 mt-6 space-y-8 overflow-y-auto">
             <div>
-                <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1>
-                <div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">COMMAND OS v10.5</div>
+                <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">1. 战略规划 (Strategy)</div>
+                <button @click="view = 'galaxy'" class="btn-nav" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400 hover:bg-slate-800/50'"><span>🌌 学期全科目星系</span></button>
+                <button @click="showPlanner = true" class="btn-nav mt-1 text-purple-400 border border-purple-500/20 bg-purple-900/10 hover:bg-purple-900/30"><span>✨ AI 生成大纲星图</span></button>
             </div>
-        </div>
-        
-        <div class="flex-1 py-8 px-3 space-y-1">
-            <a @click.prevent="selectApp('pro')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'pro' ? 'active' : ''">🌌 派乐星际教室</a>
-            <a @click.prevent="selectApp('game')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'game' ? 'active' : ''">🎮 AI 指挥官模拟舱</a>
-            <a @click.prevent="selectApp('tools')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'tools' ? 'active' : ''">🌍 全球资源探索</a>
-        </div>
-
-        <div class="p-4 border-t border-slate-800/50">
-            <button @click="showSettings = true" class="w-full py-3 bg-slate-800/40 rounded-xl text-[10px] font-bold text-slate-400 hover:text-white transition">🎛️ 算力引擎配置</button>
-        </div>
+            <div>
+                <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">2. 战术执行 (Tactics)</div>
+                <!-- 恢复写作舱 -->
+                <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border border-orange-500/30':'text-slate-400 hover:bg-slate-800/50'">
+                    <span>✍️ AI 启发式写作舱</span>
+                </button>
+                <button @click="openReading('en')" class="btn-nav mt-1" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30':'text-slate-400 hover:bg-slate-800/50'"><span>🇬🇧 英文智能伴读</span></button>
+                <button @click="openReading('zh')" class="btn-nav mt-1" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400 hover:bg-slate-800/50'"><span>🇨🇳 大语文智慧传承</span></button>
+            </div>
+        </nav>
     </aside>
 
-    <!-- 应用容器 -->
-    <main class="flex-1 relative bg-black">
-        <iframe id="app-frame" :src="iframeSrc" class="w-full h-full border-none transition-all duration-500"></iframe>
-
-        <!-- 🤖 全时随舰导师 NOVA -->
-        <div x-show="user" x-cloak>
-            <!-- 悬浮球：支持防误触的点击与拖拽识别 -->
-            <div id="nova-draggable" class="nova-float" 
-                 :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`"
-                 @mousedown="startDrag($event)"
-                 @click="toggleNovaChat()">
-                <div class="nova-orb-inner shadow-blue-500/50">🤖</div>
-            </div>
-
-            <!-- 对话面板 -->
-            <div x-show="novaOpen" x-transition class="nova-chat-panel" 
-                 :style="`left: ${Math.min(novaPos.x, window.innerWidth-380)}px; top: ${Math.max(20, novaPos.y-510)}px;`" 
-                 @click.away="novaOpen = false">
-                <div class="p-4 bg-blue-900/40 border-b border-blue-500/30 flex justify-between items-center">
-                    <span class="text-[10px] font-black uppercase text-blue-300 tracking-widest">Nova Socratic Advisor</span>
-                    <button @click="novaOpen = false" class="text-slate-500 hover:text-white">✖</button>
+    <main class="flex-1 relative overflow-hidden bg-[#02040a]">
+        
+        <!-- ================= 场景：星系地图 ================= -->
+        <div x-show="view === 'galaxy'" x-transition class="h-full relative flex items-center justify-center fade-in">
+            <template x-for="r in [300, 500, 700]"><div class="orbit" :style="`width: ${r}px; height: ${r}px;`"></div></template>
+            <template x-for="s in subjects" :key="s.id">
+                <div class="planet flex flex-col items-center" :style="`left: calc(50% + ${Math.cos(s.angle) * s.radius}px); top: calc(50% + ${Math.sin(s.angle) * s.radius}px);`" @click="openSubjectDetail(s)">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center text-3xl" x-text="s.icon"></div>
+                    <span class="mt-3 text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-black/60 px-2 py-1 rounded shadow-lg" x-text="s.title"></span>
                 </div>
-                <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs" id="nova-chat-content">
-                    <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 leading-relaxed">
-                        你好，指挥官。我已解除定位锁定。你可以把我拖到任何不挡路的地方。遇到思维盲点了吗？
+            </template>
+            <div x-show="subjects.length === 0" class="text-center text-slate-600"><div class="text-6xl mb-4 opacity-20">🌌</div><p class="font-mono text-[10px] uppercase tracking-widest">请启动学期规划引擎映射真实知识星系</p></div>
+        </div>
+
+        <!-- ================= 场景：AI 启发式写作舱 ================= -->
+        <div x-show="view === 'writing'" x-cloak x-transition class="h-full flex p-8 gap-6 fade-in">
+            <div class="flex-1 glass rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 shadow-xl border border-orange-500/20">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-black text-xl text-orange-400 flex items-center gap-3"><span class="text-2xl">✍️</span> 指挥官起草区</h3>
+                    <div class="w-48"><div class="flex justify-between text-[10px] text-slate-500 mb-1 font-mono uppercase"><span>指令思考强度</span><span x-text="`${cmdIntensity}%`"></span></div><div class="w-full bg-slate-800 rounded-full h-1.5"><div class="bg-orange-500 h-1.5 rounded-full transition-all" :style="`width: ${cmdIntensity}%`"></div></div></div>
+                </div>
+                <div class="flex-1 p-6 flex flex-col">
+                    <textarea x-model="writingDraft" @input="updateIntensity()" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500" placeholder="在这里输入原始想法，或记录你脑海中的画面..."></textarea>
+                    <div class="mt-6 flex justify-end">
+                        <button @click="runWritingCritique()" class="px-10 py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-3" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="isCritiquing" class="animate-spin text-lg">↻</span> <span x-text="isCritiquing ? 'AI 大脑正在进行苏格拉底解析...' : '🧠 提交给 AI 进行启发式批阅'"></span>
+                        </button>
                     </div>
-                    <template x-for="m in novaMsgs">
-                        <div :class="m.role==='user'?'text-right':'text-left'">
-                            <div class="inline-block p-3 rounded-2xl mt-2 shadow-lg" :class="m.role==='user'?'bg-blue-600 text-white':'bg-slate-800 border border-slate-700 text-slate-200'" x-text="m.content"></div>
-                        </div>
-                    </template>
-                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在链接智脑...</div>
                 </div>
-                <div class="p-3 border-t border-slate-800 bg-slate-900">
-                    <div class="flex items-center gap-2">
-                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs outline-none focus:border-blue-500" placeholder="向随舰导师提问...">
-                        <button @click="novaAsk()" class="bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-500 transition">🚀</button>
+            </div>
+            <div class="w-1/3 glass rounded-3xl flex flex-col overflow-hidden border border-slate-800">
+                <div class="p-6 bg-slate-800/40 border-b border-slate-700 font-bold text-sm text-slate-300 flex items-center gap-2">💡 AI 导师启发墙</div>
+                <div class="flex-1 p-6 overflow-y-auto text-sm text-slate-300 leading-loose font-serif" x-html="writingFeedback || '<div class=\'text-center text-slate-600 mt-20\'><div class=\'text-5xl mb-4\'>💭</div>等待指挥官下达指令...</div>'"></div>
+            </div>
+        </div>
+
+        <!-- ================= 场景：伴读舱 (含书架) ================= -->
+        <div x-show="view.startsWith('reading')" x-cloak x-transition class="h-full flex flex-col p-8 overflow-y-auto fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-4"><span class="text-4xl" x-text="view==='reading-en'?'🇬🇧':'🇨🇳'"></span><h2 class="text-3xl font-black" x-text="view==='reading-en'?'英文智能伴读':'大语文智慧传承'"></h2></div>
+                <button @click="importBook()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition flex items-center gap-2">📥 导入私有档案</button>
+            </div>
+            
+            <div class="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2"><div class="w-2 h-2 bg-blue-500 rounded-full"></div> 私享书架 (BOOKS)</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <template x-for="book in filteredBooks" :key="book.title">
+                    <div class="shelf-card p-6 rounded-3xl relative group hover:border-blue-500/50 transition hover:-translate-y-1 shadow-xl">
+                        <div class="flex justify-between mb-4"><span class="text-4xl text-blue-400">📖</span><span class="text-[10px] font-mono text-emerald-400 bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-500/20" x-text="`掌握度 ${book.accuracy}%`"></span></div>
+                        <h3 class="font-bold text-lg mb-2 text-slate-200 line-clamp-2" x-text="book.title"></h3>
+                        <div class="text-[9px] text-slate-500 mb-3 font-mono uppercase tracking-widest">PROGRESS: <span x-text="book.progress"></span>%</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mb-6 overflow-hidden"><div class="bg-blue-500 h-full" :style="`width: ${book.progress}%`"></div></div>
+                        <button @click="startReading(book)" class="w-full py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-bold hover:bg-blue-600 hover:border-blue-500 text-slate-300 hover:text-white transition">启动伴读任务</button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ================= 核心算力接入点 1：三段式规划器 ================= -->
+        <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-md">
+            <div class="glass w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/20 shadow-[0_0_50px_rgba(147,51,234,0.2)] fade-in">
+                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
+                <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase tracking-tighter">Strategic Planner</h2>
+                <p class="text-slate-500 text-[10px] mt-2">系统将调用大模型，生成原汁原味的当地真实教育体系。</p></div>
+                <div class="space-y-5">
+                    <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-purple-500">
+                        <option>中国义务教育课标 (2022版)</option><option>美国 Common Core State Standards</option><option>英国 National Curriculum (KS2/KS3)</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-blue-500"><option>Grade 3 / 三年级</option><option>Grade 4 / 四年级</option><option>Grade 5 / 五年级</option></select>
+                        <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-blue-500"><option>Term 1 / 上学期</option><option>Term 2 / 下学期</option></select>
+                    </div>
+                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition" :disabled="loading">
+                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在链接大模型解析真实大纲...' : '🚀 启动算力生成大纲星图'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 核心算力接入点 2 & 3：科目卫星生成与富文本教案 ================= -->
+        <div x-show="editingSubject" x-cloak class="fixed inset-0 bg-slate-950 z-40 p-8 overflow-y-auto">
+            <div class="max-w-7xl mx-auto fade-in">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                    <div class="flex items-center gap-5"><span class="text-5xl" x-text="editingSubject?.icon"></span><h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300" x-text="editingSubject?.title"></h2></div>
+                    <button @click="closeSubjectDetail()" class="px-8 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 font-bold transition">返回星图</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    <!-- 左侧：AI 拆解章节列表 -->
+                    <div class="lg:col-span-4 space-y-4">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">学期章节清单 (Chapter Satellites)</h3>
+                        <template x-for="lesson in activeLessons" :key="lesson.id">
+                            <div class="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer flex justify-between items-center" 
+                                 :class="currentLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/20' : ''" @click="selectLesson(lesson)">
+                                <div class="font-bold text-sm text-slate-200" x-text="lesson.title"></div>
+                                <span class="text-xs opacity-50" x-show="lesson.content">📝</span>
+                            </div>
+                        </template>
+                        <button @click="generateLessons()" class="w-full py-4 border border-dashed border-slate-700 rounded-2xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500 transition font-bold" :disabled="lessonLoading">
+                            <span x-show="lessonLoading" class="animate-spin inline-block">↻</span> <span x-text="lessonLoading ? 'AI 提取真实大纲章节中...' : '✨ 一键拆解生成教学章节'"></span>
+                        </button>
+                    </div>
+
+                    <!-- 右侧：Quill 富文本编辑区 -->
+                    <div class="lg:col-span-8 glass p-6 rounded-[2rem] min-h-[650px] flex flex-col shadow-2xl relative">
+                        <template x-if="!currentLesson">
+                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-60">
+                                <div class="text-7xl mb-6">✍️</div><p class="font-bold tracking-widest text-sm">选择左侧章节节点以进行精细化备课</p>
+                            </div>
+                        </template>
+                        <template x-if="currentLesson">
+                            <div class="flex-1 flex flex-col w-full h-full relative">
+                                <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4 text-blue-300 w-full transition px-2">
+                                
+                                <!-- 自定义 Quill 工具栏，包含 AI 魔法按钮 -->
+                                <div id="toolbar-container" class="flex items-center justify-between">
+                                    <div>
+                                        <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
+                                        <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
+                                    </div>
+                                    <button @click="generateLessonContent()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:scale-105 transition shadow-lg" :disabled="contentLoading">
+                                        <span x-show="contentLoading" class="animate-spin text-sm">↻</span>
+                                        <span x-text="contentLoading ? 'AI 正在撰写教案...' : '✨ AI 智能生成苏格拉底教案'"></span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Quill 容器 -->
+                                <div id="editor-container" class="flex-1"></div>
+
+                                <div class="mt-6 flex justify-end gap-4">
+                                    <button @click="saveLessonContent()" class="px-8 py-3 bg-slate-800 border border-slate-700 rounded-xl font-bold shadow-lg hover:bg-emerald-600 hover:border-emerald-500 transition text-sm">💾 本地保存进度</button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 算力设置面板 -->
-        <div x-show="showSettings" x-cloak class="absolute inset-0 bg-black/95 z-50 flex items-center justify-center p-8 backdrop-blur-xl">
-             <div class="w-full max-w-lg bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl">
-                 <h2 class="text-xl font-bold mb-6">🎛️ 算力引擎配置</h2>
-                 <div class="space-y-4">
-                     <input type="password" x-model="sysConfig.apiKey" placeholder="API Key" class="w-full input-dark p-4 rounded-xl font-mono">
-                     <input type="text" x-model="sysConfig.baseUrl" placeholder="代理 Base URL (例: /proxy/groq)" class="w-full input-dark p-4 rounded-xl font-mono">
-                     <input type="text" x-model="sysConfig.modelId" placeholder="Model ID" class="w-full input-dark p-4 rounded-xl font-mono">
-                 </div>
-                 <div class="mt-8 flex gap-4">
-                     <button @click="saveSettings()" class="flex-1 py-4 bg-blue-600 rounded-xl font-bold shadow-lg">💾 保存配置</button>
-                     <button @click="showSettings = false" class="px-8 py-4 bg-slate-800 rounded-xl">取消</button>
-                 </div>
-             </div>
-        </div>
     </main>
 
     <script>
-        window.osApp = function() {
-            return {
-                activeApp: 'pro', iframeSrc: 'apps/xuepilot-pro-core.html', user: {id:1},
-                novaOpen: false, novaInput: '', novaMsgs: [], novaLoading: false,
-                showSettings: false,
-                sysConfig: { 
-                    apiKey: localStorage.getItem('xp_sys_key') || '', 
-                    baseUrl: localStorage.getItem('xp_sys_url') || '/proxy/groq',
-                    modelId: localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile'
-                },
-                novaPos: { x: window.innerWidth - 100, y: window.innerHeight - 100 },
-                isDragging: false, dragStartPos: {x:0, y:0}, offset: { x: 0, y: 0 },
+        // 挂载全局编辑器实例以便管理
+        window.quillEditor = null;
 
-                handleChildMessage(e) {
-                    if (e.data && e.data.type === 'GO_HOME') {
-                        this.activeApp = 'none';
-                        this.iframeSrc = ''; 
-                    }
-                },
-
-                // 🚀 核心：防误触拖拽拦截算法
-                startDrag(e) {
-                    this.isDragging = false; // 初始设定未拖拽
-                    this.dragStartPos = { x: e.clientX, y: e.clientY };
-                    this.offset.x = e.clientX - this.novaPos.x;
-                    this.offset.y = e.clientY - this.novaPos.y;
-                    
-                    const move = (ev) => {
-                        const dist = Math.hypot(ev.clientX - this.dragStartPos.x, ev.clientY - this.dragStartPos.y);
-                        if (dist > 5) { // 移动超过 5px 判定为拖拽
-                            this.isDragging = true;
-                            this.novaPos.x = ev.clientX - this.offset.x;
-                            this.novaPos.y = ev.clientY - this.offset.y;
-                        }
-                    };
-                    
-                    const stop = () => {
-                        window.removeEventListener('mousemove', move);
-                        window.removeEventListener('mouseup', stop);
-                        // 🚀 关键拦截点：延迟 50ms 重置 isDragging 状态，确保紧随其后的 @click 事件被成功拦截
-                        setTimeout(() => {
-                            this.isDragging = false;
-                        }, 50);
-                    };
-                    window.addEventListener('mousemove', move);
-                    window.addEventListener('mouseup', stop);
-                },
-
-                // 触发对话框显示/隐藏的方法
-                toggleNovaChat() { 
-                    if (this.isDragging) return; // 被拦截，不打开聊天框
-                    this.novaOpen = !this.novaOpen; 
-                },
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('proApp', () => ({
+                view: 'galaxy', subjects: [], showPlanner: false, 
+                loading: false, lessonLoading: false, contentLoading: false,
+                planConfig: { curriculum: '美国 Common Core State Standards', grade: 'Grade 4 / 四年级', term: 'Term 1 / 上学期' },
+                editingSubject: null, activeLessons: [], currentLesson: null,
                 
-                selectApp(id) { 
-                    this.activeApp = id; 
-                    const paths = { pro:'apps/xuepilot-pro-core.html', game:'apps/game.html', tools:'apps/xuepilot-tools.html' };
-                    this.iframeSrc = paths[id];
-                },
+                writingDraft: '', writingFeedback: '', cmdIntensity: 10, isCritiquing: false,
+                
+                books: [ 
+                    { title: 'The Little Prince (Chapter 1)', lang: 'en', progress: 45, accuracy: 88, content: '' }, 
+                    { title: 'National Geographic: Mars', lang: 'en', progress: 10, accuracy: 95, content: '' },
+                    { title: '《西游记》第一回：灵根育孕源流出', lang: 'zh', progress: 20, accuracy: 82, content: '' },
+                    { title: '《论语》学而篇精选', lang: 'zh', progress: 100, accuracy: 96, content: '' }
+                ],
 
-                saveSettings() {
-                    localStorage.setItem('xp_sys_key', this.sysConfig.apiKey);
-                    localStorage.setItem('xp_sys_url', this.sysConfig.baseUrl);
-                    localStorage.setItem('xp_sys_model', this.sysConfig.modelId);
-                    this.showSettings = false;
-                    location.reload();
-                },
+                get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
+                
+                goHome() { window.parent.postMessage({ type: 'GO_HOME' }, '*'); },
+                openReading(lang) { this.view = 'reading-' + lang; },
 
-                async novaAsk() {
-                    const q = this.novaInput.trim(); if(!q || this.novaLoading) return;
-                    this.novaInput = '';
-                    this.novaMsgs.push({role:'user', content:q});
-                    this.novaLoading = true;
+                // ================= 核心：真实大模型接口 =================
+                async callAI(prompt, systemMsg = 'You are an elite Socratic educator and curriculum designer.') {
+                    const key = localStorage.getItem('xp_sys_key'); 
+                    const url = (localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
+                    const model = localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
+                    
+                    if(!key) { Swal.fire('引擎未点火','请回主界面配置 API Key','warning'); return null; }
+                    
                     try {
-                        const res = await fetch(`${this.sysConfig.baseUrl}/chat/completions`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.sysConfig.apiKey}` },
-                            body: JSON.stringify({
-                                model: this.sysConfig.modelId,
-                                messages: [{ role: 'system', content: 'You are NOVA, a Socratic interstellar mentor. Never give direct answers. Help student define problems and judge information. Lang: Chinese.' }, ...this.novaMsgs]
-                            })
+                        const res = await fetch(url, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, 
+                            body: JSON.stringify({ model: model, messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }] }) 
                         });
-                        const data = await res.json();
-                        this.novaMsgs.push({role:'assistant', content: data.choices[0].message.content});
-                    } catch(e) {
-                        this.novaMsgs.push({role:'assistant', content: '⚠️ 星际通讯受阻，请检查算力代理地址。'});
+                        if(!res.ok) throw new Error('API Reject');
+                        const data = await res.json(); 
+                        return data.choices[0].message.content;
+                    } catch(e) { Swal.fire('通讯失败', '网络拦截或代理配置错误', 'error'); return null; }
+                },
+
+                // 算力点 1：生成大纲星图
+                async generateSemesterMap() { 
+                    this.loading = true; 
+                    const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】【${this.planConfig.term}】标准，生成5个核心学科。
+                    要求：如果选择的是美国/英国大纲，学科名称必须使用当地真实的纯英文称呼（如 Language Arts, STEM）。如果是中国课标则用中文。
+                    仅返回JSON数组格式：[{"title": "学科名", "icon": "单字符emoji"}]。不准输出任何其他内容。`;
+                    
+                    const res = await this.callAI(prompt);
+                    if (res) {
+                        try {
+                            const cleanJson = res.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                            const parsedData = JSON.parse(cleanJson);
+                            this.subjects = parsedData.map((s, i) => ({
+                                id: Date.now() + i, title: s.title, icon: s.icon,
+                                radius: 200 + (Math.floor(i / 3) * 150), 
+                                angle: (i * (Math.PI * 2 / 5)) + (Math.random() * 0.5) 
+                            }));
+                            this.showPlanner = false;
+                            Swal.fire({title: '真实大纲映射成功', text:`已为你解析提取 ${this.planConfig.curriculum} 体系。`, icon:'success', background:'#0f172a', color:'#fff'});
+                        } catch (e) { Swal.fire('大模型格式异常', 'AI 未返回标准 JSON，请重试。', 'error'); }
                     }
-                    this.novaLoading = false;
-                    setTimeout(() => { const c = document.getElementById('nova-chat-content'); if(c) c.scrollTop = c.scrollHeight; }, 100);
-                }
-            }
-        };
+                    this.loading = false;
+                },
+
+                // 算力点 2：生成章节卫星
+                async generateLessons() {
+                    this.lessonLoading = true;
+                    const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】级别，为【${this.editingSubject.title}】学科生成3个符合该国大纲的真实教学核心章节名称。
+                    要求：语言必须与学科名的语种一致。仅返回JSON数组格式：[{"title": "Chapter/章节名称"}]。不要其他文字。`;
+                    
+                    const res = await this.callAI(prompt);
+                    if (res) {
+                        try {
+                            const cleanJson = res.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                            const lessons = JSON.parse(cleanJson);
+                            this.activeLessons = lessons.map((l, i) => ({ id: Date.now() + i, title: l.title, content: '' }));
+                        } catch (e) { Swal.fire('解析失败', 'JSON格式错误，请重试', 'warning'); }
+                    }
+                    this.lessonLoading = false;
+                },
+
+                // 算力点 3：一键生成富文本教案
+                async generateLessonContent() {
+                    if (!this.currentLesson || !window.quillEditor) return;
+                    this.contentLoading = true;
+                    
+                    const prompt = `请为课程章节【${this.currentLesson.title}】编写一份详尽的“苏格拉底式教案”。
+                    必须包含以下结构：
+                    1. 核心问题定位 (引导学生思考的锚点)
+                    2. 知识边界拆解 (将知识点分解为可讨论的子维度)
+                    3. 跨学科迁移任务 (设计一个小挑战)
+                    【输出格式限制】：直接输出排版优美的纯 HTML 代码片段 (使用 <h3>, <ul>, <li>, <p>, <strong> 标签)。不要包含 <html> 或 <body> 外层。绝对不要在开头和结尾加上 \`\`\`html 和 \`\`\` 标记！语言与章节标题语种一致。`;
+                    
+                    const res = await this.callAI(prompt);
+                    if (res) {
+                        const cleanHtml = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
+                        window.quillEditor.root.innerHTML = cleanHtml;
+                        this.currentLesson.content = cleanHtml;
+                    }
+                    this.contentLoading = false;
+                },
+
+                // Quill 富文本编辑器生命周期管理
+                selectLesson(lesson) {
+                    // 如果有正在编辑的，先保存进度
+                    if (this.currentLesson && window.quillEditor) {
+                        this.currentLesson.content = window.quillEditor.root.innerHTML;
+                    }
+                    this.currentLesson = lesson;
+                    
+                    // 等待 DOM 渲染完成后初始化 Quill
+                    this.$nextTick(() => {
+                        if (!window.quillEditor) {
+                            window.quillEditor = new Quill('#editor-container', {
+                                theme: 'snow',
+                                placeholder: '在这里手动编写教案，或点击右上角 AI 魔法按钮一键生成...',
+                                modules: { toolbar: '#toolbar-container' }
+                            });
+                        }
+                        // 注入内容
+                        window.quillEditor.root.innerHTML = lesson.content || '';
+                    });
+                },
+
+                saveLessonContent() {
+                    if (this.currentLesson && window.quillEditor) {
+                        this.currentLesson.content = window.quillEditor.root.innerHTML;
+                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '教案进度已保存', showConfirmButton: false, timer: 1500});
+                    }
+                },
+
+                openSubjectDetail(s) { 
+                    this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; window.quillEditor = null; 
+                },
+                closeSubjectDetail() {
+                    if(this.currentLesson) this.saveLessonContent();
+                    this.editingSubject = null;
+                },
+
+                // 算力点 4：启发式写作批阅
+                updateIntensity() {
+                    const text = this.writingDraft; let score = 10;
+                    if (text.length > 20) score += 20; if (text.includes("?") || text.includes("？")) score += 20;
+                    if (text.includes("如何") || text.includes("为什么") || text.includes("how") || text.includes("why")) score += 30;
+                    this.cmdIntensity = Math.min(100, Math.max(10, score));
+                },
+
+                async runWritingCritique() {
+                    if(!this.writingDraft.trim()) return; this.isCritiquing = true;
+                    const prompt = `作为严厉且睿智的苏格拉底导师，绝不代写。请分3点提出尖锐的启发性反问，指出我逻辑中的薄弱点，逼迫我自己去完善结构。\n我的文章：\n${this.writingDraft}`;
+                    const res = await this.callAI(prompt);
+                    if(res) this.writingFeedback = res.replace(/\n/g, '<br>');
+                    this.isCritiquing = false;
+                },
+
+                // 算力点 5：私享读本拖拽导入
+                importBook() { 
+                    Swal.fire({ 
+                        title: '导入私享学习档案',
+                        html: `
+                            <div id="drop-zone" class="border-2 border-dashed border-blue-500/50 rounded-2xl p-8 mb-4 text-slate-400 hover:bg-blue-900/20 hover:border-blue-400 transition cursor-pointer">
+                                <span class="text-4xl mb-3 text-blue-400 block">📄</span><span class="font-bold">点击或拖拽 .txt 档案至此</span>
+                                <input type="file" id="file-input" class="hidden" accept=".txt,.md">
+                            </div>
+                            <div class="relative flex items-center py-2"><div class="flex-grow border-t border-slate-700"></div><span class="mx-4 text-slate-500 text-[10px] font-bold">OR</span><div class="flex-grow border-t border-slate-700"></div></div>
+                            <textarea id="paste-zone" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 h-32 outline-none focus:border-blue-500" placeholder="直接粘贴文本..."></textarea>
+                            <input type="text" id="book-title" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 outline-none focus:border-blue-500 font-bold" placeholder="书名/文档名 (将自动提取)">
+                        `,
+                        background: '#0f172a', color: '#fff', width: 600, showCancelButton: true, confirmButtonText: '入库构建索引',
+                        didOpen: () => {
+                            const dropZone = document.getElementById('drop-zone'); const fileInput = document.getElementById('file-input');
+                            const pasteZone = document.getElementById('paste-zone'); const titleInput = document.getElementById('book-title');
+                            dropZone.onclick = () => fileInput.click();
+                            dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+                            dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); };
+                            const handleFile = (file) => { const reader = new FileReader(); reader.onload = (e) => { pasteZone.value = e.target.result; if(!titleInput.value) titleInput.value = file.name.replace(/\.[^/.]+$/, ""); }; reader.readAsText(file); };
+                            dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); };
+                            fileInput.onchange = (e) => { if (e.target.files.length) handleFile(e.target.files[0]); };
+                        },
+                        preConfirm: () => {
+                            const text = document.getElementById('paste-zone').value.trim(); const title = document.getElementById('book-title').value.trim();
+                            if (!text) { Swal.showValidationMessage('请提供内容数据'); return false; }
+                            return { text, title: title || '未命名档案' };
+                        }
+                    }).then(res => {
+                        if(res.isConfirmed) {
+                            this.books.unshift({ title: res.value.title, lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0, content: res.value.text });
+                        }
+                    }); 
+                },
+                startReading(book) { Swal.fire({ title: '伴读任务初始化', text: `NOVA 导师已就位，准备探讨《${book.title}》的核心逻辑。`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#2563eb' }); }
+            }));
+        });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

@@ -14,26 +14,33 @@
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.1); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
         .btn-nav { @apply w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-left text-sm font-bold; }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 拖拽上传区域高亮 */
+        .drag-over { background-color: rgba(59, 130, 246, 0.2) !important; border-color: #3b82f6 !important; }
     </style>
 </head>
 <body x-data="proApp()" class="flex h-screen overflow-hidden">
 
-    <aside class="w-64 border-r border-slate-800 flex flex-col py-6 glass z-20">
+    <aside class="w-64 border-r border-slate-800 flex flex-col py-6 glass z-20 shrink-0">
         <div class="px-6 mb-2">
             <button @click="goHome()" class="text-[10px] text-slate-500 hover:text-blue-400 flex items-center gap-2 mb-4 font-mono transition">← BACK TO COMMAND CENTER</button>
             <div class="font-black text-blue-400 text-xl tracking-tighter">XuePilot PRO</div>
         </div>
 
-        <nav class="flex-1 px-3 mt-6 space-y-8">
+        <nav class="flex-1 px-3 mt-6 space-y-8 overflow-y-auto">
             <div>
                 <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">战略规划 (Strategy)</div>
-                <button @click="view = 'galaxy'" class="btn-nav" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400'">🌌 学期全科目星系</button>
+                <button @click="view = 'galaxy'" class="btn-nav" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400 hover:bg-slate-800/50'">🌌 学期全科目星系</button>
                 <button @click="showPlanner = true" class="btn-nav mt-1 text-purple-400 border border-purple-500/20 bg-purple-900/10 hover:bg-purple-900/30">✨ 启动学期规划引擎</button>
             </div>
             <div>
                 <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">战术执行 (Tactics)</div>
-                <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30':'text-slate-400'">🇬🇧 英文智能伴读</button>
-                <button @click="openReading('zh')" class="btn-nav mt-1" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400'">🇨🇳 大语文智慧传承</button>
+                <!-- 恢复 AI 启发式写作舱 -->
+                <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border border-orange-500/30':'text-slate-400 hover:bg-slate-800/50'">✍️ AI 启发式写作舱</button>
+                <button @click="openReading('en')" class="btn-nav mt-1" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30':'text-slate-400 hover:bg-slate-800/50'">🇬🇧 英文智能伴读</button>
+                <button @click="openReading('zh')" class="btn-nav mt-1" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400 hover:bg-slate-800/50'">🇨🇳 大语文智慧传承</button>
             </div>
         </nav>
 
@@ -47,32 +54,63 @@
 
     <main class="flex-1 relative overflow-hidden bg-[#02040a]">
         <!-- 场景：星系地图 -->
-        <div x-show="view === 'galaxy'" x-transition class="h-full relative flex items-center justify-center">
+        <div x-show="view === 'galaxy'" x-transition class="h-full relative flex items-center justify-center fade-in">
             <template x-for="r in [400, 700]"><div class="orbit" :style="`width: ${r}px; height: ${r}px;`"></div></template>
             <template x-for="s in subjects" :key="s.id">
                 <div class="planet flex flex-col items-center" :style="`left: calc(50% + ${Math.cos(s.angle) * s.radius}px); top: calc(50% + ${Math.sin(s.angle) * s.radius}px);`" @click="openSubjectDetail(s)">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 shadow-xl flex items-center justify-center text-3xl" x-text="s.icon"></div>
-                    <span class="mt-2 text-[10px] font-bold text-slate-400 uppercase" x-text="s.title"></span>
+                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center text-3xl" x-text="s.icon"></div>
+                    <span class="mt-3 text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-black/60 px-2 py-1 rounded" x-text="s.title"></span>
                 </div>
             </template>
             <div x-show="subjects.length === 0" class="text-center text-slate-600"><div class="text-6xl mb-4 opacity-20">🌌</div><p class="font-mono text-[10px] uppercase">请启动学期规划引擎映射知识星系</p></div>
         </div>
 
+        <!-- 场景：AI 启发式写作舱 -->
+        <div x-show="view === 'writing'" x-cloak x-transition class="h-full flex p-8 gap-6 fade-in">
+            <div class="flex-1 glass rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 shadow-xl border border-orange-500/20">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-black text-xl text-orange-400 flex items-center gap-3"><span class="text-2xl">✍️</span> 指挥官起草区</h3>
+                    <div class="w-48">
+                        <div class="flex justify-between text-[10px] text-slate-500 mb-1 font-mono uppercase tracking-widest"><span>指令思考强度</span><span x-text="`${cmdIntensity}%`"></span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5"><div class="bg-orange-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${cmdIntensity}%`"></div></div>
+                    </div>
+                </div>
+                <div class="flex-1 p-6 flex flex-col">
+                    <textarea x-model="writingDraft" @input="updateIntensity()" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500" placeholder="在这里输入你的原始想法，或者描述你想探讨的问题..."></textarea>
+                    <div class="mt-6 flex justify-between items-center">
+                        <span class="text-xs text-slate-500">提示：多用反问句，提出“如何”、“为什么”，能提高指令强度。</span>
+                        <button @click="runWritingCritique()" class="px-10 py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="isCritiquing" class="animate-spin text-lg">↻</span>
+                            <span x-text="isCritiquing ? 'AI 正在进行逻辑解析...' : '下达苏格拉底批阅指令'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="w-1/3 glass rounded-3xl flex flex-col overflow-hidden border border-slate-800">
+                <div class="p-6 bg-slate-800/40 border-b border-slate-700 font-bold text-sm text-slate-300 flex items-center gap-2">💡 AI 导师启发墙</div>
+                <div class="flex-1 p-6 overflow-y-auto text-sm text-slate-300 leading-loose font-serif" x-html="writingFeedback || '<div class=\'text-center text-slate-600 mt-10\'><div class=\'text-4xl mb-2\'>🧠</div>等待指挥官下达批阅指令...</div>'"></div>
+            </div>
+        </div>
+
         <!-- 场景：伴读舱 (含书架) -->
-        <div x-show="view.startsWith('reading')" x-cloak x-transition class="h-full flex flex-col p-8 overflow-y-auto">
+        <div x-show="view.startsWith('reading')" x-cloak x-transition class="h-full flex flex-col p-8 overflow-y-auto fade-in">
             <div class="flex justify-between items-center mb-8">
                 <div class="flex items-center gap-4"><span class="text-4xl" x-text="view==='reading-en'?'🇬🇧':'🇨🇳'"></span><h2 class="text-3xl font-black" x-text="view==='reading-en'?'英文智能伴读':'大语文智慧传承'"></h2></div>
-                <button @click="importBook()" class="px-6 py-3 bg-blue-600 rounded-xl font-bold shadow-lg">📥 导入新读本</button>
+                <button @click="importBook()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition">📥 导入新读本 / 拖拽上传</button>
             </div>
-            <div class="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">指挥官书架 (SHELF)</div>
+            
+            <div class="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">
+                <div class="w-2 h-2 bg-blue-500 rounded-full"></div> 指挥官私享书架 (BOOKS & MATERIALS)
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <template x-for="book in filteredBooks" :key="book.title">
-                    <div class="shelf-card p-6 rounded-2xl relative group hover:border-blue-500/50 transition">
-                        <div class="flex justify-between mb-4"><span class="text-4xl">📖</span><span class="text-[10px] font-mono text-emerald-400" x-text="`准确率 ${book.accuracy}%`"></span></div>
-                        <h3 class="font-bold text-lg mb-1 truncate text-slate-200" x-text="book.title"></h3>
-                        <div class="text-[9px] text-slate-500 mb-4">PROGRESS: <span x-text="book.progress"></span>%</div>
-                        <div class="w-full bg-slate-800 h-1 rounded-full mb-6 overflow-hidden"><div class="bg-blue-500 h-full" :style="`width: ${book.progress}%`"></div></div>
-                        <button @click="startReading(book)" class="w-full py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold hover:bg-blue-600 transition">进入交互阅读</button>
+                    <div class="shelf-card p-6 rounded-3xl relative group hover:border-blue-500/50 transition hover:-translate-y-1 shadow-xl">
+                        <div class="flex justify-between mb-4"><span class="text-4xl">📖</span><span class="text-[10px] font-mono text-emerald-400 bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-500/20" x-text="`掌握度 ${book.accuracy}%`"></span></div>
+                        <h3 class="font-bold text-lg mb-2 text-slate-200 line-clamp-2" x-text="book.title"></h3>
+                        <div class="text-[9px] text-slate-500 mb-3 font-mono uppercase tracking-widest">PROGRESS: <span x-text="book.progress"></span>%</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mb-6 overflow-hidden"><div class="bg-blue-500 h-full" :style="`width: ${book.progress}%`"></div></div>
+                        <button @click="startReading(book)" class="w-full py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-bold hover:bg-blue-600 hover:border-blue-500 text-slate-300 hover:text-white transition">启动苏格拉底伴读</button>
                     </div>
                 </template>
             </div>
@@ -80,49 +118,57 @@
 
         <!-- 弹窗：三段式规划器 -->
         <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-md">
-            <div class="glass w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/20">
-                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500">✖</button>
-                <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase">Strategic Planner</h2><p class="text-slate-500 text-[10px] mt-2">AI 将根据国家政策大纲与年级标准，为您映射学期知识星系。</p></div>
-                <div class="space-y-4">
-                    <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>中国义务教育课标 (2022版)</option><option>英国 National Curriculum (KS2/KS3)</option><option>美国 Common Core State Standards</option></select>
+            <div class="glass w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/20 shadow-[0_0_50px_rgba(147,51,234,0.2)] fade-in">
+                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white hover:scale-110 transition">✖</button>
+                <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase tracking-tighter">Strategic Planner</h2><p class="text-slate-500 text-[10px] mt-2">AI 将根据国家政策大纲与年级标准，为您映射学期知识星系。</p></div>
+                <div class="space-y-5">
+                    <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-purple-500 transition"><option>中国义务教育课标 (2022版)</option><option>英国 National Curriculum (KS2/KS3)</option><option>美国 Common Core State Standards</option></select>
                     <div class="grid grid-cols-2 gap-4">
-                        <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>三年级</option><option>四年级</option><option>五年级</option></select>
-                        <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>上学期</option><option>下学期</option></select>
+                        <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-blue-500 transition"><option>三年级</option><option>四年级</option><option>五年级</option><option>六年级</option></select>
+                        <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-blue-500 transition"><option>上学期</option><option>下学期</option></select>
                     </div>
-                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3">
-                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在解析教育政策映射...' : '🚀 启动规划并生成星图'"></span>
+                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition">
+                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在全网解析教育政策映射...' : '🚀 启动规划并生成星图'"></span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 科目卫星编辑界面 (🚀 修复 null.title 报错的地方) -->
+        <!-- 科目卫星编辑界面 -->
         <div x-show="editingSubject" x-cloak class="fixed inset-0 bg-slate-950 z-40 p-8 overflow-y-auto">
-            <div class="max-w-5xl mx-auto">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                    <div class="flex items-center gap-4"><span class="text-4xl" x-text="editingSubject?.icon"></span><h2 class="text-3xl font-black" x-text="editingSubject?.title"></h2></div>
-                    <button @click="editingSubject = null" class="px-6 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition">返回星图</button>
+            <div class="max-w-6xl mx-auto fade-in">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                    <div class="flex items-center gap-5"><span class="text-5xl" x-text="editingSubject?.icon"></span><h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300" x-text="editingSubject?.title"></h2></div>
+                    <button @click="editingSubject = null" class="px-8 py-3 bg-slate-800 rounded-xl hover:bg-slate-700 font-bold transition">返回星图</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- 左侧：章节卫星列表 -->
                     <div class="space-y-4">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">学习卫星 (Chapter Satellites)</h3>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">学习卫星 (Chapter Satellites)</h3>
                         <template x-for="lesson in activeLessons" :key="lesson.title">
-                            <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer" @click="currentLesson = lesson"><div class="font-bold text-sm" x-text="lesson.title"></div></div>
+                            <div class="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 hover:border-blue-500 transition cursor-pointer" @click="currentLesson = lesson">
+                                <div class="font-bold text-sm text-slate-200" x-text="lesson.title"></div>
+                            </div>
                         </template>
-                        <button @click="generateLessons()" class="w-full py-3 border border-dashed border-slate-700 rounded-xl text-[10px] text-slate-500 hover:text-blue-400 transition">一键生成核心教学章节</button>
+                        <button @click="generateLessons()" class="w-full py-4 border border-dashed border-slate-700 rounded-2xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500 transition font-bold bg-slate-900/20 hover:bg-blue-900/10">一键生成基础教学章节</button>
                     </div>
-                    <div class="md:col-span-2 glass p-8 rounded-3xl min-h-[500px] flex flex-col">
-                        <!-- 🚀 核心修复：使用 x-if 确保 currentLesson 不为 null 才会绑定 title -->
+                    <!-- 右侧：编辑区 -->
+                    <div class="lg:col-span-2 glass p-10 rounded-[2rem] min-h-[600px] flex flex-col shadow-2xl">
                         <template x-if="!currentLesson">
-                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-40"><div class="text-6xl mb-4">✍️</div><p>选择一个卫星节点进行苏格拉底式教案微调</p></div>
+                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-60">
+                                <div class="text-7xl mb-6">✍️</div>
+                                <p class="font-bold tracking-widest text-sm">选择左侧卫星节点进行苏格拉底式教案微调</p>
+                            </div>
                         </template>
                         <template x-if="currentLesson">
                             <div class="flex-1 flex flex-col">
-                                <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4 text-blue-300">
-                                <div id="editor" class="flex-1 bg-black/20 p-6 rounded-xl text-sm leading-relaxed overflow-y-auto border border-slate-800 text-slate-300 outline-none" contenteditable="true">
-                                    [AI 导师已载入教学策略...] <br><br>1. 核心问题定位：为什么这部分知识对现实世界有意义？<br>2. 指挥官引导：请通过提问促使学生自己定义该概念。<br>3. 迁移挑战：将其应用到另一个学科场景。
+                                <input x-model="currentLesson.title" class="bg-transparent text-3xl font-black border-none outline-none mb-6 text-blue-300 w-full focus:border-b focus:border-blue-500/30 pb-2 transition">
+                                <div id="editor" class="flex-1 bg-black/40 p-8 rounded-2xl text-sm leading-loose overflow-y-auto border border-slate-800 text-slate-300 outline-none focus:border-blue-500 transition" contenteditable="true">
+                                    [AI 导师已载入启发式教学策略...] <br><br>1. 核心问题定位：为什么这部分知识对现实世界有意义？<br>2. 指挥官引导：请通过提问促使学生自己定义该概念。<br>3. 迁移挑战：将其应用到另一个学科场景。
                                 </div>
-                                <div class="mt-6 flex justify-end gap-4"><button class="px-6 py-2 bg-blue-600 rounded-lg font-bold shadow-lg">💾 保存同步</button></div>
+                                <div class="mt-8 flex justify-end gap-4">
+                                    <button class="px-8 py-4 bg-blue-600 rounded-xl font-bold shadow-lg hover:bg-blue-500 transition flex items-center gap-2">💾 保存教案并同步云端</button>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -134,17 +180,140 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('proApp', () => ({
-                view: 'galaxy', subjects: [], showPlanner: false, loading: false, planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '四年级', term: '上学期' },
+                view: 'galaxy', subjects: [], showPlanner: false, loading: false, 
+                planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '四年级', term: '上学期' },
                 editingSubject: null, activeLessons: [], currentLesson: null,
-                books: [ { title: 'The Little Prince', lang: 'en', progress: 45, accuracy: 88 }, { title: '论语·学而篇', lang: 'zh', progress: 12, accuracy: 92 } ],
+                
+                // 写作舱数据
+                writingDraft: '', writingFeedback: '', cmdIntensity: 10, isCritiquing: false,
+                
+                // 书架数据 (预置了符合理念的核心经典书籍)
+                books: [ 
+                    { title: 'The Little Prince (Chapter 1-3)', lang: 'en', progress: 45, accuracy: 88, content: '' }, 
+                    { title: 'National Geographic: The Solar System', lang: 'en', progress: 10, accuracy: 95, content: '' },
+                    { title: '《西游记》第一回：灵根育孕源流出', lang: 'zh', progress: 20, accuracy: 82, content: '' },
+                    { title: '《论语》学而篇、为政篇精选', lang: 'zh', progress: 100, accuracy: 96, content: '' }
+                ],
+
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
+                
                 goHome() { window.parent.postMessage({ type: 'GO_HOME' }, '*'); },
                 openReading(lang) { this.view = 'reading-' + lang; },
-                async generateSemesterMap() { this.loading = true; setTimeout(() => { this.subjects = [ { id:1, title:'大语文', icon:'🇨🇳', radius:200, angle: 0.5 }, { id:2, title:'奥数思维', icon:'📐', radius:200, angle: 2.2 }, { id:3, title:'高阶英语', icon:'🇬🇧', radius:200, angle: 4.5 }, { id:4, title:'自然科学', icon:'🧪', radius:320, angle: 1.2 }, { id:5, title:'AI 指挥艺术', icon:'🤖', radius:320, angle: 5.8 } ]; this.loading = false; this.showPlanner = false; Swal.fire('生成成功','','success'); }, 2500); },
+
+                // 写作舱动态指令强度计算
+                updateIntensity() {
+                    const text = this.writingDraft; let score = 10;
+                    if (text.length > 20) score += 20;
+                    if (text.includes("？") || text.includes("?")) score += 20;
+                    if (text.includes("如何") || text.includes("为什么") || text.includes("定义") || text.includes("假设")) score += 30;
+                    if (text.includes("帮我写") || text.includes("直接给我")) score -= 40;
+                    this.cmdIntensity = Math.min(100, Math.max(10, score));
+                },
+
+                async callAI(prompt) {
+                    const key = localStorage.getItem('xp_sys_key'); 
+                    const url = (localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
+                    const model = localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
+                    if(!key) { Swal.fire('缺少算力钥匙','请回主界面左下角配置 API Key','warning'); return null; }
+                    try {
+                        const res = await fetch(url, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, 
+                            body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are a Socratic tutor. Never rewrite text directly. Ask questions. Lang: Chinese.' }, { role: 'user', content: prompt }] }) 
+                        });
+                        const data = await res.json(); 
+                        return data.choices[0].message.content;
+                    } catch(e) { Swal.fire('通讯失败', '请检查网络或算力代理设置', 'error'); return null; }
+                },
+
+                async runWritingCritique() {
+                    if(!this.writingDraft.trim()) return; this.isCritiquing = true;
+                    const res = await this.callAI(`作为苏格拉底导师，不要帮我修改文章，而是分3点提出启发性问题，指出我逻辑中薄弱的地方，引导我自己去思考。\n我的文章：\n${this.writingDraft}`);
+                    if(res) this.writingFeedback = res.replace(/\n/g, '<br>');
+                    this.isCritiquing = false;
+                },
+
+                async generateSemesterMap() { 
+                    this.loading = true; 
+                    setTimeout(() => { 
+                        this.subjects = [ 
+                            { id:1, title:'大语文核心', icon:'🇨🇳', radius:200, angle: 0.5 }, 
+                            { id:2, title:'奥数思维', icon:'📐', radius:200, angle: 2.2 }, 
+                            { id:3, title:'高阶英语', icon:'🇬🇧', radius:200, angle: 4.5 }, 
+                            { id:4, title:'自然科学', icon:'🧪', radius:320, angle: 1.2 }, 
+                            { id:5, title:'AI 指挥艺术', icon:'🤖', radius:320, angle: 5.8 } 
+                        ]; 
+                        this.loading = false; this.showPlanner = false; 
+                        Swal.fire({title:'星系映射完成', icon:'success', background:'#0f172a', color:'#fff', confirmButtonColor:'#3b82f6'}); 
+                    }, 2500); 
+                },
+
                 openSubjectDetail(s) { this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; },
-                generateLessons() { this.activeLessons = [ { title: '卫星 1：问题定义' }, { title: '卫星 2：漏洞筛查' }, { title: '卫星 3：跨域整合' } ]; },
-                importBook() { Swal.fire({ title: '导入文档', input: 'textarea', background: '#0f172a', color: '#fff' }).then(r => { if(r.value) this.books.unshift({ title: '新导入读本', lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0 }); }); },
-                startReading(book) { Swal.fire('开启任务', book.title, 'question'); }
+                
+                generateLessons() { 
+                    this.activeLessons = [ { title: '第一节：现象观察与问题定义' }, { title: '第二节：批判性逻辑推演' }, { title: '第三节：跨学科融合实战' } ]; 
+                },
+
+                // 🚀 高级文档导入 (支持拖拽 + 粘贴双模式)
+                importBook() { 
+                    Swal.fire({ 
+                        title: '导入学习档案',
+                        html: `
+                            <div id="drop-zone" class="border-2 border-dashed border-blue-500/50 rounded-2xl p-8 mb-4 text-slate-400 hover:bg-blue-900/20 hover:border-blue-400 transition cursor-pointer flex flex-col items-center justify-center">
+                                <span class="text-5xl mb-3 text-blue-400">📄</span>
+                                <span class="font-bold">点击选择文件，或将 .txt 文档拖拽至此</span>
+                                <span class="text-[10px] mt-2 opacity-70">支持自动提取文件名作为书名</span>
+                                <input type="file" id="file-input" class="hidden" accept=".txt,.md">
+                            </div>
+                            <div class="relative flex items-center py-2"><div class="flex-grow border-t border-slate-700"></div><span class="flex-shrink-0 mx-4 text-slate-500 text-[10px] font-bold">OR</span><div class="flex-grow border-t border-slate-700"></div></div>
+                            <textarea id="paste-zone" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 h-32 outline-none focus:border-blue-500 transition" placeholder="或者直接在这里粘贴大段文本内容..."></textarea>
+                            <input type="text" id="book-title" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 outline-none focus:border-blue-500 transition font-bold" placeholder="给这份文档起个响亮的名字 (选填)">
+                        `,
+                        background: '#0f172a', color: '#fff', width: 600,
+                        showCancelButton: true, confirmButtonText: '确认入库', confirmButtonColor: '#2563eb', cancelButtonText: '取消',
+                        didOpen: () => {
+                            const dropZone = document.getElementById('drop-zone');
+                            const fileInput = document.getElementById('file-input');
+                            const pasteZone = document.getElementById('paste-zone');
+                            const titleInput = document.getElementById('book-title');
+
+                            dropZone.onclick = () => fileInput.click();
+                            dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+                            dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); };
+                            
+                            const handleFile = (file) => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    pasteZone.value = e.target.result;
+                                    if(!titleInput.value) titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+                                    Swal.resetValidationMessage();
+                                };
+                                reader.readAsText(file);
+                            };
+
+                            dropZone.ondrop = (e) => {
+                                e.preventDefault(); dropZone.classList.remove('drag-over');
+                                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+                            };
+
+                            fileInput.onchange = (e) => {
+                                if (e.target.files.length) handleFile(e.target.files[0]);
+                            };
+                        },
+                        preConfirm: () => {
+                            const text = document.getElementById('paste-zone').value.trim();
+                            const title = document.getElementById('book-title').value.trim();
+                            if (!text) { Swal.showValidationMessage('请提供文本内容或上传文件'); return false; }
+                            return { text, title: title || '指挥官新档案 ' + (this.books.length + 1) };
+                        }
+                    }).then(res => {
+                        if(res.isConfirmed) {
+                            this.books.unshift({ title: res.value.title, lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0, content: res.value.text });
+                            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '档案已成功入库', showConfirmButton: false, timer: 2000});
+                        }
+                    }); 
+                },
+
+                startReading(book) { Swal.fire({ title: '伴读任务开启', text: `NOVA 导师已就位，准备探讨《${book.title}》的核心逻辑。`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#2563eb' }); }
             }));
         });
     </script>

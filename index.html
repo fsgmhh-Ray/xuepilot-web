@@ -10,7 +10,7 @@
         [x-cloak] { display: none !important; }
         body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
         
-        /* 🚀 侧边栏沉浸式折叠动画 */
+        /* 侧边栏平滑折叠动画 */
         .glass-sidebar { 
             background: rgba(15, 23, 42, 0.4); 
             backdrop-filter: blur(16px); 
@@ -28,7 +28,7 @@
         .nav-item { transition: all 0.3s ease; position: relative; cursor: pointer; }
         .nav-item.active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent); border-left: 4px solid #3b82f6; color: #fff; }
         
-        /* 🚀 NOVA 磁吸拖拽 UI (识别拖动还是点击) */
+        /* 🚀 NOVA 磁吸拖拽与防误触 UI */
         .nova-float { 
             width: 64px; height: 64px; 
             position: fixed; 
@@ -68,7 +68,7 @@
             <span class="text-3xl mr-3 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
             <div>
                 <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1>
-                <div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">COMMAND OS v10.0</div>
+                <div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">COMMAND OS v10.5</div>
             </div>
         </div>
         
@@ -89,11 +89,12 @@
 
         <!-- 🤖 全时随舰导师 NOVA -->
         <div x-show="user" x-cloak>
-            <!-- 悬浮球 -->
+            <!-- 悬浮球：支持防误触的点击与拖拽识别 -->
             <div id="nova-draggable" class="nova-float" 
                  :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`"
-                 @mousedown="startDrag($event)">
-                <div class="nova-orb-inner">🤖</div>
+                 @mousedown="startDrag($event)"
+                 @click="toggleNovaChat()">
+                <div class="nova-orb-inner shadow-blue-500/50">🤖</div>
             </div>
 
             <!-- 对话面板 -->
@@ -106,25 +107,25 @@
                 </div>
                 <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs" id="nova-chat-content">
                     <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 leading-relaxed">
-                        你好，指挥官。我已经解除位置锁定。有什么思维盲点需要我引导吗？
+                        你好，指挥官。我已解除定位锁定。你可以把我拖到任何不挡路的地方。遇到思维盲点了吗？
                     </div>
                     <template x-for="m in novaMsgs">
                         <div :class="m.role==='user'?'text-right':'text-left'">
                             <div class="inline-block p-3 rounded-2xl mt-2 shadow-lg" :class="m.role==='user'?'bg-blue-600 text-white':'bg-slate-800 border border-slate-700 text-slate-200'" x-text="m.content"></div>
                         </div>
                     </template>
-                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在解析宇宙规律...</div>
+                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在链接智脑...</div>
                 </div>
                 <div class="p-3 border-t border-slate-800 bg-slate-900">
                     <div class="flex items-center gap-2">
-                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs outline-none focus:border-blue-500" placeholder="打字向 NOVA 请教...">
+                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs outline-none focus:border-blue-500" placeholder="向随舰导师提问...">
                         <button @click="novaAsk()" class="bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-500 transition">🚀</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 算力配置 -->
+        <!-- 算力设置面板 -->
         <div x-show="showSettings" x-cloak class="absolute inset-0 bg-black/95 z-50 flex items-center justify-center p-8 backdrop-blur-xl">
              <div class="w-full max-w-lg bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl">
                  <h2 class="text-xl font-bold mb-6">🎛️ 算力引擎配置</h2>
@@ -134,7 +135,7 @@
                      <input type="text" x-model="sysConfig.modelId" placeholder="Model ID" class="w-full input-dark p-4 rounded-xl font-mono">
                  </div>
                  <div class="mt-8 flex gap-4">
-                     <button @click="saveSettings()" class="flex-1 py-4 bg-blue-600 rounded-xl font-bold">💾 保存配置</button>
+                     <button @click="saveSettings()" class="flex-1 py-4 bg-blue-600 rounded-xl font-bold shadow-lg">💾 保存配置</button>
                      <button @click="showSettings = false" class="px-8 py-4 bg-slate-800 rounded-xl">取消</button>
                  </div>
              </div>
@@ -162,15 +163,16 @@
                     }
                 },
 
+                // 🚀 核心：防误触拖拽拦截算法
                 startDrag(e) {
-                    this.isDragging = false;
+                    this.isDragging = false; // 初始设定未拖拽
                     this.dragStartPos = { x: e.clientX, y: e.clientY };
                     this.offset.x = e.clientX - this.novaPos.x;
                     this.offset.y = e.clientY - this.novaPos.y;
                     
                     const move = (ev) => {
                         const dist = Math.hypot(ev.clientX - this.dragStartPos.x, ev.clientY - this.dragStartPos.y);
-                        if (dist > 5) { 
+                        if (dist > 5) { // 移动超过 5px 判定为拖拽
                             this.isDragging = true;
                             this.novaPos.x = ev.clientX - this.offset.x;
                             this.novaPos.y = ev.clientY - this.offset.y;
@@ -178,16 +180,22 @@
                     };
                     
                     const stop = () => {
-                        if (!this.isDragging) this.toggleNovaChat();
-                        this.isDragging = false;
                         window.removeEventListener('mousemove', move);
                         window.removeEventListener('mouseup', stop);
+                        // 🚀 关键拦截点：延迟 50ms 重置 isDragging 状态，确保紧随其后的 @click 事件被成功拦截
+                        setTimeout(() => {
+                            this.isDragging = false;
+                        }, 50);
                     };
                     window.addEventListener('mousemove', move);
                     window.addEventListener('mouseup', stop);
                 },
 
-                toggleNovaChat() { this.novaOpen = !this.novaOpen; },
+                // 触发对话框显示/隐藏的方法
+                toggleNovaChat() { 
+                    if (this.isDragging) return; // 被拦截，不打开聊天框
+                    this.novaOpen = !this.novaOpen; 
+                },
                 
                 selectApp(id) { 
                     this.activeApp = id; 
@@ -214,13 +222,13 @@
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.sysConfig.apiKey}` },
                             body: JSON.stringify({
                                 model: this.sysConfig.modelId,
-                                messages: [{ role: 'system', content: 'You are NOVA, a Socratic intersteller mentor. Never give direct answers. Help student define problems and judge information. Lang: Chinese.' }, ...this.novaMsgs]
+                                messages: [{ role: 'system', content: 'You are NOVA, a Socratic interstellar mentor. Never give direct answers. Help student define problems and judge information. Lang: Chinese.' }, ...this.novaMsgs]
                             })
                         });
                         const data = await res.json();
                         this.novaMsgs.push({role:'assistant', content: data.choices[0].message.content});
                     } catch(e) {
-                        this.novaMsgs.push({role:'assistant', content: '⚠️ 星际通讯受阻，请检查算力代理配置。'});
+                        this.novaMsgs.push({role:'assistant', content: '⚠️ 星际通讯受阻，请检查算力代理地址。'});
                     }
                     this.novaLoading = false;
                     setTimeout(() => { const c = document.getElementById('nova-chat-content'); if(c) c.scrollTop = c.scrollHeight; }, 100);

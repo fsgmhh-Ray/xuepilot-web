@@ -18,6 +18,10 @@
         .input-dark:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
         .auth-glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 0 50px rgba(0,0,0,0.8); }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        
+        /* 指南表格样式 */
+        .guide-table th { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); padding: 8px; font-size: 12px; }
+        .guide-table td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; font-size: 12px; }
     </style>
 </head>
 <body x-data="osApp()" class="flex h-screen w-screen relative">
@@ -25,7 +29,7 @@
     <aside class="w-64 flex flex-col glass-sidebar z-20 shadow-2xl">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50">
             <span class="text-3xl mr-3 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
-            <div><h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1><div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">CLOUD OS v8.8</div></div>
+            <div><h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1><div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">CLOUD OS v8.9</div></div>
         </div>
 
         <div class="flex-1 py-8 flex flex-col gap-2 px-3 overflow-y-auto">
@@ -34,7 +38,7 @@
             <a @click.prevent="selectApp('pro')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="[activeApp === 'pro' ? 'active' : '', user ? 'text-blue-200 font-bold' : 'locked']"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">🌌</span> 派乐星际教室</a>
             <a @click.prevent="selectApp('tools')" class="nav-item flex items-center px-4 py-3 rounded-xl mt-2" :class="[activeApp === 'tools' ? 'active' : '', user ? 'text-slate-300' : 'locked']"><span class="text-xl mr-3">🌍</span> 全球 AI 资源探索</a>
             
-            <!-- 🎮 新增：AI 指挥官模拟舱入口 -->
+            <!-- 🎮 AI 指挥官模拟舱入口 -->
             <a @click.prevent="selectApp('game')" class="nav-item flex items-center px-4 py-3 rounded-xl mt-2" :class="[activeApp === 'game' ? 'active' : '', user ? 'text-emerald-300 font-bold' : 'locked']"><span class="text-xl mr-3">🎮</span> AI 指挥官模拟舱</a>
         </div>
 
@@ -61,10 +65,21 @@
         <!-- 双引擎配置 -->
         <div class="absolute inset-0 bg-[#02040a]/95 z-40 p-8 overflow-y-auto backdrop-blur-xl" x-show="showSettings" x-transition.opacity x-cloak>
             <div class="max-w-4xl mx-auto pt-6 pb-20">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4"><h2 class="text-2xl font-black text-white uppercase tracking-tighter">🎛️ Engine Control Center</h2><button @click="showSettings = false" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold">返回驾驶舱</button></div>
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">🎛️ Engine Control Center</h2>
+                    <div class="flex gap-4">
+                        <button @click="showGuide()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow-[0_0_15px_rgba(16,185,129,0.4)]">💡 查看填表指南</button>
+                        <button @click="showSettings = false" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold">返回驾驶舱</button>
+                    </div>
+                </div>
                 
-                <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl mb-8">
-                    <p class="text-sm text-blue-200">🚀 <strong>Vercel 代理模式提示：</strong> 如果您已部署到 Vercel，为彻底避免跨域拦截，建议将 Base URL 填写为 Vercel 代理地址。例如使用 Groq 时，填写 <code>/proxy/groq</code> 即可。</p>
+                <!-- 友好的用户指南横幅 -->
+                <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl mb-8 flex items-start gap-4">
+                    <span class="text-2xl">🛡️</span>
+                    <div>
+                        <h4 class="text-sm font-bold text-blue-300 mb-1">避免“Failed to fetch”红字报错的秘诀</h4>
+                        <p class="text-xs text-blue-200/80 leading-relaxed">网页端直接访问大模型 API 会被浏览器跨域安全机制（CORS）无情拦截。如果您已经部署了薛定谔系统，请<strong class="text-white">不要填官方网址</strong>，直接在下方 Base URL 中填写对应的代理短地址（如 <code>/proxy/groq</code>，<code>/proxy/nvidia</code>）。</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-8">
@@ -75,10 +90,10 @@
                             <button @click="testConnection('sys')" class="px-4 py-2 bg-blue-900/50 text-blue-300 text-xs font-bold rounded border border-blue-500/30 hover:bg-blue-600 hover:text-white transition" :disabled="isTestingSys"><span x-show="isTestingSys" class="animate-spin inline-block mr-1">↻</span>测通连接</button>
                         </div>
                         <div class="space-y-4">
-                            <input type="password" x-model="sysConfig.apiKey" placeholder="API Key" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                            <input type="password" x-model="sysConfig.apiKey" placeholder="API Key 密钥" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
                             <div class="grid grid-cols-2 gap-4">
-                                <input type="text" x-model="sysConfig.baseUrl" placeholder="Base URL (例: /proxy/groq 或 https://api.groq.com/openai/v1)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
-                                <input type="text" x-model="sysConfig.modelId" placeholder="Model ID" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                                <input type="text" x-model="sysConfig.baseUrl" placeholder="代理 Base URL (例: /proxy/groq)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                                <input type="text" x-model="sysConfig.modelId" placeholder="Model ID 模型名称" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
                             </div>
                         </div>
                     </div>
@@ -90,10 +105,10 @@
                             <button @click="testConnection('nova')" class="px-4 py-2 bg-purple-900/50 text-purple-300 text-xs font-bold rounded border border-purple-500/30 hover:bg-purple-600 hover:text-white transition" :disabled="isTestingNova"><span x-show="isTestingNova" class="animate-spin inline-block mr-1">↻</span>测通连接</button>
                         </div>
                         <div class="space-y-4">
-                            <input type="password" x-model="novaConfig.apiKey" placeholder="API Key" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                            <input type="password" x-model="novaConfig.apiKey" placeholder="API Key 密钥" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
                             <div class="grid grid-cols-2 gap-4">
-                                <input type="text" x-model="novaConfig.baseUrl" placeholder="Base URL (建议使用代理如 /proxy/groq)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
-                                <input type="text" x-model="novaConfig.modelId" placeholder="Model ID" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                                <input type="text" x-model="novaConfig.baseUrl" placeholder="代理 Base URL (例: /proxy/nvidia)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
+                                <input type="text" x-model="novaConfig.modelId" placeholder="Model ID 模型名称" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
                             </div>
                         </div>
                     </div>
@@ -132,7 +147,7 @@
                 activeApp: 'none', iframeSrc: '', user: null, showAuthModal: false, email: '', password: '', loading: false, showSettings: false,
                 isTestingSys: false, isTestingNova: false,
                 sysConfig: { apiKey: safeGet('xp_sys_key'), baseUrl: safeGet('xp_sys_url', '/proxy/groq'), modelId: safeGet('xp_sys_model', 'gpt-4o-mini') },
-                novaConfig: { apiKey: safeGet('xp_nova_key'), baseUrl: safeGet('xp_nova_url', '/proxy/groq'), modelId: safeGet('xp_nova_model', 'gpt-4o-mini') },
+                novaConfig: { apiKey: safeGet('xp_nova_key'), baseUrl: safeGet('xp_nova_url', '/proxy/nvidia'), modelId: safeGet('xp_nova_model', 'google/gemma-4-31b-it') },
                 
                 async init() {
                     window.addEventListener('message', (ev) => { if (ev.data) this.handleMessage(ev.data); });
@@ -149,14 +164,41 @@
                 selectApp(appId) {
                     if (!this.user && appId !== 'radar') { this.showAuthModal = true; return; }
                     this.showSettings = false; this.activeApp = appId;
-                    // 🎮 路由路径配置，这里注册了游戏入口
                     const paths = { 
                         'radar': 'apps/xuepilot-radar.html', 
                         'pro': 'apps/xuepilot-pro-core.html', 
                         'tools': 'apps/xuepilot-tools.html',
-                        'game': 'apps/game.html' // 匹配您在 apps 目录下的文件
+                        'game': 'apps/game.html' 
                     };
                     this.iframeSrc = paths[appId];
+                },
+
+                // 🚀 新增：内置指南系统
+                showGuide() {
+                    Swal.fire({
+                        title: '📚 算力平台配置速查表',
+                        width: 700,
+                        background: '#0f172a',
+                        color: '#fff',
+                        html: `
+                            <p class="text-sm text-slate-300 mb-4 text-left">为了防止您的 API Key 在网页前端被盗用，各大厂商均采用了跨域限制。请在此填入下方对应的<b>代理 Base URL</b> 即可绕过限制：</p>
+                            <table class="w-full text-left guide-table text-slate-300">
+                                <thead>
+                                    <tr><th>提供商 (Provider)</th><th>代理 Base URL (直接填这个)</th><th>常见 Model ID 示例</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="font-bold text-blue-400">Groq (推荐)</td><td><code class="bg-slate-800 px-1 rounded text-pink-400">/proxy/groq</code></td><td>llama-3.3-70b-versatile</td></tr>
+                                    <tr><td class="font-bold text-green-400">Nvidia (英伟达)</td><td><code class="bg-slate-800 px-1 rounded text-pink-400">/proxy/nvidia</code></td><td>google/gemma-4-31b-it</td></tr>
+                                    <tr><td class="font-bold text-purple-400">DeepSeek (深度求索)</td><td><code class="bg-slate-800 px-1 rounded text-pink-400">/proxy/deepseek</code></td><td>deepseek-chat</td></tr>
+                                    <tr><td class="font-bold text-emerald-400">OpenAI</td><td><code class="bg-slate-800 px-1 rounded text-pink-400">/proxy/openai</code></td><td>gpt-4o-mini</td></tr>
+                                    <tr><td class="font-bold text-orange-400">硅基流动 (SiliconFlow)</td><td><code class="bg-slate-800 px-1 rounded text-pink-400">/proxy/siliconflow</code></td><td>Qwen/Qwen2.5-72B-Instruct</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-slate-500 mt-4 text-left">提示：代理规则已内置于您部署的 <code>vercel.json</code> 中。</p>
+                        `,
+                        confirmButtonText: '明白了',
+                        confirmButtonColor: '#3b82f6'
+                    });
                 },
 
                 saveEngineConfig() {
@@ -180,7 +222,7 @@
                     
                     if(!key) { Swal.fire('缺少 Key','请填写 API 密钥','warning'); return; }
                     
-                    // 如果没有填写 /v1，且使用的是真实域名，则自动补充 /v1
+                    // 特殊兼容：如果用户还是填了官方域名，尝试给他加上 /v1
                     if (baseUrl.startsWith('http') && !baseUrl.endsWith('/v1')) {
                         baseUrl += '/v1';
                     }
@@ -198,7 +240,11 @@
                             Swal.fire({ title: '连接被拒', text: err.error?.message || '配置有误，请检查模型名称和密钥', icon: 'error', background: '#0f172a', color: '#fff' });
                         }
                     } catch (e) {
-                        Swal.fire({ title: '网络跨域拦截 (CORS)', html: `接口拒绝了前端访问。如果您正在使用 Vercel，请将 Base URL 修改为：<b>/proxy/groq</b> 等代理地址。`, icon: 'warning', background: '#0f172a', color: '#fff' });
+                        Swal.fire({ 
+                            title: '网络跨域拦截 (CORS)', 
+                            html: `您的浏览器拦截了对官方地址的访问！<br><br>解决方案：<br>请点击上方绿色的<b>【💡查看填表指南】</b>，并将 Base URL 改为对应的 <b>代理地址 (如 /proxy/nvidia)</b>。`, 
+                            icon: 'warning', background: '#0f172a', color: '#fff' 
+                        });
                     }
                     this[loadVar] = false;
                 },

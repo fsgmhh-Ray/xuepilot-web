@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>XuePilot Pro - 核心星际教室</title>
+    <title>XuePilot Pro - 星际教室核心</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- 引入 Quill 富文本编辑器 -->
@@ -26,24 +26,45 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* 深度定制 Quill 暗黑模式主题 */
-        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.8); border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
-        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; background: rgba(0,0,0,0.4); font-family: -apple-system, sans-serif; font-size: 0.875rem; color: #e2e8f0; }
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.8); border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-bottom-left-radius: 1.5rem; border-bottom-right-radius: 1.5rem; background: rgba(0,0,0,0.4); font-family: -apple-system, sans-serif; font-size: 0.875rem; color: #e2e8f0; }
         .ql-snow .ql-stroke { stroke: #94a3b8; } .ql-snow .ql-fill { fill: #94a3b8; }
         .ql-snow .ql-picker { color: #94a3b8; }
-        .ql-editor { min-height: 400px; line-height: 1.8; }
+        .ql-editor { min-height: 400px; line-height: 1.8; padding: 1.5rem; }
         .ql-editor h3 { color: #60a5fa; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; }
         .ql-editor ul { padding-left: 1.5rem; }
         .ql-editor p { margin-bottom: 0.75rem; }
         .ql-editor strong { color: #38bdf8; }
+
+        /* 🚀 移植：NOVA 漂浮导师样式 */
+        .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
+        .nova-float:active { cursor: grabbing; }
+        .nova-orb-inner { 
+            width: 100%; height: 100%; border-radius: 50%; 
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); 
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); 
+            animation: novaBreath 3s infinite alternate; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+        @keyframes novaBreath { from { transform: scale(1); } to { transform: scale(1.05); } }
+        
+        .nova-chat-panel { 
+            position: fixed; width: 360px; height: 500px; z-index: 99; 
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(25px); 
+            border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; 
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body x-data="proApp()" class="flex h-screen overflow-hidden">
 
+    <!-- 🚀 升级版：加宽的战术指挥侧边栏 -->
     <aside class="w-72 border-r border-slate-800 flex flex-col py-6 px-4 glass z-20 shrink-0 shadow-2xl">
-        <!-- 🚀 强化版：巨大且明显的返回按钮 -->
+        <!-- 巨大且明显的返回按钮 -->
         <button @click="goHome()" class="w-full mb-8 flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-rose-600 hover:to-rose-500 border border-slate-700 hover:border-rose-400 rounded-2xl text-slate-300 hover:text-white transition-all shadow-lg text-sm font-black tracking-widest group">
-            <span class="text-lg group-hover:-translate-x-1 transition-transform">⬅</span>
-            返回主控舱
+            <span class="text-lg group-hover:-translate-x-1 transition-transform">⬅</span> 返回主控舱
         </button>
 
         <div class="mb-6 px-2 text-center">
@@ -70,9 +91,8 @@
                     <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> 2. 战术执行 (Tactics)
                 </div>
                 <div class="space-y-3">
-                    <!-- 恢复写作舱 -->
-                    <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)]':'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'">
-                        <span class="text-xl">✍️</span> <span>AI 启发式写作舱</span>
+                    <button @click="checkProFeature('writing')" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)]':'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'">
+                        <span class="text-xl">✍️</span> <span class="flex-1">AI 启发式写作舱</span> <span x-show="!isPro" class="text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded">PRO</span>
                     </button>
                     <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'">
                         <span class="text-xl">🇬🇧</span> <span>英文智能伴读</span>
@@ -108,7 +128,7 @@
             <div x-show="subjects.length === 0" class="text-center text-slate-600"><div class="text-6xl mb-4 opacity-20">🌌</div><p class="font-mono text-[10px] uppercase tracking-widest">请启动学期规划引擎映射真实知识星系</p></div>
         </div>
 
-        <!-- ================= 场景：AI 启发式写作舱 ================= -->
+        <!-- ================= 场景：AI 启发式写作舱 (PRO) ================= -->
         <div x-show="view === 'writing'" x-cloak x-transition class="h-full flex p-8 gap-6 fade-in">
             <div class="flex-1 glass rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 shadow-xl border border-orange-500/20">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center">
@@ -130,11 +150,13 @@
             </div>
         </div>
 
-        <!-- ================= 场景：伴读舱 (仅展示书架时) ================= -->
+        <!-- ================= 场景：伴读舱 (含书架) ================= -->
         <div x-show="view.startsWith('reading') && !activeBook" x-cloak x-transition class="h-full flex flex-col p-8 overflow-y-auto fade-in">
             <div class="flex justify-between items-center mb-8">
                 <div class="flex items-center gap-4"><span class="text-4xl" x-text="view==='reading-en'?'🇬🇧':'🇨🇳'"></span><h2 class="text-3xl font-black" x-text="view==='reading-en'?'英文智能伴读':'大语文智慧传承'"></h2></div>
-                <button @click="importBook()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition flex items-center gap-2">📥 导入私有档案</button>
+                <button @click="checkProFeature('importBook')" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition flex items-center gap-2">
+                    📥 导入私有档案 <span x-show="!isPro" class="text-[8px] bg-amber-500/20 text-amber-300 border border-amber-500/50 px-1 rounded">PRO</span>
+                </button>
             </div>
             
             <div class="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2"><div class="w-2 h-2 bg-blue-500 rounded-full"></div> 私享书架 (BOOKS)</div>
@@ -151,9 +173,8 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 满血复活的 交互伴读界面 (Active Reading) ================= -->
+        <!-- ================= 交互伴读界面 (Active Reading) ================= -->
         <div x-show="view.startsWith('reading') && activeBook" x-cloak class="h-full flex p-8 gap-6 fade-in">
-            <!-- 左侧：文档内容展示 -->
             <div class="w-1/2 glass rounded-3xl flex flex-col overflow-hidden border border-blue-500/20">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                     <div class="flex items-center gap-3">
@@ -163,27 +184,19 @@
                 </div>
                 <div class="flex-1 p-8 overflow-y-auto text-sm leading-loose text-slate-300 font-serif whitespace-pre-wrap" x-text="activeBook?.content || '暂无内容文本...'"></div>
             </div>
-
-            <!-- 右侧：NOVA 伴读交互区 -->
             <div class="flex-1 glass rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
                 <div class="h-14 border-b border-slate-800/50 flex items-center justify-center bg-slate-900/50">
-                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
-                        <span class="text-xl">🤖</span> <span x-text="view==='reading-en'?'NOVA English Tutor':'NOVA 大语文导师'"></span>
-                    </span>
+                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'"><span class="text-xl">🤖</span> <span x-text="view==='reading-en'?'NOVA English Tutor':'NOVA 大语文导师'"></span></span>
                 </div>
-                
                 <div class="flex-1 p-6 overflow-y-auto space-y-4" id="nova-reading-chat">
                     <template x-for="(msg,i) in readingChatLog" :key="i">
                         <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
                             <span class="text-[10px] text-slate-500 font-bold mb-1" x-text="msg.role==='user'?'指挥官':'NOVA 导师'"></span>
-                            <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role==='user'?'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'">
-                                <span x-html="msg.text"></span>
-                            </div>
+                            <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role==='user'?'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'"><span x-html="msg.text"></span></div>
                         </div>
                     </template>
                     <div x-show="readingLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在解析材料上下文...</div>
                 </div>
-
                 <div class="p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
                     <input type="text" x-model="readingInput" @keydown.enter="sendReadingText()" class="flex-1 input-dark px-4 py-3 rounded-xl text-sm" placeholder="针对左侧材料，与 NOVA 探讨...">
                     <button @click="sendReadingText()" class="px-6 py-3 bg-blue-600 rounded-xl font-bold shadow-lg disabled:opacity-50 transition hover:bg-blue-500" :disabled="readingLoading || !readingInput.trim()">🚀 探讨</button>
@@ -191,12 +204,12 @@
             </div>
         </div>
 
-        <!-- ================= 核心算力接入点 1：三段式规划器 ================= -->
+        <!-- ================= 核心算力点 1：三段式规划器 ================= -->
         <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-md">
             <div class="glass w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/20 shadow-[0_0_50px_rgba(147,51,234,0.2)] fade-in">
                 <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
                 <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase tracking-tighter">Strategic Planner</h2>
-                <p class="text-slate-500 text-[10px] mt-2">系统将调用大模型，生成原汁原味的当地真实教育体系。</p></div>
+                <p class="text-slate-500 text-[10px] mt-2">系统将调用大模型，生成原汁原味的当地真实教育大纲体系。</p></div>
                 <div class="space-y-5">
                     <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none focus:border-purple-500">
                         <option>中国义务教育课标 (2022版)</option><option>美国 Common Core State Standards</option><option>英国 National Curriculum (KS2/KS3)</option>
@@ -212,7 +225,7 @@
             </div>
         </div>
 
-        <!-- ================= 核心算力接入点 2 & 3：科目卫星生成与富文本教案 ================= -->
+        <!-- ================= 核心算力点 2 & 3：卫星生成与富文本教案 ================= -->
         <div x-show="editingSubject" x-cloak class="fixed inset-0 bg-slate-950 z-40 p-8 overflow-y-auto">
             <div class="max-w-7xl mx-auto fade-in">
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
@@ -221,14 +234,11 @@
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
-                    <!-- 左侧：AI 拆解章节列表 -->
                     <div class="lg:col-span-4 space-y-4">
                         <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">学期章节清单 (Chapter Satellites)</h3>
                         <template x-for="lesson in activeLessons" :key="lesson.id">
-                            <div class="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer flex justify-between items-center" 
-                                 :class="currentLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/20' : ''" @click="selectLesson(lesson)">
-                                <div class="font-bold text-sm text-slate-200" x-text="lesson.title"></div>
-                                <span class="text-xs opacity-50" x-show="lesson.content">📝</span>
+                            <div class="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer flex justify-between items-center" :class="currentLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/20' : ''" @click="selectLesson(lesson)">
+                                <div class="font-bold text-sm text-slate-200" x-text="lesson.title"></div><span class="text-xs opacity-50" x-show="lesson.content">📝</span>
                             </div>
                         </template>
                         <button @click="generateLessons()" class="w-full py-4 border border-dashed border-slate-700 rounded-2xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500 transition font-bold" :disabled="lessonLoading">
@@ -236,35 +246,23 @@
                         </button>
                     </div>
 
-                    <!-- 右侧：Quill 富文本编辑区 -->
                     <div class="lg:col-span-8 glass p-6 rounded-[2rem] min-h-[650px] flex flex-col shadow-2xl relative">
                         <template x-if="!currentLesson">
-                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-60">
-                                <div class="text-7xl mb-6">✍️</div><p class="font-bold tracking-widest text-sm">选择左侧章节节点以进行精细化备课</p>
-                            </div>
+                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-60"><div class="text-7xl mb-6">✍️</div><p class="font-bold tracking-widest text-sm">选择左侧章节节点以进行精细化备课</p></div>
                         </template>
                         <template x-if="currentLesson">
                             <div class="flex-1 flex flex-col w-full h-full relative">
                                 <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4 text-blue-300 w-full transition px-2">
                                 
-                                <!-- 自定义 Quill 工具栏，包含 AI 魔法按钮 -->
                                 <div id="toolbar-container" class="flex items-center justify-between">
-                                    <div>
-                                        <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
-                                        <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                                    </div>
+                                    <div><span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span><span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span></div>
                                     <button @click="generateLessonContent()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:scale-105 transition shadow-lg" :disabled="contentLoading">
-                                        <span x-show="contentLoading" class="animate-spin text-sm">↻</span>
-                                        <span x-text="contentLoading ? 'AI 正在撰写教案...' : '✨ AI 智能生成苏格拉底教案'"></span>
+                                        <span x-show="contentLoading" class="animate-spin text-sm">↻</span> <span x-text="contentLoading ? 'AI 正在撰写教案...' : '✨ AI 智能生成苏格拉底教案'"></span>
                                     </button>
                                 </div>
                                 
-                                <!-- Quill 容器 -->
                                 <div id="editor-container" class="flex-1"></div>
-
-                                <div class="mt-6 flex justify-end gap-4">
-                                    <button @click="saveLessonContent()" class="px-8 py-3 bg-slate-800 border border-slate-700 rounded-xl font-bold shadow-lg hover:bg-emerald-600 hover:border-emerald-500 transition text-sm">💾 本地保存进度</button>
-                                </div>
+                                <div class="mt-6 flex justify-end gap-4"><button @click="saveLessonContent()" class="px-8 py-3 bg-slate-800 border border-slate-700 rounded-xl font-bold shadow-lg hover:bg-emerald-600 hover:border-emerald-500 transition text-sm">💾 本地保存进度</button></div>
                             </div>
                         </template>
                     </div>
@@ -272,14 +270,42 @@
             </div>
         </div>
 
+        <!-- 🤖 全时随舰导师 NOVA (移入星际教室内部) -->
+        <div x-cloak>
+            <div id="nova-draggable" class="nova-float" :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`" @mousedown="startDrag($event)">
+                <div class="nova-orb-inner shadow-blue-500/50">🤖</div>
+            </div>
+
+            <div x-show="novaOpen" x-transition class="nova-chat-panel" :style="`left: ${Math.min(Math.max(20, novaPos.x), window.innerWidth-380)}px; top: ${Math.max(20, novaPos.y-510)}px;`" @click.away="novaOpen = false">
+                <div class="p-4 bg-blue-900/40 border-b border-blue-500/30 flex justify-between items-center">
+                    <span class="text-[10px] font-black uppercase text-blue-300 tracking-widest">Nova Advisor</span>
+                    <button @click="novaOpen = false" class="text-slate-500 hover:text-white">✖</button>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs" id="nova-chat-content">
+                    <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 leading-relaxed text-slate-300">你好，指挥官。我是随舰导师 NOVA。在星际教室中遇到了什么思维盲点需要我引导吗？</div>
+                    <template x-for="m in novaMsgs">
+                        <div :class="m.role==='user'?'text-right':'text-left'"><div class="inline-block p-3 rounded-2xl mt-2 shadow-lg" :class="m.role==='user'?'bg-blue-600 text-white':'bg-slate-800 border border-slate-700 text-slate-200'" x-text="m.content"></div></div>
+                    </template>
+                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在链接算力...</div>
+                </div>
+                <div class="p-3 border-t border-slate-800 bg-slate-900">
+                    <div class="flex items-center gap-2">
+                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs outline-none focus:border-blue-500" placeholder="打字向导师提问...">
+                        <button @click="novaAsk()" class="bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-500 transition">🚀</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
+    <!-- 🚀 将脚本强行置于 DOM 最底端确保 Alpine 加载顺序 -->
     <script>
-        // 挂载全局编辑器实例以便管理
         window.quillEditor = null;
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('proApp', () => ({
+                isPro: localStorage.getItem('xp_is_pro') === 'true',
                 view: 'galaxy', subjects: [], showPlanner: false, 
                 loading: false, lessonLoading: false, contentLoading: false,
                 planConfig: { curriculum: '美国 Common Core State Standards', grade: 'Grade 4 / 四年级', term: 'Term 1 / 上学期' },
@@ -293,26 +319,52 @@
                     { title: '《西游记》第一回：灵根育孕源流出', lang: 'zh', progress: 20, accuracy: 82, content: '混沌未分天地乱，茫茫渺渺无人见。自从盘古破鸿蒙，开辟从兹清浊辨。\n盖闻天地之数，有十二万九千六百岁为一元。将一元分为十二会，乃子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥之十二支也。' },
                     { title: '《论语》学而篇精选', lang: 'zh', progress: 100, accuracy: 96, content: '子曰：“学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？”\n\n曾子曰：“吾日三省吾身：为人谋而不忠乎？与朋友交而不信乎？传不习乎？”' }
                 ],
+                activeBook: null, readingChatLog: [], readingInput: '', readingLoading: false,
 
-                activeBook: null,
-                readingChatLog: [],
-                readingInput: '',
-                readingLoading: false,
+                // NOVA 全时导师变量
+                novaOpen: false, novaInput: '', novaMsgs: [], novaLoading: false,
+                novaPos: { x: window.innerWidth - 100, y: window.innerHeight - 100 },
+                isDragging: false, dragStartPos: {x:0, y:0}, offset: { x: 0, y: 0 },
 
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
                 
                 goHome() { window.parent.postMessage({ type: 'GO_HOME' }, '*'); },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
 
-                // ================= 🚀 核心：真正的双通道 AI 接口 =================
+                checkProFeature(featureName) {
+                    if (!this.isPro) { window.parent.postMessage({ type: 'UPGRADE_PRO' }, '*'); return; }
+                    if (featureName === 'writing') this.view = 'writing';
+                    if (featureName === 'importBook') this.executeImportBook();
+                },
+
+                // ================= NOVA 拖拽机制 =================
+                startDrag(e) {
+                    this.isDragging = false; 
+                    this.dragStartPos = { x: e.clientX, y: e.clientY };
+                    this.offset.x = e.clientX - this.novaPos.x;
+                    this.offset.y = e.clientY - this.novaPos.y;
+                    const move = (ev) => {
+                        const dist = Math.hypot(ev.clientX - this.dragStartPos.x, ev.clientY - this.dragStartPos.y);
+                        if (dist > 5) { this.isDragging = true; this.novaPos.x = ev.clientX - this.offset.x; this.novaPos.y = ev.clientY - this.offset.y; }
+                    };
+                    const stop = () => {
+                        window.removeEventListener('mousemove', move);
+                        window.removeEventListener('mouseup', stop);
+                        if (!this.isDragging) this.novaOpen = !this.novaOpen;
+                        setTimeout(() => { this.isDragging = false; }, 50);
+                    };
+                    window.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', stop);
+                },
+
+                // ================= 全真实算力引擎 =================
                 async callAI(prompt, type = 'sys', customSysMsg = null) {
                     const prefix = type === 'sys' ? 'xp_sys' : 'xp_nova';
-                    const key = localStorage.getItem(`${prefix}_key`); 
-                    const url = (localStorage.getItem(`${prefix}_url`) || '/proxy/groq') + '/chat/completions';
-                    const model = localStorage.getItem(`${prefix}_model`) || 'llama-3.3-70b-versatile';
+                    const key = localStorage.getItem(`${prefix}_key`) || localStorage.getItem('xp_sys_key'); 
+                    const url = (localStorage.getItem(`${prefix}_url`) || localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
+                    const model = localStorage.getItem(`${prefix}_model`) || localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
                     
                     if(!key) { Swal.fire('引擎未点火', `请回主界面配置 ${type === 'sys' ? '核心' : 'NOVA'} API Key`, 'warning'); return null; }
-                    
                     let sysMsg = customSysMsg || (type === 'sys' ? 'You are an elite Socratic educator and curriculum designer.' : (this.view === 'reading-en' ? 'You are NOVA English Tutor. Guide thinking.' : '你是NOVA大语文导师。启发式提问。'));
                     
                     try {
@@ -326,7 +378,6 @@
                     } catch(e) { Swal.fire('通讯失败', '网络拦截或代理配置错误', 'error'); return null; }
                 },
 
-                // 算力点 1：生成大纲星图 (调用 Sys)
                 async generateSemesterMap() { 
                     this.loading = true; 
                     const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】【${this.planConfig.term}】标准，生成5个核心学科。
@@ -340,8 +391,7 @@
                             const parsedData = JSON.parse(cleanJson);
                             this.subjects = parsedData.map((s, i) => ({
                                 id: Date.now() + i, title: s.title, icon: s.icon,
-                                radius: 200 + (Math.floor(i / 3) * 150), 
-                                angle: (i * (Math.PI * 2 / 5)) + (Math.random() * 0.5) 
+                                radius: 200 + (Math.floor(i / 3) * 150), angle: (i * (Math.PI * 2 / 5)) + (Math.random() * 0.5) 
                             }));
                             this.showPlanner = false;
                             Swal.fire({title: '真实大纲映射成功', text:`已为你解析提取 ${this.planConfig.curriculum} 体系。`, icon:'success', background:'#0f172a', color:'#fff'});
@@ -350,12 +400,10 @@
                     this.loading = false;
                 },
 
-                // 算力点 2：生成章节卫星 (调用 Sys)
                 async generateLessons() {
                     this.lessonLoading = true;
                     const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】级别，为【${this.editingSubject.title}】学科生成3个符合该国大纲的真实教学核心章节名称。
                     要求：语言必须与学科名的语种一致。仅返回JSON数组格式：[{"title": "Chapter/章节名称"}]。不要其他文字。`;
-                    
                     const res = await this.callAI(prompt, 'sys');
                     if (res) {
                         try {
@@ -367,18 +415,11 @@
                     this.lessonLoading = false;
                 },
 
-                // 算力点 3：一键生成富文本教案 (调用 Sys)
                 async generateLessonContent() {
                     if (!this.currentLesson || !window.quillEditor) return;
                     this.contentLoading = true;
-                    
-                    const prompt = `请为课程章节【${this.currentLesson.title}】编写一份详尽的“苏格拉底式教案”。
-                    必须包含以下结构：
-                    1. 核心问题定位 (引导学生思考的锚点)
-                    2. 知识边界拆解 (将知识点分解为可讨论的子维度)
-                    3. 跨学科迁移任务 (设计一个小挑战)
-                    【输出格式限制】：直接输出排版优美的纯 HTML 代码片段 (使用 <h3>, <ul>, <li>, <p>, <strong> 标签)。不要包含 <html> 或 <body> 外层。绝对不要在开头和结尾加上 \`\`\`html 和 \`\`\` 标记！语言与章节标题语种一致。`;
-                    
+                    const prompt = `请为课程章节【${this.currentLesson.title}】编写一份详尽的“苏格拉底式教案”。包含以下结构：1. 核心问题定位。2. 知识边界拆解。3. 跨学科迁移任务。
+                    【输出格式限制】：直接输出排版优美的纯 HTML 代码片段 (使用 <h3>, <ul>, <li>, <p>, <strong>)。不要包含 <html> 或 <body> 外层。语言与章节标题语种一致。`;
                     const res = await this.callAI(prompt, 'sys');
                     if (res) {
                         const cleanHtml = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
@@ -388,20 +429,12 @@
                     this.contentLoading = false;
                 },
 
-                // Quill 富文本编辑器生命周期管理
                 selectLesson(lesson) {
-                    if (this.currentLesson && window.quillEditor) {
-                        this.currentLesson.content = window.quillEditor.root.innerHTML;
-                    }
+                    if (this.currentLesson && window.quillEditor) { this.currentLesson.content = window.quillEditor.root.innerHTML; }
                     this.currentLesson = lesson;
-                    
                     this.$nextTick(() => {
                         if (!window.quillEditor) {
-                            window.quillEditor = new Quill('#editor-container', {
-                                theme: 'snow',
-                                placeholder: '在这里手动编写教案，或点击右上角 AI 魔法按钮一键生成...',
-                                modules: { toolbar: '#toolbar-container' }
-                            });
+                            window.quillEditor = new Quill('#editor-container', { theme: 'snow', placeholder: '手动编写教案，或点击右上角 AI 按钮一键生成...', modules: { toolbar: '#toolbar-container' } });
                         }
                         window.quillEditor.root.innerHTML = lesson.content || '';
                     });
@@ -414,15 +447,9 @@
                     }
                 },
 
-                openSubjectDetail(s) { 
-                    this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; window.quillEditor = null; 
-                },
-                closeSubjectDetail() {
-                    if(this.currentLesson) this.saveLessonContent();
-                    this.editingSubject = null;
-                },
+                openSubjectDetail(s) { this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; window.quillEditor = null; },
+                closeSubjectDetail() { if(this.currentLesson) this.saveLessonContent(); this.editingSubject = null; },
 
-                // 算力点 4：启发式写作批阅 (调用 Sys)
                 updateIntensity() {
                     const text = this.writingDraft; let score = 10;
                     if (text.length > 20) score += 20; if (text.includes("?") || text.includes("？")) score += 20;
@@ -432,77 +459,63 @@
 
                 async runWritingCritique() {
                     if(!this.writingDraft.trim()) return; this.isCritiquing = true;
-                    const prompt = `作为严厉且睿智的苏格拉底导师，绝不代写。请分3点提出尖锐的启发性反问，指出我逻辑中的薄弱点，逼迫我自己去完善结构。\n我的文章：\n${this.writingDraft}`;
-                    const res = await this.callAI(prompt, 'sys');
+                    const res = await this.callAI(`作为苏格拉底导师，不代写，分3点启发性反问我逻辑的薄弱点：\n${this.writingDraft}`, 'sys');
                     if(res) this.writingFeedback = res.replace(/\n/g, '<br>');
                     this.isCritiquing = false;
                 },
 
-                // 书架与伴读逻辑
-                importBook() { 
+                executeImportBook() { 
                     Swal.fire({ 
                         title: '导入私享学习档案',
-                        html: `
-                            <div id="drop-zone" class="border-2 border-dashed border-blue-500/50 rounded-2xl p-8 mb-4 text-slate-400 hover:bg-blue-900/20 hover:border-blue-400 transition cursor-pointer">
-                                <span class="text-4xl mb-3 text-blue-400 block">📄</span><span class="font-bold">点击或拖拽 .txt 档案至此</span>
-                                <input type="file" id="file-input" class="hidden" accept=".txt,.md">
-                            </div>
-                            <div class="relative flex items-center py-2"><div class="flex-grow border-t border-slate-700"></div><span class="mx-4 text-slate-500 text-[10px] font-bold">OR</span><div class="flex-grow border-t border-slate-700"></div></div>
-                            <textarea id="paste-zone" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 h-32 outline-none focus:border-blue-500" placeholder="直接粘贴文本..."></textarea>
-                            <input type="text" id="book-title" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 mt-4 outline-none focus:border-blue-500 font-bold" placeholder="书名/文档名 (将自动提取)">
-                        `,
+                        html: `<div id="drop-zone" class="border-2 border-dashed border-blue-500/50 rounded-2xl p-8 mb-4 text-slate-400 hover:bg-blue-900/20 transition cursor-pointer"><span class="text-4xl mb-3 block">📄</span><span class="font-bold">点击或拖拽 .txt 档案至此</span><input type="file" id="file-input" class="hidden" accept=".txt,.md"></div><textarea id="paste-zone" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm mt-4 h-32" placeholder="直接粘贴文本..."></textarea><input type="text" id="book-title" class="w-full bg-black/50 border border-slate-700 rounded-xl p-4 text-sm mt-4 font-bold" placeholder="书名/文档名">`,
                         background: '#0f172a', color: '#fff', width: 600, showCancelButton: true, confirmButtonText: '入库构建索引',
                         didOpen: () => {
-                            const dropZone = document.getElementById('drop-zone'); const fileInput = document.getElementById('file-input');
-                            const pasteZone = document.getElementById('paste-zone'); const titleInput = document.getElementById('book-title');
-                            dropZone.onclick = () => fileInput.click();
-                            dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
-                            dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); };
-                            const handleFile = (file) => { const reader = new FileReader(); reader.onload = (e) => { pasteZone.value = e.target.result; if(!titleInput.value) titleInput.value = file.name.replace(/\.[^/.]+$/, ""); }; reader.readAsText(file); };
-                            dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); };
-                            fileInput.onchange = (e) => { if (e.target.files.length) handleFile(e.target.files[0]); };
+                            const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input'), pz = document.getElementById('paste-zone'), ti = document.getElementById('book-title');
+                            dz.onclick = () => fi.click(); dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag-over'); }; dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('drag-over'); };
+                            const hf = (file) => { const r = new FileReader(); r.onload = (e) => { pz.value = e.target.result; if(!ti.value) ti.value = file.name.replace(/\.[^/.]+$/, ""); }; r.readAsText(file); };
+                            dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('drag-over'); if (e.dataTransfer.files.length) hf(e.dataTransfer.files[0]); };
+                            fi.onchange = (e) => { if (e.target.files.length) hf(e.target.files[0]); };
                         },
                         preConfirm: () => {
-                            const text = document.getElementById('paste-zone').value.trim(); const title = document.getElementById('book-title').value.trim();
-                            if (!text) { Swal.showValidationMessage('请提供内容数据'); return false; }
+                            const text = document.getElementById('paste-zone').value.trim(), title = document.getElementById('book-title').value.trim();
+                            if (!text) { Swal.showValidationMessage('请提供内容'); return false; }
                             return { text, title: title || '未命名档案' };
                         }
                     }).then(res => {
-                        if(res.isConfirmed) {
-                            this.books.unshift({ title: res.value.title, lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0, content: res.value.text });
-                        }
+                        if(res.isConfirmed) { this.books.unshift({ title: res.value.title, lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0, content: res.value.text }); }
                     }); 
                 },
 
-                // 🚀 算力点 5：NOVA 伴读引擎 (调用 Nova)
                 startReading(book) {
                     this.activeBook = book;
-                    this.readingChatLog = [{
-                        role: 'nova', 
-                        text: this.view === 'reading-en' 
-                            ? `Commander, I've loaded <strong>"${book.title}"</strong>. What part of the text would you like to explore?` 
-                            : `指挥官，已载入《${book.title}》。请问你想探讨文中的哪个细节？`
-                    }];
+                    this.readingChatLog = [{ role: 'nova', text: this.view === 'reading-en' ? `Commander, I've loaded <strong>"${book.title}"</strong>. What part of the text would you like to explore?` : `指挥官，已载入《${book.title}》。你想探讨文中的哪个细节？` }];
                 },
 
                 async sendReadingText() {
                     const t = this.readingInput.trim(); if(!t || this.readingLoading) return;
-                    this.readingInput = ''; this.readingChatLog.push({role: 'user', text: t});
-                    this.readingLoading = true;
-                    this.scrollToBottom('nova-reading-chat');
+                    this.readingInput = ''; this.readingChatLog.push({role: 'user', text: t}); this.readingLoading = true;
+                    setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
                     
-                    const prompt = `背景材料片段:\n${this.activeBook.content.substring(0, 2000)}\n\n学生说:${t}\n要求: 结合材料内容进行苏格拉底式提问回复，不要直接给答案。使用 ${this.view === 'reading-en' ? '英文' : '中文'}。`;
+                    const prompt = `背景材料:\n${this.activeBook.content.substring(0, 1500)}\n\n学生:${t}\n要求: 结合材料苏格拉底式反问，绝不直给答案。语言: ${this.view === 'reading-en' ? 'English' : 'Chinese'}`;
                     const reply = await this.callAI(prompt, 'nova');
-                    if(reply) {
-                        this.readingChatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')});
-                        this.scrollToBottom('nova-reading-chat');
-                    }
+                    if(reply) { this.readingChatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100); }
                     this.readingLoading = false;
                 },
-
-                scrollToBottom(id) { setTimeout(() => { const el = document.getElementById(id); if(el) el.scrollTop = el.scrollHeight; }, 100); }
+                
+                // 全局 NOVA 对话逻辑
+                async novaAsk() {
+                    const q = this.novaInput.trim(); if(!q || this.novaLoading) return;
+                    this.novaInput = ''; this.novaMsgs.push({role:'user', content:q}); this.novaLoading = true;
+                    try {
+                        const res = await this.callAI(q, 'nova', 'You are NOVA, a Socratic mentor. Guide thinking in the interstellar classroom. Lang: Chinese.');
+                        if (res) this.novaMsgs.push({role:'assistant', content: res});
+                    } catch(e) { this.novaMsgs.push({role:'assistant', content: '⚠️ 通讯受阻。'}); }
+                    this.novaLoading = false;
+                    setTimeout(() => { const c = document.getElementById('nova-chat-content'); if(c) c.scrollTop = c.scrollHeight; }, 100);
+                }
             }));
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>

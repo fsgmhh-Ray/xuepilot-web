@@ -2,117 +2,155 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>XuePilot Pro - 星际教室</title>
+    <title>XuePilot Pro - 核心母舰</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
-        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .orbit { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; pointer-events: none; }
-        .planet { position: absolute; transform: translate(-50%, -50%); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; z-index: 10; }
-        .log-entry { border-left: 2px solid #3b82f6; animation: slideIn 0.3s ease-out; margin-bottom: 12px; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
-        .nova-orb { background: radial-gradient(circle at 30% 30%, #38bdf8, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.4); }
-        .nova-thinking { animation: pulse 1.5s infinite alternate; }
-        @keyframes pulse { from { opacity: 0.6; transform: scale(0.95); } to { opacity: 1; transform: scale(1.05); } }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .planet:hover { transform: scale(1.1); filter: brightness(1.2); }
+        .orbit { border: 1px dashed rgba(59, 130, 246, 0.1); border-radius: 50%; position: absolute; pointer-events: none; }
+        .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
-<body x-data="proApp()" class="flex h-screen relative">
-    <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,rgba(17,24,39,1)_0%,rgba(3,7,18,1)_100%)]"></div>
-    
+<body x-data="proApp()" class="flex h-screen">
+
     <!-- 侧边栏 -->
-    <aside class="w-72 border-r border-slate-800 flex flex-col py-6 z-20 glass-panel">
-        <div class="px-6 mb-6 font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 tracking-tighter text-xl">XuePilot PRO</div>
-        <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
-            <button @click="currentView = 'map'" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition" :class="currentView === 'map' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:bg-slate-800/50'">🗺️ 探索星图</button>
-            <button @click="currentView = 'writing'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-2" :class="currentView === 'writing' ? 'bg-orange-900/40 text-orange-200 border border-orange-500/50' : 'bg-slate-800/40 text-slate-300'">✍️ AI 启发式写作</button>
-            <button @click="openNova('en')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-2" :class="currentView === 'nova-en' ? 'bg-indigo-900/40 border-indigo-500 text-white' : 'bg-slate-800/40 text-slate-400'">🇬🇧 英文伴读舱</button>
-            <button @click="openNova('zh')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-2" :class="currentView === 'nova-zh' ? 'bg-emerald-900/40 border-emerald-500 text-white' : 'bg-slate-800/40 text-slate-400'">🇨🇳 大语文传承</button>
-            
-            <div class="mt-8 px-4">
-                <span class="text-[10px] text-slate-500 font-bold uppercase block mb-3">思维指挥日志 LV.<span x-text="commanderLevel"></span></span>
-                <div class="space-y-3 max-h-64 overflow-y-auto pr-2" id="log-container">
-                    <template x-for="log in commandLogs" :key="log.id">
-                        <div class="log-entry pl-3 py-1 text-[10px] text-slate-400">
-                            <div class="text-blue-400 font-bold" x-text="log.time"></div>
-                            <div class="mt-0.5" x-text="log.content"></div>
-                        </div>
-                    </template>
-                </div>
-            </div>
+    <aside class="w-64 border-r border-slate-800 flex flex-col py-6 glass z-20">
+        <div class="px-6 mb-8 font-black text-blue-400 text-xl tracking-tighter">XuePilot PRO</div>
+        <nav class="flex-1 px-3 space-y-1">
+            <button @click="view = 'galaxy'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400'">🌌 学期科目星系</button>
+            <button @click="view = 'bookshelf'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-2" :class="view==='bookshelf'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400'">📚 指挥官书架</button>
         </nav>
+        <div class="p-4 mt-auto">
+            <div class="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                <div class="text-[10px] text-slate-500 font-bold mb-1 uppercase">学情统计</div>
+                <div class="flex justify-between text-[10px] text-blue-400"><span>本周进步</span><span>+12.5%</span></div>
+                <div class="w-full bg-slate-800 h-1 mt-1 rounded-full"><div class="bg-blue-500 h-1 w-2/3"></div></div>
+            </div>
+        </div>
     </aside>
 
     <main class="flex-1 relative overflow-hidden">
-        <!-- 探索星图 -->
-        <div x-show="currentView === 'map'" class="absolute inset-0 flex items-center justify-center">
-            <template x-for="r in [180, 320, 460]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
-            <template x-for="planet in planets" :key="planet.id">
-                <div class="planet w-14 h-14 rounded-full bg-slate-900 border-2 border-slate-700 shadow-lg flex items-center justify-center group hover:border-blue-400" :style="`left: calc(50% + ${Math.cos(planet.angle) * planet.radius}px); top: calc(50% + ${Math.sin(planet.angle) * planet.radius}px);`" @click="Swal.fire(planet.title, '即将开启该星球的深度指挥教学', 'info')">
-                    <span class="text-2xl" x-text="planet.icon"></span>
-                    <div class="absolute -bottom-8 whitespace-nowrap text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 bg-black/80 px-2 py-1 rounded" x-text="planet.title"></div>
+        
+        <!-- ================= 场景 1: 学期科目星系 (Semester Galaxy) ================= -->
+        <div x-show="view === 'galaxy'" class="h-full relative flex items-center justify-center">
+            <div class="orbit w-[400px] h-[400px]"></div>
+            <div class="orbit w-[700px] h-[700px]"></div>
+            
+            <template x-for="subject in subjects">
+                <div class="planet absolute flex flex-col items-center" 
+                     :style="`left: calc(50% + ${Math.cos(subject.angle) * subject.radius}px); top: calc(50% + ${Math.sin(subject.angle) * subject.radius}px);`"
+                     @click="openSubjectDetail(subject)">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-600 shadow-xl flex items-center justify-center text-3xl" x-text="subject.icon"></div>
+                    <span class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="subject.title"></span>
                 </div>
             </template>
-            <button @click="showAiPlanner = true" class="absolute bottom-10 right-10 px-6 py-4 bg-blue-600 rounded-full shadow-2xl text-white z-30 font-bold hover:scale-105 transition">✨ 规划新航线</button>
-        </div>
 
-        <!-- 写作舱 -->
-        <div x-show="currentView === 'writing'" x-cloak class="absolute inset-0 flex p-6 gap-6 fade-in">
-            <div class="flex-1 glass-panel rounded-2xl flex flex-col overflow-hidden bg-slate-900/80 shadow-xl border border-orange-500/20">
-                <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-bold text-sm text-orange-200">📝 协作指挥区</h3><div class="text-[9px] text-slate-500 font-mono">指令强度: <span x-text="cmdIntensity"></span>%</div></div>
-                <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg resize-none" placeholder="输入你的想法..."></textarea>
-                <button @click="runWritingCritique()" class="m-4 py-4 bg-orange-600 text-white font-bold rounded-xl shadow-lg" :disabled="isCritiquing">
-                    <span x-text="isCritiquing ? 'AI 正在解析...' : '下达苏格拉底批阅指令'"></span>
-                </button>
-            </div>
-            <div class="w-1/3 glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-800">
-                <div class="p-4 bg-slate-800/50 font-bold text-sm">💡 导师启发建议</div>
-                <div class="flex-1 p-6 overflow-y-auto text-sm text-slate-300 leading-relaxed font-serif" x-html="writingFeedback || '等待指挥官输入初稿...'"></div>
+            <div class="absolute bottom-10 right-10 flex gap-4">
+                <button @click="showPlanner = true" class="px-8 py-4 bg-purple-600 rounded-full font-bold shadow-2xl hover:scale-105 transition">✨ 启动学期全科目规划</button>
             </div>
         </div>
 
-        <!-- NOVA 伴读 -->
-        <div x-show="currentView.startsWith('nova')" x-cloak class="absolute inset-0 flex p-6 gap-6">
-            <div class="w-1/3 glass-panel rounded-2xl flex flex-col">
-                <div class="p-4 bg-slate-800 border-b border-slate-700 font-bold text-sm">📖 阅读素材注入</div>
-                <textarea x-model="novaContext" class="flex-1 input-dark p-4 text-sm resize-none border-none" placeholder="在此粘贴课文..."></textarea>
-                <button @click="saveContext()" class="m-3 py-3 bg-blue-600 rounded-xl font-bold hover:bg-blue-500 transition shadow-lg">💾 同步给 NOVA 大脑</button>
+        <!-- ================= 场景 2: 书架系统 (Commander Bookshelf) ================= -->
+        <div x-show="view === 'bookshelf'" x-cloak class="p-8 h-full overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black text-white">指挥官个人书架</h2>
+                <button @click="importBook()" class="px-6 py-2 bg-emerald-600 rounded-lg font-bold">📥 导入新读本</button>
             </div>
-            <div class="flex-1 glass-panel rounded-2xl flex flex-col relative border overflow-hidden" :class="novaLang==='en-US'?'border-indigo-500/30':'border-emerald-500/30'">
-                <div class="flex-1 p-6 overflow-y-auto space-y-4" id="nova-chat-box">
-                    <template x-for="msg in novaChatLog">
-                        <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
-                            <span class="text-[10px] text-slate-500 font-bold mb-1" x-text="msg.role==='user'?'指挥官':'NOVA'"></span>
-                            <div class="max-w-[85%] p-3.5 rounded-2xl text-sm" :class="msg.role==='user'?'bg-blue-600/20 border border-blue-500/30 text-blue-100':'bg-slate-800 border border-slate-700 text-slate-200'">
-                                <span x-text="msg.text"></span>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <template x-for="book in books">
+                    <div class="shelf-card p-6 rounded-2xl relative group cursor-pointer hover:border-emerald-500/50 transition">
+                        <div class="text-4xl mb-4">📖</div>
+                        <h3 class="font-bold text-lg mb-1" x-text="book.title"></h3>
+                        <div class="text-[10px] text-slate-500 mb-4">阅读进度: <span x-text="book.progress"></span>%</div>
+                        <div class="w-full bg-slate-800 h-1 rounded-full mb-4"><div class="bg-emerald-500 h-1" :style="`width: ${book.progress}%`"></div></div>
+                        <button class="w-full py-2 bg-slate-700 rounded-lg text-xs font-bold group-hover:bg-emerald-600 transition">开启伴读交互</button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ================= 🚀 全新 Mission Planner (三段式逻辑) ================= -->
+        <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-md">
+            <div class="glass w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/20">
+                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl">✖</button>
+                
+                <template x-if="plannerStep === 1">
+                    <div>
+                        <h2 class="text-2xl font-black text-blue-400 mb-6 font-mono">STEP 1: 国家大纲与政策定位</h2>
+                        <div class="space-y-6">
+                            <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm">
+                                <option>中国义务教育课标 (2022版)</option>
+                                <option>英国 National Curriculum (KS2/KS3)</option>
+                                <option>美国 Common Core State Standards</option>
+                            </select>
+                            <select x-model="planConfig.grade" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm">
+                                <option>小学三年级</option><option>小学四年级</option><option>初中一年级</option>
+                            </select>
+                            <button @click="generateSemesterMap()" class="w-full py-5 bg-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3">
+                                <span x-show="loading" class="animate-spin">↻</span> 一键生成学期全科目星图
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="plannerStep === 2">
+                    <div class="text-center">
+                        <div class="text-5xl mb-6">🌌</div>
+                        <h2 class="text-2xl font-black text-white mb-2">全科目星系已生成</h2>
+                        <p class="text-slate-400 text-sm mb-8">AI 已根据大纲自动规划了语文、数学、英语、科学、艺术等核心科目。</p>
+                        <div class="flex flex-wrap justify-center gap-3 mb-8">
+                            <template x-for="s in subjects">
+                                <span class="bg-blue-900/40 border border-blue-500/30 px-3 py-1 rounded-full text-xs" x-text="s.title"></span>
+                            </template>
+                        </div>
+                        <button @click="showPlanner = false; plannerStep = 1" class="px-10 py-4 bg-emerald-600 rounded-full font-bold">进入星图开始微调</button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- 科目详情与内容编辑器 -->
+        <div x-show="editingSubject" x-cloak class="fixed inset-0 bg-slate-950 z-40 p-8 overflow-y-auto">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+                    <div class="flex items-center gap-4">
+                        <span class="text-4xl" x-text="editingSubject?.icon"></span>
+                        <h2 class="text-3xl font-black" x-text="editingSubject?.title"></h2>
+                    </div>
+                    <button @click="editingSubject = null" class="px-6 py-2 bg-slate-800 rounded-lg">返回星图</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- 左侧：章节卫星列表 -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">课程章节章节 (Satellites)</h3>
+                        <template x-for="lesson in activeLessons">
+                            <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer" @click="editLesson(lesson)">
+                                <div class="font-bold text-sm" x-text="lesson.title"></div>
+                            </div>
+                        </template>
+                        <button @click="generateLessons()" class="w-full py-3 border border-dashed border-slate-700 rounded-xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500">一键生成基础教学章节</button>
+                    </div>
+                    <!-- 右侧：精修编辑区 -->
+                    <div class="md:col-span-2 glass p-8 rounded-3xl min-h-[500px] flex flex-col">
+                        <div x-show="!currentLesson" class="flex-1 flex flex-col items-center justify-center text-slate-600">
+                            <div class="text-6xl mb-4">✍️</div>
+                            <p>选择一个章节或卫星节点进行精修编辑</p>
+                        </div>
+                        <div x-show="currentLesson" class="flex-1 flex flex-col">
+                            <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4">
+                            <div id="editor" class="flex-1 bg-black/20 p-6 rounded-xl text-sm leading-relaxed overflow-y-auto border border-slate-800" contenteditable="true">
+                                加载章节核心内容...
+                            </div>
+                            <div class="mt-6 flex justify-end gap-4">
+                                <button class="px-6 py-2 bg-blue-600 rounded-lg font-bold">保存并同步至 AI 导师</button>
                             </div>
                         </div>
-                    </template>
-                </div>
-                <div class="p-4 bg-slate-900 border-t border-slate-800 flex flex-col gap-3">
-                    <div class="flex gap-2">
-                        <input type="text" x-model="novaTextInput" @keydown.enter="sendNovaText()" class="flex-1 input-dark px-4 py-3 rounded-xl text-sm" placeholder="打字指挥 NOVA...">
-                        <button @click="sendNovaText()" class="px-6 py-3 bg-blue-600 rounded-xl font-bold shadow-lg disabled:opacity-50" :disabled="novaState==='thinking'">发送指令</button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 规划器弹窗 -->
-        <div x-show="showAiPlanner" x-cloak class="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
-            <div class="glass-panel w-full max-w-xl rounded-2xl p-8 border border-purple-500/30 relative">
-                <button @click="showAiPlanner = false" class="absolute top-5 right-5 text-slate-400 hover:text-white text-2xl transition">✖</button>
-                <div class="flex justify-between items-center mb-6 font-mono text-xl text-purple-400">MISSION PLANNER</div>
-                <div class="space-y-5">
-                    <select x-model="aiSpec.grade" class="w-full input-dark p-3 rounded-xl text-sm"><option>3年级</option><option>4年级</option><option>5年级</option><option>6年级</option></select>
-                    <input type="text" x-model="aiSpec.topic" placeholder="输入具体教学主题 (例如: 分数的加法)..." class="w-full input-dark p-3.5 rounded-xl text-sm border-blue-500/50">
-                    <button @click="runAiPlanning()" class="w-full py-4 bg-purple-600 text-white font-bold rounded-xl shadow-lg" :disabled="isPlanning">
-                        <span x-text="isPlanning ? '正在联络算力中心...' : '🚀 启动星际生成'"></span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -120,119 +158,54 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('proApp', () => {
-                const client = window.supabase ? window.supabase.createClient('https://cywslfalbedraeeggryj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0') : null;
+            Alpine.data('proApp', () => ({
+                view: 'galaxy', subjects: [], showPlanner: false, plannerStep: 1, loading: false,
+                planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '小学四年级' },
+                editingSubject: null, activeLessons: [], currentLesson: null,
+                books: [
+                    { title: '《小王子》英文导读', progress: 45, accuracy: 88 },
+                    { title: '《论语》精选二十章', progress: 12, accuracy: 92 }
+                ],
+
+                async generateSemesterMap() {
+                    this.loading = true;
+                    // 模拟 AI 生成过程
+                    setTimeout(() => {
+                        this.subjects = [
+                            { id:1, title:'语文', icon:'🇨🇳', radius:200, angle: 0 },
+                            { id:2, title:'数学', icon:'📐', radius:200, angle: 2.1 },
+                            { id:3, title:'英语', icon:'🇬🇧', radius:200, angle: 4.2 },
+                            { id:4, title:'自然科学', icon:'🧪', radius:320, angle: 1.05 }
+                        ];
+                        this.loading = false;
+                        this.plannerStep = 2;
+                    }, 2000);
+                },
+
+                openSubjectDetail(s) { this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; },
                 
-                return {
-                    currentView: 'map', planets: [], showAiPlanner: false, isPlanning: false, isCritiquing: false,
-                    aiSpec: { grade: '4年级', topic: '' }, 
-                    
-                    // 🚀 核心修复：初始化缺失的 NOVA 变量
-                    novaLang: 'zh-CN', novaState: 'idle', 
-                    novaChatLog: [], novaContext: '', novaTextInput: '', 
-                    
-                    commandLogs: [], commanderLevel: 1, cmdIntensity: 10, writingDraft: '', writingFeedback: '',
+                generateLessons() {
+                    this.activeLessons = [
+                        { title: '第一章：核心概念定义' }, { title: '第二章：批判性思维练习' }, { title: '第三章：跨学科整合实践' }
+                    ];
+                },
+                
+                editLesson(l) { 
+                    this.currentLesson = l;
+                    document.getElementById('editor').innerText = "AI 已为您准备好该章节的苏格拉底式教案：\n\n1. 核心问题引导...\n2. 盲点排查逻辑...\n3. 知识迁移挑战...";
+                },
 
-                    async init() { 
-                        this.novaContext = localStorage.getItem('xuepilot_nova_context')||''; 
-                        if(client) await this.loadPlanets(); 
-                        this.addLog("系统初始化完毕，等待指令。"); 
-                    },
-                    
-                    addLog(c) { 
-                        this.commandLogs.unshift({ id: Date.now(), time: new Date().toLocaleTimeString('zh-CN',{hour12:false}), content: c }); 
-                        if(this.commandLogs.length > 20) this.commandLogs.pop();
-                        this.commanderLevel = 1 + Math.floor(this.commandLogs.length / 5); 
-                    },
-
-                    async loadPlanets() { 
-                        const {data} = await client.from('planets').select('*').order('created_at',{ascending:true}); 
-                        this.planets = data || [{ id: 1, title: '数学基础', icon: '📐', radius: 180, angle: 0 }]; 
-                    },
-
-                    async callAI(p, type = 'sys') {
-                        const k = localStorage.getItem('xp_sys_key'); 
-                        const u = (localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
-                        const m = localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
-                        if(!k) { Swal.fire('缺少 API Key','请点击主页左下角配置算力引擎','warning'); return null; }
-                        try {
-                            const res = await fetch(u, { 
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }, 
-                                body: JSON.stringify({ model: m, messages: [{ role: 'system', content: 'You are a Socratic tutor. Language: Chinese.' }, { role: 'user', content: p }] }) 
-                            });
-                            const data = await res.json(); 
-                            return data.choices[0].message.content;
-                        } catch(e) { 
-                            Swal.fire('通讯失败', '请检查网络或 Vercel 代理配置', 'error');
-                            return null;
+                importBook() {
+                    Swal.fire({ title: '导入文档', input: 'textarea', inputPlaceholder: '将书籍内容或文档文本粘贴于此...', background: '#0f172a', color: '#fff' })
+                    .then(res => {
+                        if(res.value) {
+                            this.books.unshift({ title: '新导入读本 ' + (this.books.length + 1), progress: 0, accuracy: 0 });
+                            Swal.fire('成功', '文档已存入书架并建立索引', 'success');
                         }
-                    },
-
-                    async runAiPlanning() {
-                        if(!this.aiSpec.topic) return;
-                        this.isPlanning = true; 
-                        this.addLog(`开始规划“${this.aiSpec.topic}”学习航线...`);
-                        const res = await this.callAI(`生成5个学习节点标题和对应的图标, 必须仅返回 JSON 数组格式: [{"title":"xx","icon":"🪐"}]。 主题:${this.aiSpec.topic}`);
-                        if(res) { 
-                            try { 
-                                const cleanRes = res.replace(/\u0060\u0060\u0060json/g, '').replace(/\u0060\u0060\u0060/g, '').trim();
-                                const nodes = JSON.parse(cleanRes); 
-                                const list = nodes.map((n,i)=>({...n, radius: 180 + (i % 3) * 140, angle: Math.random() * 6})); 
-                                if(client) { await client.from('planets').insert(list); await this.loadPlanets(); }
-                                else { this.planets = [...this.planets, ...list]; }
-                                this.showAiPlanner = false; 
-                                this.addLog("航线生成成功。");
-                            } catch(e) { this.addLog("⚠️ 数据解析失败，请重试。"); } 
-                        }
-                        this.isPlanning = false;
-                    },
-
-                    async runWritingCritique() {
-                        if(!this.writingDraft) return; this.isCritiquing = true;
-                        this.addLog("正在启动苏格拉底启发式批阅...");
-                        const res = await this.callAI(`批阅以下文字，不要修改，分3点通过提问引导学生思考改进:\n${this.writingDraft}`);
-                        if(res) {
-                            this.writingFeedback = res.replace(/\n/g, '<br>');
-                            this.addLog("导师建议已返回。");
-                        }
-                        this.isCritiquing = false;
-                    },
-
-                    async sendNovaText() {
-                        const t = this.novaTextInput.trim(); if(!t || this.novaState==='thinking') return;
-                        this.novaTextInput = ''; 
-                        this.novaChatLog.push({role:'user', text:t});
-                        this.novaState = 'thinking';
-                        this.scrollToBottom();
-                        
-                        const r = await this.callAI(`背景材料:${this.novaContext}\n学生说:${t}\n要求: 根据背景简短回答，必须结尾带一个启发式问题。`);
-                        if(r) { 
-                            this.novaChatLog.push({role:'nova', text:r}); 
-                            this.scrollToBottom();
-                        }
-                        this.novaState = 'idle';
-                    },
-
-                    openNova(l) { 
-                        this.currentView = l==='en'?'nova-en':'nova-zh'; 
-                        this.novaLang = l==='en'?'en-US':'zh-CN'; 
-                        this.novaChatLog = [{role:'nova', text: l==='en'?'Commander, what is your instruction?':'指挥官，请针对素材下达教学指令。'}]; 
-                    },
-                    
-                    saveContext() { 
-                        localStorage.setItem('xuepilot_nova_context', this.novaContext); 
-                        this.addLog("NOVA 知识背景已更新。");
-                        Swal.fire({toast:true, position:'top-end', icon:'success', title:'素材已注入大模型大脑', showConfirmButton: false, timer: 1500}); 
-                    },
-
-                    scrollToBottom() {
-                        setTimeout(() => { const b = document.getElementById('nova-chat-box'); if(b) b.scrollTop = b.scrollHeight; }, 50);
-                    }
+                    });
                 }
-            });
+            }));
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

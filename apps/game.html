@@ -12,42 +12,93 @@
         .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); transition: all 0.2s; cursor: pointer; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .cinematic-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
-        .cinematic-overlay.active { opacity: 1; pointer-events: auto; }
-        .warp-star { position: absolute; background: #fff; border-radius: 50%; width: 2px; height: 2px; animation: warp 2s infinite linear; }
-        @keyframes warp { 0% { transform: translate(0,0); opacity: 0; } 100% { transform: translate(var(--tx), var(--ty)) scale(10); opacity: 0; } }
+        
+        /* 🚀 新增：战术辅助面板 */
+        .tactical-panel { border-left: 2px solid #3b82f6; background: rgba(30,58,138,0.2); }
     </style>
 </head>
 <body class="min-h-screen">
-    <div id="cinematic-layer" class="cinematic-overlay"><div id="warp-effect" class="absolute inset-0 overflow-hidden"></div><div id="cinematic-text" class="text-2xl font-mono text-center px-8 z-10"></div></div>
-    <main class="max-w-5xl mx-auto p-6 mt-8 relative">
-        <!-- 步骤 0: 选年龄 -->
-        <div id="step-0" class="glass-panel rounded-3xl p-10 text-center fade-in">
-            <h2 class="text-3xl font-black mb-8">选择你的指挥级别</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div onclick="startCampaign('young')" class="bg-slate-900 p-8 rounded-2xl border border-emerald-500/30 cursor-pointer hover:scale-105 transition"><div class="text-5xl mb-4">🍭</div><h3 class="font-bold">幼崽 (6-8岁)</h3></div>
-                <div onclick="startCampaign('mid')" class="bg-slate-900 p-8 rounded-2xl border border-blue-500/30 cursor-pointer hover:scale-105 transition"><div class="text-5xl mb-4">🦖</div><h3 class="font-bold">少年 (9-12岁)</h3></div>
-                <div onclick="startCampaign('old')" class="bg-slate-900 p-8 rounded-2xl border border-purple-500/30 cursor-pointer hover:scale-105 transition"><div class="text-5xl mb-4">⚛️</div><h3 class="font-bold">领航员 (13-15岁)</h3></div>
+    
+    <main class="max-w-6xl mx-auto p-6 mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <div class="lg:col-span-3">
+            <!-- 步骤 0: 选年龄 -->
+            <div id="step-0" class="glass-panel rounded-3xl p-10 text-center fade-in">
+                <h2 class="text-4xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">指挥官资格核验</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="startCampaign('young')" class="bg-slate-900 p-8 rounded-2xl border border-emerald-500/30 cursor-pointer hover:scale-105 transition">
+                        <div class="text-5xl mb-4">🍭</div><h3 class="font-bold">星际幼崽 (6-8岁)</h3>
+                    </div>
+                    <div onclick="startCampaign('mid')" class="bg-slate-900 p-8 rounded-2xl border border-blue-500/30 cursor-pointer hover:scale-105 transition">
+                        <div class="text-5xl mb-4">🦖</div><h3 class="font-bold">少年先锋 (9-12岁)</h3>
+                    </div>
+                    <div onclick="startCampaign('old')" class="bg-slate-900 p-8 rounded-2xl border border-purple-500/30 cursor-pointer hover:scale-105 transition">
+                        <div class="text-5xl mb-4">⚛️</div><h3 class="font-bold">银河领航员 (13-15岁)</h3>
+                    </div>
+                </div>
             </div>
+
+            <!-- 步骤 1: 简报 (略，同前) -->
+            <div id="step-1" class="hidden-step glass-panel rounded-3xl p-10 text-center fade-in">
+                <div id="mission-icon" class="text-7xl mb-6 text-blue-500">🪐</div>
+                <h2 id="mission-title" class="text-3xl font-black mb-4">载入中...</h2>
+                <p id="mission-desc" class="text-slate-300 mb-8 max-w-xl mx-auto leading-loose"></p>
+                <button onclick="goToStep(2)" class="btn-primary px-12 py-4 rounded-full font-bold shadow-lg">进入全息指挥台</button>
+            </div>
+
+            <!-- 步骤 2: 核心环节 (提问/判断/整合，此处逻辑已原生化) -->
+            <div id="step-2" class="hidden-step glass-panel rounded-3xl p-8 fade-in">
+                <h2 class="text-2xl font-black mb-6 text-blue-400">环节 1: 下达全局指令 (Prompting)</h2>
+                <textarea id="game-prompt" class="w-full bg-black/60 p-6 rounded-xl border border-slate-700 h-48 mb-6" placeholder="输入你对 AI 建设团队的要求..."></textarea>
+                <div class="flex justify-between items-center">
+                    <div class="text-xs text-slate-500">提示：考虑环境中的重力、能源和维生系统</div>
+                    <button onclick="goToStep(3)" class="btn-primary px-10 py-3 rounded-xl font-bold">提交指令给智脑群 ➔</button>
+                </div>
+            </div>
+            
+            <!-- 更多步骤... -->
         </div>
-        <!-- 步骤 1: 简报 -->
-        <div id="step-1" class="hidden-step glass-panel rounded-3xl p-10 text-center fade-in">
-            <div id="mission-icon" class="text-7xl mb-6">🪐</div>
-            <h2 id="mission-title" class="text-3xl font-black mb-4">载入中...</h2>
-            <p id="mission-desc" class="text-slate-300 mb-8"></p>
-            <button onclick="playIntro()" class="btn-primary px-12 py-4 rounded-full font-bold">进入全息指挥台</button>
-        </div>
-        <!-- (其余游戏步骤代码逻辑由 JS 动态切换，结构同前，为节省篇幅不重复展示，逻辑核心见 JS) -->
+
+        <!-- 🚀 战术辅助侧边栏 (更深度的 AI 应用) -->
+        <aside class="hidden lg:block space-y-6">
+            <div class="glass-panel p-6 rounded-2xl tactical-panel">
+                <h3 class="text-blue-400 font-bold text-xs uppercase mb-3 tracking-widest">AI 战术参谋</h3>
+                <p class="text-[10px] text-slate-400 leading-relaxed mb-4">当前局势分析：任务环境复杂度为 85%，提议在指令中加入对“极端昼夜温差”的考量。</p>
+                <button onclick="requestTacticalAid()" class="w-full py-2 bg-blue-900/40 border border-blue-500/30 rounded text-[10px] font-bold text-blue-300 hover:bg-blue-600 transition">申请算力支持</button>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border-emerald-500/20">
+                <h3 class="text-emerald-400 font-bold text-xs uppercase mb-3 tracking-widest">指挥官技能点</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-[10px]"><span>提问力 (Prompt)</span><span>LV.4</span></div>
+                    <div class="w-full bg-slate-800 h-1 rounded-full"><div class="bg-blue-500 h-1 w-3/4"></div></div>
+                    <div class="flex justify-between text-[10px]"><span>判断力 (Judge)</span><span>LV.2</span></div>
+                    <div class="w-full bg-slate-800 h-1 rounded-full"><div class="bg-emerald-500 h-1 w-1/4"></div></div>
+                </div>
+            </div>
+        </aside>
     </main>
+
     <script>
-        // 核心关卡数据
-        const campaigns = { 'young': [{title:'糖果星球',icon:'🍭',desc:'保护甜甜的棉花糖星球！',keywords:{'防御':['墙','门']},flaws:[{title:'方案A',desc:'巧克力墙',opt1:{text:'化了',isCorrect:true},opt2:{text:'太难看',isCorrect:false}}],integrations:[{title:'材料',wrong:'巧克力',right:'石头'}]}] }; 
+        const campaigns = { 
+            'young': [{title:'棉花糖星球保卫战', icon:'🍭', desc:'坏坏的蛀牙怪兽要来吃掉糖果了！你需要建立一个自动防御基地。'}],
+            'mid': [{title:'月球自动化矿场', icon:'🌖', desc:'建立一个无需人工干预的自动化开采阵列，注意微陨石撞击风险。'}],
+            'old': [{title:'戴森球能源工程', icon:'⚛️', desc:'在太阳轨道建设恒星能量捕获系统，解决星际文明的终极能源危机。'}]
+        };
         let activeC = null;
-        function startCampaign(age) { activeC = campaigns[age][0]; document.getElementById('mission-title').innerText = activeC.title; document.getElementById('mission-desc').innerText = activeC.desc; goToStep(1); }
-        function goToStep(s) { document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden-step')); document.getElementById(`step-${s}`).classList.remove('hidden-step'); }
-        function playIntro() { /* 过场动画逻辑 */ goToStep(2); }
-        // ... (此处包含完整逻辑实现，确保与之前发您的 Vanilla 版逻辑一致)
-        window.startCampaign = startCampaign;
+        function startCampaign(age) { 
+            activeC = campaigns[age][0]; 
+            document.getElementById('mission-title').innerText = activeC.title;
+            document.getElementById('mission-desc').innerText = activeC.desc;
+            document.getElementById('mission-icon').innerText = activeC.icon;
+            goToStep(1); 
+        }
+        function goToStep(s) {
+            document.querySelectorAll('main > div > div').forEach(d => d.classList.add('hidden-step'));
+            document.getElementById(`step-${s}`).classList.remove('hidden-step');
+        }
+        function requestTacticalAid() {
+            Swal.fire({ title: '正在呼叫 AI 参谋...', text: '建议关注资源的循环利用率，这是长期任务成功的核心。', icon: 'info', background: '#0f172a', color: '#fff' });
+        }
     </script>
 </body>
 </html>

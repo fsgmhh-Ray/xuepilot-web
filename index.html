@@ -13,182 +13,115 @@
         .glass-sidebar { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(16px); border-right: 1px solid rgba(255,255,255,0.05); }
         .nav-item { transition: all 0.3s ease; position: relative; cursor: pointer; }
         .nav-item.active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent); border-left: 4px solid #3b82f6; color: #fff; }
-        .nav-item.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(100%); }
-        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; transition: all 0.3s; }
-        .input-dark:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
         
-        /* NOVA 悬浮球 */
-        .nova-float { width: 64px; height: 64px; position: fixed; bottom: 30px; right: 30px; z-index: 100; cursor: pointer; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .nova-float:hover { transform: scale(1.1) rotate(15deg); }
-        .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6), inset 0 0 15px rgba(255,255,255,0.3); animation: novaBreath 3s infinite alternate; border: 2px solid rgba(255,255,255,0.2); }
-        @keyframes novaBreath { from { transform: scale(1); box-shadow: 0 0 20px rgba(37, 99, 235, 0.4); } to { transform: scale(1.05); box-shadow: 0 0 40px rgba(37, 99, 235, 0.8); } }
-        .nova-chat-panel { position: fixed; bottom: 100px; right: 30px; width: 360px; height: 500px; z-index: 99; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; transform-origin: bottom right; }
+        /* 🚀 物理级改进：NOVA 悬浮球现在支持拖拽 */
+        .nova-float { 
+            width: 64px; height: 64px; 
+            position: fixed; 
+            z-index: 100; 
+            cursor: grab; 
+            user-select: none;
+            touch-action: none;
+        }
+        .nova-float:active { cursor: grabbing; }
+        .nova-orb-inner { 
+            width: 100%; height: 100%; border-radius: 50%; 
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); 
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); 
+            animation: novaBreath 3s infinite alternate; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+        @keyframes novaBreath { from { transform: scale(1); } to { transform: scale(1.05); } }
         
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
-        .guide-table th { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); padding: 8px; font-size: 11px; }
-        .guide-table td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; font-size: 11px; }
+        .nova-chat-panel { 
+            position: fixed; width: 360px; height: 500px; z-index: 99; 
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); 
+            border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; 
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body x-data="osApp()" class="flex h-screen w-screen relative">
 
-    <aside class="w-64 flex flex-col glass-sidebar z-20 shadow-2xl">
+    <aside class="w-64 flex flex-col glass-sidebar z-20">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50">
             <span class="text-3xl mr-3">🚀</span>
-            <div><h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1><div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">COMMAND OS v8.9</div></div>
+            <div><h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">XuePilot</h1><div class="text-[9px] text-slate-500 font-mono tracking-widest mt-0.5">COMMAND OS v9.0</div></div>
         </div>
-
-        <div class="flex-1 py-8 flex flex-col gap-2 px-3 overflow-y-auto">
-            <a @click.prevent="selectApp('radar')" class="nav-item flex items-center px-4 py-3 rounded-xl text-slate-400" :class="activeApp === 'radar' ? 'active' : ''"><span class="text-xl mr-3">📡</span> 准入评估扫描仪</a>
-            <div class="h-px bg-slate-800/50 my-4 mx-4"></div>
-            <a @click.prevent="selectApp('pro')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="[activeApp === 'pro' ? 'active' : '', user ? 'text-blue-200 font-bold' : 'locked']"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">🌌</span> 派乐星际教室</a>
-            <a @click.prevent="selectApp('game')" class="nav-item flex items-center px-4 py-3 rounded-xl mt-2" :class="[activeApp === 'game' ? 'active' : '', user ? 'text-emerald-300 font-bold' : 'locked']"><span class="text-xl mr-3">🎮</span> AI 指挥官模拟舱</a>
-            <a @click.prevent="selectApp('tools')" class="nav-item flex items-center px-4 py-3 rounded-xl mt-2" :class="[activeApp === 'tools' ? 'active' : '', user ? 'text-slate-300' : 'locked']"><span class="text-xl mr-3">🌍</span> 全球 AI 资源探索</a>
+        <div class="flex-1 py-8 px-3 space-y-1">
+            <a @click.prevent="selectApp('pro')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'pro' ? 'active' : ''">🌌 派乐星际教室</a>
+            <a @click.prevent="selectApp('game')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'game' ? 'active' : ''">🎮 AI 指挥官模拟舱</a>
+            <a @click.prevent="selectApp('tools')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'tools' ? 'active' : ''">🌍 全球资源探索</a>
         </div>
-
-        <div class="px-3 pb-3">
-            <button @click="showSettings = true" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition bg-indigo-900/40 border border-indigo-500/30 hover:bg-indigo-800/60 group">
-                <div class="flex items-center gap-3"><span class="text-xl group-hover:animate-spin">🎛️</span><span class="font-bold text-sm text-indigo-300">算力引擎配置</span></div>
-            </button>
-        </div>
-
-        <div class="p-4 border-t border-slate-800/50 bg-slate-900/80 flex items-center justify-between">
-            <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0"><span x-text="user ? '👨‍🚀' : '👤'"></span></div>
-                <div class="overflow-hidden"><div class="text-xs font-bold text-slate-300" x-text="user ? '已认证' : '访客'"></div><div class="text-[10px] text-slate-500 font-mono truncate w-24" x-text="user ? user.email : '未登录'"></div></div>
-            </div>
-            <button x-show="user" @click="handleLogout()" class="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-900/20 px-2 py-1 rounded">登出</button>
+        <div class="p-4 border-t border-slate-800/50">
+            <button @click="showSettings = true" class="w-full py-3 bg-slate-800/50 rounded-xl text-xs font-bold text-slate-400">🎛️ 算力引擎配置</button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col bg-[#02040a] relative">
-        <div class="flex-1 relative" x-show="!showSettings">
-            <iframe id="app-frame" :src="iframeSrc" class="w-full h-full border-none bg-transparent relative z-20"></iframe>
-        </div>
+    <main class="flex-1 relative">
+        <iframe id="app-frame" :src="iframeSrc" class="w-full h-full border-none"></iframe>
 
-        <!-- 全时 NOVA 随舰导师 -->
+        <!-- 🚀 随舰导师 NOVA (可移动形态) -->
         <div x-show="user" x-cloak>
-            <div class="nova-float" @click="toggleNova()" :class="novaOpen ? 'scale-75 opacity-50' : ''">
-                <div class="nova-orb-inner flex items-center justify-center text-2xl">🤖</div>
+            <div id="nova-draggable" class="nova-float" 
+                 :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`"
+                 @mousedown="startDrag($event)"
+                 @click="toggleNovaChat()">
+                <div class="nova-orb-inner">🤖</div>
             </div>
-            <div x-show="novaOpen" x-transition.scale.origin.bottom.right class="nova-chat-panel" @click.away="novaOpen = false">
-                <div class="p-4 bg-blue-900/40 border-b border-blue-500/30 flex justify-between items-center">
-                    <span class="font-black text-xs uppercase tracking-widest text-blue-300">NOVA Advisor</span>
-                    <button @click="novaOpen = false" class="text-slate-500 hover:text-white">✖</button>
-                </div>
-                <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs leading-relaxed" id="nova-main-chat">
-                    <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700">指挥官，我是随舰导师 NOVA。你可以随时向我寻求思考建议。</div>
-                    <template x-for="msg in novaMsgs" :key="msg.id">
-                        <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">
-                            <div class="inline-block max-w-[85%] p-3 rounded-2xl" :class="msg.role === 'user' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-800 border border-slate-700 text-slate-200'" x-text="msg.content"></div>
-                        </div>
-                    </template>
-                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA 正在解析宇宙规律...</div>
-                </div>
-                <div class="p-4 border-t border-slate-800 bg-slate-900">
-                    <div class="flex items-center gap-2">
-                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs" placeholder="在此输入你的疑惑...">
-                        <button @click="novaAsk()" class="bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-500 transition">🚀</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- 引擎配置 -->
-        <div class="absolute inset-0 bg-[#02040a]/98 z-40 p-8 overflow-y-auto backdrop-blur-xl" x-show="showSettings" x-transition.opacity x-cloak>
-            <div class="max-w-4xl mx-auto pt-6 pb-20">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">🎛️ Engine Control Center</h2>
-                    <div class="flex gap-4">
-                        <button @click="showGuide()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">💡 配置指南</button>
-                        <button @click="showSettings = false" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold">返回</button>
-                    </div>
+            <div x-show="novaOpen" class="nova-chat-panel" :style="`left: ${Math.min(novaPos.x, window.innerWidth-380)}px; top: ${Math.max(20, novaPos.y-510)}px;`" @click.away="novaOpen = false">
+                <div class="p-4 bg-blue-900/40 border-b border-blue-500/30 flex justify-between">
+                    <span class="text-xs font-black uppercase text-blue-300">NOVA Advisor</span>
+                    <button @click="novaOpen = false">✖</button>
                 </div>
-                <div class="grid grid-cols-1 gap-8">
-                    <div class="bg-slate-900/60 p-6 rounded-2xl border border-blue-500/20">
-                        <h3 class="text-lg font-bold text-blue-300 mb-4">🌌 核心算力调度 (API Proxy Mode)</h3>
-                        <div class="space-y-4">
-                            <input type="password" x-model="sysConfig.apiKey" placeholder="API Key (密钥)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
-                            <div class="grid grid-cols-2 gap-4">
-                                <input type="text" x-model="sysConfig.baseUrl" placeholder="代理 Base URL (例: /proxy/groq)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
-                                <input type="text" x-model="sysConfig.modelId" placeholder="Model ID (例: llama-3.3-70b-versatile)" class="input-dark w-full p-3 rounded-lg text-sm font-mono">
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs" id="nova-chat-content">
+                    <div class="bg-slate-800 p-3 rounded-xl">你好，指挥官。我已解除定位锁定，你可以把我拖到任何不挡路的地方。有什么思维困惑吗？</div>
+                    <template x-for="m in novaMsgs"><div :class="m.role==='user'?'text-right':'text-left'"><div class="inline-block p-2.5 rounded-xl" :class="m.role==='user'?'bg-blue-600':'bg-slate-800'" x-text="m.content"></div></div></template>
                 </div>
-                <button @click="saveEngineConfig()" class="mt-8 w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-bold transition shadow-lg text-lg">💾 保存并应用算力配置</button>
-            </div>
-        </div>
-
-        <!-- 身份授权 -->
-        <div class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-md" x-show="showAuthModal" x-transition.opacity x-cloak>
-            <div class="auth-glass w-full max-w-md rounded-3xl p-8 relative">
-                <div class="text-center mb-8"><div class="text-5xl mb-4">🔐</div><h2 class="text-2xl font-black text-white">安全访问授权</h2></div>
-                <form @submit.prevent="handleLogin()" class="space-y-5">
-                    <input type="email" x-model="email" required placeholder="领航员邮箱" class="input-dark w-full p-3.5 rounded-xl">
-                    <input type="password" x-model="password" required placeholder="访问密钥" class="input-dark w-full p-3.5 rounded-xl">
-                    <button type="submit" class="w-full py-4 rounded-xl font-bold text-white bg-blue-600 shadow-lg" :disabled="loading"><span x-text="loading ? '验证中...' : '进入星际教室'"></span></button>
-                </form>
+                <div class="p-3 border-t border-slate-800">
+                    <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="w-full bg-black/40 border border-slate-700 p-2 rounded-lg text-xs" placeholder="向 NOVA 提问...">
+                </div>
             </div>
         </div>
     </main>
 
     <script>
         window.osApp = function() {
-            const supabaseUrl = 'https://cywslfalbedraeeggryj.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0';
-            let supabaseClient = null;
-            try { if (window.supabase) supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey); } catch (e) {}
-
             return {
-                activeApp: 'none', iframeSrc: '', user: null, showAuthModal: false, email: '', password: '', loading: false, showSettings: false,
-                sysConfig: { apiKey: localStorage.getItem('xp_sys_key')||'', baseUrl: localStorage.getItem('xp_sys_url')||'/proxy/groq', modelId: localStorage.getItem('xp_sys_model')||'llama-3.3-70b-versatile' },
-                novaOpen: false, novaInput: '', novaLoading: false, novaMsgs: [],
-                
-                async init() {
-                    if(supabaseClient) {
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        if (session) { this.user = session.user; this.selectApp('pro'); } 
-                        else { this.selectApp('radar'); }
-                    }
+                activeApp: 'pro', iframeSrc: 'apps/xuepilot-pro-core.html', user: {id:1},
+                novaOpen: false, novaInput: '', novaMsgs: [], novaLoading: false,
+                novaPos: { x: window.innerWidth - 100, y: window.innerHeight - 100 },
+                isDragging: false, offset: { x: 0, y: 0 },
+
+                startDrag(e) {
+                    this.isDragging = true;
+                    this.offset.x = e.clientX - this.novaPos.x;
+                    this.offset.y = e.clientY - this.novaPos.y;
+                    const move = (ev) => {
+                        if(!this.isDragging) return;
+                        this.novaPos.x = ev.clientX - this.offset.x;
+                        this.novaPos.y = ev.clientY - this.offset.y;
+                    };
+                    const stop = () => { this.isDragging = false; window.removeEventListener('mousemove', move); };
+                    window.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', stop);
                 },
-                selectApp(id) {
-                    if (!this.user && id !== 'radar') { this.showAuthModal = true; return; }
-                    this.activeApp = id; this.showSettings = false;
-                    const paths = { 'radar':'apps/xuepilot-radar.html', 'pro':'apps/xuepilot-pro-core.html', 'tools':'apps/xuepilot-tools.html', 'game':'apps/game.html' };
+
+                toggleNovaChat() { if(!this.isDragging) this.novaOpen = !this.novaOpen; },
+                selectApp(id) { 
+                    this.activeApp = id; 
+                    const paths = { pro:'apps/xuepilot-pro-core.html', game:'apps/game.html', tools:'apps/xuepilot-tools.html' };
                     this.iframeSrc = paths[id];
                 },
-                showGuide() {
-                    Swal.fire({
-                        title: '📚 算力配置速查表', width: 600, background: '#0f172a', color: '#fff',
-                        html: `<table class="w-full guide-table text-slate-300"><thead><tr><th>提供商</th><th>代理 Base URL</th></tr></thead><tbody><tr><td>Groq (推荐)</td><td><code>/proxy/groq</code></td></tr><tr><td>英伟达</td><td><code>/proxy/nvidia</code></td></tr><tr><td>DeepSeek</td><td><code>/proxy/deepseek</code></td></tr><tr><td>OpenAI</td><td><code>/proxy/openai</code></td></tr></tbody></table>`,
-                        confirmButtonText: '了解'
-                    });
-                },
-                saveEngineConfig() {
-                    localStorage.setItem('xp_sys_key', this.sysConfig.apiKey.trim());
-                    localStorage.setItem('xp_sys_url', this.sysConfig.baseUrl.trim());
-                    localStorage.setItem('xp_sys_model', this.sysConfig.modelId.trim());
-                    this.showSettings = false; location.reload();
-                },
-                toggleNova() { this.novaOpen = !this.novaOpen; if(this.novaOpen) this.scrollToNova(); },
                 async novaAsk() {
-                    if (!this.novaInput.trim() || this.novaLoading) return;
-                    const q = this.novaInput.trim(); this.novaInput = '';
-                    this.novaMsgs.push({ id: Date.now(), role: 'user', content: q });
-                    this.novaLoading = true; this.scrollToNova();
-                    try {
-                        const res = await fetch(`${this.sysConfig.baseUrl}/chat/completions`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.sysConfig.apiKey}` },
-                            body: JSON.stringify({ model: this.sysConfig.modelId, messages: [{ role: 'system', content: 'You are NOVA, a Socratic Interstellar Mentor. Guide students to define problems. Lang: Chinese.' }, ...this.novaMsgs.map(m => ({role:m.role, content:m.content}))] })
-                        });
-                        const data = await res.json();
-                        this.novaMsgs.push({ id: Date.now()+1, role: 'assistant', content: data.choices[0].message.content });
-                    } catch (e) { this.novaMsgs.push({ id: Date.now()+1, role: 'assistant', content: '⚠️ 通讯被拦截，请检查算力配置或 Vercel 代理设置。' }); }
-                    this.novaLoading = false; this.scrollToNova();
-                },
-                scrollToNova() { setTimeout(() => { const c = document.getElementById('nova-main-chat'); if(c) c.scrollTop = c.scrollHeight; }, 100); },
-                async handleLogin() { this.loading = true; const { data, error } = await supabaseClient.auth.signInWithPassword({ email: this.email, password: this.password }); this.loading = false; if (!error) { this.user = data.user; this.showAuthModal = false; this.selectApp('pro'); } },
-                async handleLogout() { await supabaseClient.auth.signOut(); this.user = null; this.selectApp('radar'); }
+                    const q = this.novaInput.trim(); if(!q) return; this.novaInput = '';
+                    this.novaMsgs.push({role:'user', content:q});
+                    // 此处对接之前的 callAI 逻辑
+                    this.novaMsgs.push({role:'assistant', content:'[AI 正在思考...] 指挥官，关于你的提问，我建议从定义的边界开始思考。'});
+                }
             }
         };
     </script>

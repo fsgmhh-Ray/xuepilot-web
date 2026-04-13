@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XuePilot - AI 指挥官模拟舱 (史诗剧情连战版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .hidden-step { display: none !important; }
+        body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow-x: hidden; margin: 0; }
+        
+        /* 动态背景 */
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
+        
+        /* 面板UI */
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; outline: none; transition: border-color 0.3s; }
+        .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        button, select { cursor: pointer !important; }
+        .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-primary:hover { box-shadow: 0 0 20px rgba(79, 70, 229, 0.6); transform: translateY(-2px); }
+        .btn-disabled { opacity: 0.5; cursor: not-allowed !important; pointer-events: none; filter: grayscale(100%); }
+        
+        /* 动画特效 */
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* ================= 过场动画专属 CSS ================= */
+        .cinematic-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        .cinematic-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        /* 曲率跃迁特效 (Warp Speed) */
+        .warp-container { position: absolute; inset: 0; overflow: hidden; display: none; }
+        .warp-star { position: absolute; background: #fff; border-radius: 50%; top: 50%; left: 50%; width: 2px; height: 2px; animation: warp 2s infinite linear; }
+        @keyframes warp {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(10); opacity: 0; }
+        }
+
+        /* 红色警报特效 (Red Alert) */
+        .alert-bg { position: absolute; inset: 0; background: rgba(220, 38, 38, 0.2); animation: redAlert 1s infinite alternate; display: none; }
+        @keyframes redAlert { from { opacity: 0.2; } to { opacity: 0.8; } }
+        
+        .typewriter-text { font-family: monospace; font-size: 1.5rem; text-align: center; z-index: 10; padding: 0 2rem; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .blinking-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="min-h-screen text-slate-200">
+
+    <div class="space-bg"></div>
+    <div class="grid-bg"></div>
+
+    <!-- 全屏电影过场 (Cinematic Engine) -->
+    <div id="cinematic-layer" class="cinematic-overlay">
+        <div id="warp-effect" class="warp-container"></div>
+        <div id="alert-effect" class="alert-bg"></div>
+        <div id="cinematic-text" class="typewriter-text blinking-cursor"></div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-blue-900/50">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl filter drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">🚀</span>
+            <div>
+                <h1 class="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">XuePilot COMMANDER</h1>
+                <div class="text-[10px] text-blue-500 font-mono tracking-widest mt-0.5">EPIC CAMPAIGN v4.5</div>
+            </div>
+        </div>
+        <div class="text-right hidden md:block">
+            <div class="text-xs font-bold text-slate-400 italic">"你不再是工具，你是思想的源头。"</div>
+            <div id="header-age-badge" class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded mt-1 inline-block hidden-step">当前模式</div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-6 mt-4 relative">
+
+        <!-- ================= Step 0: 年龄探测与大厅 ================= -->
+        <div id="step-0" class="glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div class="mb-10">
+                <h2 class="text-4xl font-black text-white mb-4">欢迎登舰，准指挥官</h2>
+                <p class="text-slate-400">为了匹配适合你的心智考验，请选择你的年龄段开启剧情：</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="startCampaign('young')" class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-8 hover:bg-emerald-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">🍭</div>
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">星际幼崽 (6-8岁)</h3>
+                    <p class="text-xs text-slate-500">简单有趣的语言，用保护糖果、深海寻宝等任务，培养最初的提问与选择意识。</p>
+                </div>
+                <div onclick="startCampaign('mid')" class="bg-slate-900 border border-blue-500/30 rounded-2xl p-8 hover:bg-blue-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">🦖</div>
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">少年先锋 (9-12岁)</h3>
+                    <p class="text-xs text-slate-500">逻辑稍强的挑战，揪出 AI 的方案漏洞，建设恐龙乐园和月球基地。</p>
+                </div>
+                <div onclick="startCampaign('old')" class="bg-slate-900 border border-purple-500/30 rounded-2xl p-8 hover:bg-purple-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">⚛️</div>
+                    <h3 class="text-xl font-bold text-purple-400 mb-2">银河领航员 (13-15岁)</h3>
+                    <p class="text-xs text-slate-500">硬核的物理与生物挑战，设计戴森球与纳米机器人，考验极致的跨域整合力。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= Step 1: 任务简报界面 ================= -->
+        <div id="step-1" class="hidden-step glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div id="mission-icon" class="text-7xl mb-6 drop-shadow-2xl">🪐</div>
+            <div class="text-xs font-mono text-blue-400 mb-2" id="mission-progress">任务 1 / 2</div>
+            <h2 id="mission-title" class="text-3xl font-black text-white mb-4">载入中...</h2>
+            <p id="mission-desc" class="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed mb-8 bg-slate-900/50 p-6 rounded-xl border border-slate-700"></p>
+            
+            <button onclick="playIntroCutscene()" class="btn-primary px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg tracking-wider animate-pulse">开启全息投影指挥台 ➔</button>
+        </div>
+
+        <!-- ================= Step 2: 提问力 (Prompting) ================= -->
+        <div id="step-2" class="hidden-step glass-panel rounded-3xl p-8 fade-in">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <h2 class="text-2xl font-black text-blue-400 flex items-center gap-3"><span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-[0_0_10px_rgba(37,99,235,0.5)]">1</span> 明确需求 (Prompt)</h2>
+            </div>
+            <div id="prompt-hint" class="mb-6 bg-blue-900/20 border border-blue-800/50 p-4 rounded-xl text-sm text-blue-200">
+                提示加载中...
+            </div>
+            
+            <textarea id="prompt-input" class="w-full input-dark p-6 rounded-xl text-lg leading-relaxed resize-none h-48 mb-4" placeholder="我是总指挥，我的要求是..."></textarea>
+            
+            <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="w-full md:w-1/2 bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                    <div class="text-xs font-bold text-slate-400 mb-2 font-mono flex justify-between"><span>指令思考维度雷达</span><span id="prompt-score-text" class="text-blue-400 font-black text-sm">0%</span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 mb-3 overflow-hidden shadow-inner">
+                        <div id="prompt-score-bar" class="bg-gradient-to-r from-blue-600 to-cyan-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div id="prompt-tags-container" class="text-[10px] flex gap-2 flex-wrap min-h-[24px]"></div>
+                </div>
+                <button id="prompt-submit-btn" onclick="submitPrompt()" class="btn-primary btn-disabled px-8 py-4 rounded-xl font-bold text-white shadow-lg">
+                    提交给 AI 专家团 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= Step 3: 判断力 (Judging) ================= -->
+        <div id="step-3" class="hidden-step glass-panel rounded-3xl p-8 fade-in">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <h2 class="text-2xl font-black text-purple-400 flex items-center gap-3"><span class="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> 找出漏洞 (Judge)</h2>
+            </div>
+            <div class="mb-6 bg-purple-900/20 border border-purple-800/50 p-4 rounded-xl text-sm text-purple-200">
+                <strong>AI 方案已送达！</strong> 但机器很傻，每个方案都有一个<span class="text-rose-400 font-bold">致命缺陷</span>，请帮它们指出来！
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="flaw-cards-container"></div>
+
+            <div id="judge-next-container" class="mt-8 text-center hidden-step">
+                <!-- 触发危机过场 -->
+                <button onclick="playCrisisCutscene()" class="bg-rose-600 hover:bg-rose-500 px-12 py-4 rounded-full font-bold text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse text-lg">⚠️ 警告：侦测到突发危机 ➔</button>
+            </div>
+        </div>
+
+        <!-- ================= Step 4: 整合力 (Integrating) ================= -->
+        <div id="step-4" class="hidden-step glass-panel rounded-3xl p-8 fade-in relative">
+            <div class="absolute inset-0 bg-rose-600/5 pointer-events-none rounded-3xl animate-pulse"></div>
+            
+            <div class="flex justify-between items-center mb-6 border-b border-rose-800/50 pb-4 relative z-10">
+                <h2 class="text-2xl font-black text-emerald-400 flex items-center gap-3"><span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span> 危机整合 (Integrate)</h2>
+            </div>
+            <div id="crisis-desc" class="mb-6 bg-rose-900/30 border border-rose-500/50 p-4 rounded-xl text-sm text-rose-200 relative z-10 font-bold">
+                危机简报加载中...
+            </div>
+
+            <div class="space-y-6 max-w-2xl mx-auto relative z-10" id="integration-container"></div>
+
+            <div class="mt-10 text-center relative z-10">
+                <button id="integrate-submit-btn" onclick="finishSimulation()" class="btn-primary btn-disabled px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg">
+                    🚀 部署最终挽救方案
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= Step 5: 结果报告与连战选择 ================= -->
+        <div id="step-5" class="hidden-step glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div class="absolute inset-0 bg-emerald-600/10 blur-3xl rounded-full pointer-events-none"></div>
+            <div class="text-7xl mb-4 drop-shadow-lg">🎖️</div>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">危机解除，方案部署成功</h2>
+            
+            <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 max-w-lg mx-auto text-left space-y-5 mt-8 shadow-2xl">
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-blue-400 mb-1"><span>提问清晰度 (Prompt)</span><span>优秀</span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-prompt" class="bg-blue-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-purple-400 mb-1"><span>火眼金睛 (Judge)</span><span>完美排雷</span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-judge" class="bg-purple-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-emerald-400 mb-1"><span>乱局统筹力 (Integrate)</span><span>力挽狂澜</span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-integrate" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                </div>
+                
+                <div class="mt-8 p-5 bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-xl border border-blue-500/30 text-center">
+                    <p class="text-sm text-slate-300 italic leading-relaxed">
+                        "在这个任务里，AI 干了画图、出方案这些‘苦力活’，但真正救了大家的，是你敏锐的判断和高超的指挥统筹。"
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-4">
+                <button id="next-mission-btn" onclick="nextMission()" class="btn-primary px-8 py-3 rounded-full font-bold text-white shadow-lg">继续下一项演习 ➔</button>
+                <button onclick="location.reload()" class="text-slate-500 hover:text-white underline text-sm px-4 py-3 cursor-pointer transition">返回年龄大厅</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= 剧情与核心逻辑 ================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 多重宇宙剧本库 (Narrative Database Array Version) ---
+            const campaigns = {
+                'young': [
+                    {
+                        title: '保卫棉花糖星球',
+                        icon: '🍭', badge: '星际幼崽 (6-8岁)',
+                        desc: '哎呀！宇宙里的“蛀牙怪兽”要来吃掉棉花糖星球了！<br>小指挥官，你需要指挥机器人工人，建造一个大城堡把星球保护起来。',
+                        promptHint: '提示：城堡需要什么材料？要不要大门？要不要护城河？（例如：需要石头、大门、河水等词）',
+                        keywords: { '材料': ['石头', '铁', '钢', '玻璃', '材料'], '防御': ['门', '墙', '护城河', '炮', '防御'], '食物水': ['水', '河', '喝', '食物', '糖'] },
+                        flaws: [
+                            { title: '方案 A：巧克力城墙', desc: '用超大块的黑巧克力堆成高高的城墙。', opt1: {text: '城墙不够好看', isCorrect: false}, opt2: {text: '太阳一晒巧克力就融化了', isCorrect: true} },
+                            { title: '方案 B：玻璃大罩子', desc: '用一个大大的透明玻璃罩子把整个星球扣起来。', opt1: {text: '玻璃罩子里没有空气，没法呼吸', isCorrect: true}, opt2: {text: '罩子太重了搬不动', isCorrect: false} },
+                            { title: '方案 C：果冻陷阱', desc: '在星球外面铺满黏糊糊的大果冻，怪兽来了就会被黏住。', opt1: {text: '怪兽万一不喜欢吃果冻呢', isCorrect: false}, opt2: {text: '果冻陷阱也会把我们自己的飞船黏住出不去', isCorrect: true} }
+                        ],
+                        crisis: '🚨 警报！蛀牙怪兽提前到了，而且它开着喷火飞船！普通防御顶不住了！我们必须把好点子拼起来！',
+                        integrations: [
+                            { title: '🧱 防火外墙', wrong: '用巧克力做城墙', right: '用不会化的太空石头做城墙' },
+                            { title: '🌬️ 呼吸系统', wrong: '用全封闭的玻璃大罩子', right: '用带空气过滤孔的透明防护网' },
+                            { title: '🪤 防御陷阱', wrong: '在所有地方铺满果冻', right: '只在敌人来的方向放果冻，留出安全通道' }
+                        ]
+                    },
+                    {
+                        title: '深海寻宝潜水艇',
+                        icon: '🌊', badge: '星际幼崽 (6-8岁)',
+                        desc: '指挥官，海底最深处有一颗会发光的超级珍珠！<br>你需要设计一艘厉害的潜水艇，潜入黑乎乎、水压极大的海底把它带回来。',
+                        promptHint: '提示：海底很黑也很冷，水压很大，潜水艇需要什么功能？（例如：灯光、坚固、保暖）',
+                        keywords: { '抗压': ['坚固', '硬', '铁', '钢', '压力'], '照明': ['灯', '光', '发光', '手电'], '保暖生命': ['暖', '温度', '空气', '氧气', '呼吸'] },
+                        flaws: [
+                            { title: '方案 A：木头潜水艇', desc: '用地球上最轻的木头做一艘潜水艇。', opt1: {text: '木头在水里会腐烂发臭', isCorrect: false}, opt2: {text: '木材不够坚固，会被海底巨大的水压压碎', isCorrect: true} },
+                            { title: '方案 B：敞篷超级跑车', desc: '做一辆可以在海底开的敞篷跑车，视野极佳。', opt1: {text: '敞篷车海水会直接灌进来，没有空气呼吸', isCorrect: true}, opt2: {text: '跑车在海底开不快', isCorrect: false} },
+                            { title: '方案 C：纸糊大灯笼', desc: '为了照亮海底，在潜水艇外面挂满纸做的发光大灯笼。', opt1: {text: '纸灯笼一碰到水就会破掉坏掉', isCorrect: true}, opt2: {text: '灯笼不够亮', isCorrect: false} }
+                        ],
+                        crisis: '🚨 警报！海底突然出现了一只巨大的深海乌贼！它喷出了大量的墨汁，把周围弄得更黑了，潜水艇的普通灯光根本穿不透墨汁！',
+                        integrations: [
+                            { title: '🛡️ 潜水艇外壳', wrong: '用最轻便的木头做外壳', right: '用最坚固的超级太空钛合金做抗压外壳' },
+                            { title: '🌬️ 生命维持舱', wrong: '做成敞篷方便看风景', right: '做成全封闭的加压密封舱并带足氧气' },
+                            { title: '💡 破除黑暗危机', wrong: '挂上纸灯笼照明', right: '安装能穿透墨汁的超强声纳和防水平安探照灯' }
+                        ]
+                    }
+                ],
+                
+                'mid': [
+                    {
+                        title: '侏罗纪方舟乐园',
+                        icon: '🦖', badge: '少年先锋 (9-12岁)',
+                        desc: '你买下了一座海岛，要用 AI 克隆技术建立恐龙公园。<br>你的任务是：指挥 AI 规划公园的结构，既要让游客看恐龙，又绝对不能让恐龙跑出来吃人。',
+                        promptHint: '提示：你需要考虑“食肉动物的隔离”、“游客的交通工具”、“突发情况断电时的安全”。',
+                        keywords: { '物理隔离': ['墙', '电网', '笼子', '隔离', '水沟'], '交通': ['车', '轻轨', '船', '观光车', '交通'], '安全应急': ['备用', '断电', '应急', '逃生', '避难所'], '饮食分区': ['食肉', '食草', '喂食', '分区'] },
+                        flaws: [
+                            { title: '方案 A：万伏高压电网', desc: '用 10 米高、通了一万伏特的高压电网把霸王龙围起来，游客在外面走。', opt1: {text: '电网太高会挡住风景', isCorrect: false}, opt2: {text: '一旦刮台风停电，电网失效，恐龙立刻逃脱', isCorrect: true} },
+                            { title: '方案 B：自动驾驶吉普车', desc: '游客乘坐 AI 自动驾驶的敞篷吉普车，进入生活区近距离拍照。', opt1: {text: '敞篷车没有任何物理防御，恐龙能轻易攻击游客', isCorrect: true}, opt2: {text: '自动驾驶可能会迷路', isCorrect: false} },
+                            { title: '方案 C：食草肉混养区', desc: '为了展现自然生态，把三角龙和霸王龙放在同一个超级大区域里。', opt1: {text: '区域太大游客找不到恐龙', isCorrect: false}, opt2: {text: '霸王龙会很快把食草恐龙全部猎杀殆尽', isCorrect: true} }
+                        ],
+                        crisis: '🚨 紧急情况！公园的主发电机被雷击中瘫痪了！大门即将失效！我们需要立刻整合一套无需电力的终极安全防御！',
+                        integrations: [
+                            { title: '🚧 终极隔离栅栏', wrong: '使用纯粹的高压电网防御系统', right: '采用 15 米宽的天然深水壕沟 + 物理厚重水泥围墙（无惧断电）' },
+                            { title: '🚟 游客交通路线', wrong: '乘坐地面的敞篷吉普车深入腹地', right: '乘坐架设在 20 米高空的悬挂式防弹封闭轻轨' },
+                            { title: '🦕 生态区域规划', wrong: '为了逼真将食草与食肉恐龙混养', right: '严格划分不同区域，通过高强度透明地下玻璃隧道隔离观赏' }
+                        ]
+                    },
+                    {
+                        title: '月球自动化矿场',
+                        icon: '🌖', badge: '少年先锋 (9-12岁)',
+                        desc: '地球急需月球上的稀有矿石！<br>你的任务是指挥 AI 建设一个月球矿场。记住，月球上没有空气，重力仅地球六分之一，且地表常受微陨石撞击。',
+                        promptHint: '提示：考虑“没有空气的环境动力”、“防陨石袭击的建筑结构”、“低重力下的稳定运输”。',
+                        keywords: { '真空环境': ['空气', '氧气', '真空', '燃烧'], '陨石防御': ['陨石', '防御', '地下', '防护'], '低重力': ['重力', '飘', '抓地', '运输'] },
+                        flaws: [
+                            { title: '方案 A：露天超长传送带', desc: '在月球表面修建一条10公里长的露天皮带传送带运送矿石。', opt1: {text: '传送带太长太费电', isCorrect: false}, opt2: {text: '缺乏大气层保护，传送带极易被微型陨石雨砸毁', isCorrect: true} },
+                            { title: '方案 B：燃煤巨型挖掘机', desc: '把地球上的大型内燃机挖掘机运到月球挖矿，动力强劲。', opt1: {text: '月球处于真空状态没有氧气，燃料根本无法燃烧做功', isCorrect: true}, opt2: {text: '尾气会污染月球环境', isCorrect: false} },
+                            { title: '方案 C：高速轮式卡车', desc: '用普通橡胶轮胎的高速卡车在月球表面运载重物。', opt1: {text: '卡车装载量不如火车大', isCorrect: false}, opt2: {text: '低重力下普通轮胎摩擦力极低，转弯或加速极易打滑侧翻', isCorrect: true} }
+                        ],
+                        crisis: '🚨 紧急情况！前所未有的超强太阳风暴来袭，地表的所有设备都暴露在致命的高能粒子辐射中，且太阳能板暂时失效！',
+                        integrations: [
+                            { title: '🛡️ 矿山防御体系', wrong: '继续在露天表面修建开采设施', right: '将核心处理厂和居住舱深埋在数十米厚的月壤地表之下' },
+                            { title: '⚡ 动力发电机组', wrong: '使用传统的燃油或燃煤发电机', right: '部署不受沙尘和缺氧影响的深地同位素核能微型电池' },
+                            { title: '🚜 物流运输载具', wrong: '使用普通的轮式高速卡车', right: '改用抓地力强的全地形磁悬浮履带车，或封闭式气动管道传输' }
+                        ]
+                    }
+                ],
+
+                'old': [
+                    {
+                        title: '戴森球捕获计划',
+                        icon: '⚛️', badge: '银河领航员 (13-15岁)',
+                        desc: '地球能源即将枯竭。作为星际统帅，你要指挥 AI 在太阳外围建设一个“戴森球”结构，捕获太阳能量并传输回地球。这涉及天体物理与极致的工程统筹。',
+                        promptHint: '提示：指令必须包含：戴森球的“材质结构”、“组装方式（人工/机器人）”、以及“能量传回地球的途径”。',
+                        keywords: { '材料结构': ['材料', '纳米', '轻质', '镜面', '太阳能板'], '建造方式': ['机器人', '无人机', '3D打印', '自动', '工厂'], '能量传输': ['激光', '微波', '传输', '接收站', '无线电'], '轨道物理': ['轨道', '引力', '稳定', '同步'] },
+                        flaws: [
+                            { title: '方案 A：刚性实心壳体', desc: '直接用钢铁铸造一个完全包裹太阳的实心超级金属球壳。', opt1: {text: '全宇宙的金属资源加起来也不够，且实心刚性结构会被太阳引力撕裂', isCorrect: true}, opt2: {text: '实心球体会彻底挡住阳光，导致地球完全陷入黑暗', isCorrect: false} },
+                            { title: '方案 B：百万宇航员接力', desc: '派大量载人飞船停在太阳周围，人工组装部件并用高能激光将能量射回地球。', opt1: {text: '距离太远激光会严重衰减', isCorrect: false}, opt2: {text: '太阳辐射极强，人类无法近距离长期生存，人力维护效率几乎为零', isCorrect: true} },
+                            { title: '方案 C：水星拆解反射', desc: '直接炸碎水星作为材料，在水星轨道部署无数反光镜，将太阳光直接反射回地球表面的太阳能板上。', opt1: {text: '将天文级别的热量阳光聚焦到地球表面会瞬间引发全球气候沸腾毁灭', isCorrect: true}, opt2: {text: '炸碎水星需要太多炸药', isCorrect: false} }
+                        ],
+                        crisis: '🚨 致命警报！由于太阳异常的耀斑大爆发，极强的电磁干扰让原定的所有硬连接和光波传输方案都受到威胁！我们必须重构出一套高容错的架构！',
+                        integrations: [
+                            { title: '🏗️ 核心包裹结构', wrong: '强行铸造一个实心或网状连接的金属球壳', right: '采用“戴森云”：部署千万颗彼此独立、无需硬连接的轻质智能收集卫星群' },
+                            { title: '🤖 建造与部署', wrong: '派遣数万名人类宇航员冒死前往近距离组装', right: '派遣抗辐射 AI 机器人在水星就地开采冶炼，利用轨道炮自动发射部署阵列' },
+                            { title: '⚡ 能量传输路径', wrong: '将阳光直接反射聚集到地球表面', right: '卫星将能量转化为稳定微波，精准发射到地球高轨道的太空接收站，再转入地表电网' }
+                        ]
+                    },
+                    {
+                        title: '人体微观长城',
+                        icon: '🧬', badge: '银河领航员 (13-15岁)',
+                        desc: '一种未知的超级细胞病毒正在侵袭人体器官。<br>你需要设计一支纳米医疗机器人大军，注射进血液中，在微观尺度下精准寻找并猎杀病毒。',
+                        promptHint: '提示：考虑机器人“如何在血液环境中长期供电”、“如何精准识别敌我细胞”、“任务完成后如何安全清理”。',
+                        keywords: { '生物供电': ['电', '电池', '葡萄糖', '能量', '血液'], '导航识别': ['导航', '识别', '雷达', '抗体', '受体'], '生物相容性': ['降解', '排异', '毒性', '安全'] },
+                        flaws: [
+                            { title: '方案 A：微型锂电池动力', desc: '给每个纳米机器人内部安装微型高能锂电池提供强劲推进动力。', opt1: {text: '电池电量体积比太低，很快就会耗尽停机', isCorrect: false}, opt2: {text: '锂电池在血液环境中一旦破损泄漏，会对人体器官造成致命的化学毒性', isCorrect: true} },
+                            { title: '方案 B：全武装机械螺旋桨', desc: '使用高速旋转的微型金属螺旋桨，让机器人在复杂的血管网络里快速移动。', opt1: {text: '坚硬且高速旋转的螺旋桨在拥挤的血液中会无差别搅碎红细胞并划破血管壁', isCorrect: true}, opt2: {text: '螺旋桨转动的声音太大会让人感到严重耳鸣头晕', isCorrect: false} },
+                            { title: '方案 C：永不磨损钛合金躯体', desc: '用最坚固耐腐蚀的医疗级钛合金制造纳米机器人，确保它们在人体内永远不会损坏。', opt1: {text: '钛合金造价极其高昂，无法实现数以亿计的量产部署', isCorrect: false}, opt2: {text: '任务完成后金属躯体无法降解，永久残留在微血管内会引发严重的免疫排异和血栓', isCorrect: true} }
+                        ],
+                        crisis: '🚨 致命突发！人体的免疫系统（巨噬细胞）将我们的纳米机器人误认为了外来致命入侵者，正在全线出击试图吞噬它们！大军即将覆灭！',
+                        integrations: [
+                            { title: '⚡ 动力供能来源', wrong: '使用自带的微型有毒化学锂电池', right: '利用血液中丰富的葡萄糖，构建微型生物燃料电池实现无限续航发电' },
+                            { title: '🚀 血液内移动方式', wrong: '采用具有严重破坏性的刚性金属螺旋桨', right: '采用模仿白细胞运动轨迹的柔性仿生纤毛，通过形变安全推进' },
+                            { title: '🛡️ 外壳伪装与隐蔽', wrong: '使用无法降解且极易触发免疫警报的裸露钛合金', right: '外层包裹提取自人体自身的细胞膜伪装层骗过免疫系统，且内部采用任务后自动溶解的水凝胶材料' }
+                        ]
+                    }
+                ]
+            };
+
+            let currentAgeGroup = null;
+            let currentMissionIndex = 0;
+            let activeCampaign = null;
+            const state = { step: 0, promptScore: 0, judgments: [false, false, false] };
+
+            // --- 动态过场动画引擎 (Cinematic Engine) ---
+            const cineLayer = document.getElementById('cinematic-layer');
+            const warpEffect = document.getElementById('warp-effect');
+            const alertEffect = document.getElementById('alert-effect');
+            const cineText = document.getElementById('cinematic-text');
+
+            for(let i=0; i<50; i++) {
+                let star = document.createElement('div');
+                star.className = 'warp-star';
+                let angle = Math.random() * Math.PI * 2;
+                let distance = 500 + Math.random() * 500;
+                star.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                star.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                warpEffect.appendChild(star);
+            }
+
+            function typeText(text, callback) {
+                cineText.innerHTML = '';
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        if(text.charAt(i) === '<') {
+                            let end = text.indexOf('>', i);
+                            cineText.innerHTML += text.substring(i, end+1);
+                            i = end + 1;
+                        } else {
+                            cineText.innerHTML += text.charAt(i);
+                            i++;
+                        }
+                        setTimeout(type, 30);
+                    } else {
+                        setTimeout(callback, 1500);
+                    }
+                }
+                type();
+            }
+
+            window.playIntroCutscene = function() {
+                cineLayer.classList.add('active');
+                warpEffect.style.display = 'block'; alertEffect.style.display = 'none';
+                typeText("启动曲率引擎...<br>跨越维度壁垒...<br>正在接入专家智脑...", () => {
+                    cineLayer.classList.remove('active');
+                    setTimeout(() => { warpEffect.style.display = 'none'; goToStep(2); }, 500);
+                });
+            };
+
+            window.playCrisisCutscene = function() {
+                cineLayer.classList.add('active');
+                warpEffect.style.display = 'none'; alertEffect.style.display = 'block';
+                typeText("<span style='color:#ef4444'>🚨 警告！侦测到突发危机！</span><br>原方案即将失效！<br>指挥官，请立刻接管进行终极架构重组！", () => {
+                    cineLayer.classList.remove('active');
+                    setTimeout(() => { alertEffect.style.display = 'none'; document.getElementById('crisis-desc').innerHTML = activeCampaign.crisis; goToStep(4); }, 500);
+                });
+            };
+
+            // --- 核心业务逻辑 ---
+            window.startCampaign = function(ageKey) {
+                currentAgeGroup = ageKey;
+                currentMissionIndex = 0;
+                loadMissionData();
+            };
+
+            function loadMissionData() {
+                activeCampaign = campaigns[currentAgeGroup][currentMissionIndex];
+                document.getElementById('header-age-badge').innerText = activeCampaign.badge;
+                document.getElementById('header-age-badge').classList.remove('hidden-step');
+                
+                document.getElementById('mission-progress').innerText = `任务编队：第 ${currentMissionIndex + 1} / ${campaigns[currentAgeGroup].length} 演习节点`;
+                document.getElementById('mission-icon').innerText = activeCampaign.icon;
+                document.getElementById('mission-title').innerText = activeCampaign.title;
+                document.getElementById('mission-desc').innerHTML = activeCampaign.desc;
+                document.getElementById('prompt-hint').innerHTML = activeCampaign.promptHint;
+
+                // 渲染判断关卡
+                document.getElementById('flaw-cards-container').innerHTML = activeCampaign.flaws.map((f, i) => `
+                    <div id="card-${i}" class="bg-slate-900/80 border border-slate-700 rounded-2xl p-5 flex flex-col transition duration-300 shadow-lg">
+                        <h3 class="font-bold text-lg text-white mb-2">${f.title}</h3>
+                        <p class="text-sm text-slate-400 mb-6 flex-1">${f.desc}</p>
+                        <div id="card-${i}-btns" class="space-y-3">
+                            <p class="text-xs font-bold text-blue-400 mb-1 border-b border-slate-700 pb-2">请指出该方案的致命漏洞：</p>
+                            <button onclick="checkFlaw(${i}, ${f.opt1.isCorrect})" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 hover:border-blue-500 rounded-xl border border-slate-600 transition leading-snug">${f.opt1.text}</button>
+                            <button onclick="checkFlaw(${i}, ${f.opt2.isCorrect})" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 hover:border-blue-500 rounded-xl border border-slate-600 transition leading-snug">${f.opt2.text}</button>
+                        </div>
+                        <div id="card-${i}-success" class="hidden-step text-emerald-400 text-sm font-bold flex items-center justify-center gap-2 mt-auto bg-emerald-900/30 p-4 rounded-xl border border-emerald-800/50"><span class="text-2xl">✅</span> 漏洞已排除</div>
+                    </div>
+                `).join('');
+
+                // 渲染整合关卡（随机打乱选项）
+                document.getElementById('integration-container').innerHTML = activeCampaign.integrations.map((int, i) => {
+                    let optionsHTML = [
+                        `<option value="wrong">🔹 ${int.wrong}</option>`,
+                        `<option value="right">🔹 ${int.right}</option>`
+                    ];
+                    if (Math.random() > 0.5) optionsHTML.reverse();
+
+                    return `
+                    <div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition shadow-lg relative overflow-hidden">
+                        <div class="absolute right-0 top-0 opacity-10 text-6xl">🧩</div>
+                        <h4 class="font-bold text-slate-200 mb-4 text-lg relative z-10">${int.title}</h4>
+                        <select id="select-${i}" class="w-full input-dark p-4 rounded-xl text-sm hover:border-blue-500 transition cursor-pointer relative z-10" onchange="checkIntegrateStatus()">
+                            <option value="">点击选择你认为最优的架构组件...</option>
+                            ${optionsHTML.join('')}
+                        </select>
+                    </div>
+                    `;
+                }).join('');
+
+                // 更新结算页面的按钮文案
+                const nextBtn = document.getElementById('next-mission-btn');
+                if (currentMissionIndex < campaigns[currentAgeGroup].length - 1) {
+                    nextBtn.innerText = "继续下一项演习 ➔";
+                    nextBtn.onclick = window.nextMission;
+                } else {
+                    nextBtn.innerText = "🎉 完美通关！返回大厅";
+                    nextBtn.onclick = () => location.reload();
+                }
+
+                goToStep(1);
+            }
+
+            window.nextMission = function() {
+                if (currentMissionIndex < campaigns[currentAgeGroup].length - 1) {
+                    currentMissionIndex++;
+                    resetGameState();
+                    loadMissionData();
+                }
+            };
+
+            window.goToStep = function(stepNum) {
+                if(stepNum === 0) { currentAgeGroup = null; activeCampaign = null; resetGameState(); }
+                for(let i=0; i<=5; i++) {
+                    const el = document.getElementById(`step-${i}`);
+                    if(el) el.classList.add('hidden-step');
+                }
+                const target = document.getElementById(`step-${stepNum}`);
+                if(target) {
+                    target.classList.remove('hidden-step');
+                    target.style.animation = 'none'; target.offsetHeight; target.style.animation = null; 
+                }
+            };
+
+            document.getElementById('prompt-input').addEventListener('input', (e) => {
+                if(!activeCampaign) return;
+                const text = e.target.value.toLowerCase();
+                let score = 0; let tags = new Set();
+                
+                for (const [category, words] of Object.entries(activeCampaign.keywords)) {
+                    if (words.some(w => text.includes(w))) { score += 25; tags.add(category); }
+                }
+                if (text.includes("必须") || text.includes("要求") || text.includes("设计") || text.includes("考虑")) score += 10;
+                
+                state.promptScore = Math.min(100, score);
+                document.getElementById('prompt-score-text').innerText = `${state.promptScore}%`;
+                document.getElementById('prompt-score-bar').style.width = `${state.promptScore}%`;
+                document.getElementById('prompt-tags-container').innerHTML = Array.from(tags).map(t => `<span class="bg-blue-900/50 border border-blue-700 px-2 py-0.5 rounded text-blue-300">${t}</span>`).join('');
+
+                const btn = document.getElementById('prompt-submit-btn');
+                if (state.promptScore > 0) btn.classList.remove('btn-disabled'); else btn.classList.add('btn-disabled');
+            });
+
+            window.submitPrompt = function() {
+                if (state.promptScore < 50) {
+                    Swal.fire({ title: '维度不足', text: '指挥官，目前的指令会导致工程灾难，请回想简报提示，给出更多维度的要求！', icon: 'warning', background: '#0f172a', color: '#fff' });
+                } else {
+                    Swal.fire({ title: '指令发送成功', text: '专家团正在根据你的框架推演方案...', timer: 1500, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#fff' }).then(() => goToStep(3));
+                }
+            };
+
+            window.checkFlaw = function(index, isCorrect) {
+                if (isCorrect) {
+                    state.judgments[index] = true;
+                    document.getElementById(`card-${index}-btns`).classList.add('hidden-step');
+                    document.getElementById(`card-${index}-success`).classList.remove('hidden-step');
+                    const c = document.getElementById(`card-${index}`);
+                    c.classList.replace('border-slate-700', 'border-emerald-500/50');
+                    c.classList.add('shadow-[0_0_20px_rgba(16,185,129,0.3)]');
+                    if (state.judgments.every(v => v === true)) document.getElementById('judge-next-container').classList.remove('hidden-step');
+                } else {
+                    Swal.fire({ title: '再想想！', text: '这个缺点虽然存在，但并不是致命伤。结合该宇宙的极端环境和物理法则重新判断！', icon: 'error', background: '#0f172a', color: '#fff' });
+                }
+            };
+
+            window.checkIntegrateStatus = function() {
+                const s0 = document.getElementById('select-0').value;
+                const s1 = document.getElementById('select-1').value;
+                const s2 = document.getElementById('select-2').value;
+                if (s0 && s1 && s2) document.getElementById('integrate-submit-btn').classList.remove('btn-disabled');
+                else document.getElementById('integrate-submit-btn').classList.add('btn-disabled');
+            };
+
+            window.finishSimulation = function() {
+                let score = 0;
+                if (document.getElementById('select-0').value === 'right') score++;
+                if (document.getElementById('select-1').value === 'right') score++;
+                if (document.getElementById('select-2').value === 'right') score++;
+
+                if (score < 3) {
+                    Swal.fire({ title: '架构存在致命隐患', text: '你选用的某些组件存在之前的逻辑漏洞！请回想危机提示，重新组合！', icon: 'error', background: '#0f172a', color: '#fff' });
+                } else {
+                    Swal.fire({ title: '最高权限验证通过', text: '完美架构已生成！危机解除！', timer: 2000, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#fff' }).then(() => {
+                        goToStep(5);
+                        setTimeout(() => {
+                            document.getElementById('bar-prompt').style.width = '92%';
+                            document.getElementById('bar-judge').style.width = '99%';
+                            document.getElementById('bar-integrate').style.width = '99%';
+                        }, 500);
+                    });
+                }
+            };
+
+            function resetGameState() {
+                state.promptScore = 0;
+                state.judgments = [false, false, false];
+                document.getElementById('prompt-input').value = '';
+                document.getElementById('prompt-score-text').innerText = '0%';
+                document.getElementById('prompt-score-bar').style.width = '0%';
+                document.getElementById('prompt-tags-container').innerHTML = '';
+                document.getElementById('prompt-submit-btn').classList.add('btn-disabled');
+                document.getElementById('judge-next-container').classList.add('hidden-step');
+                
+                document.getElementById('bar-prompt').style.width = '0%';
+                document.getElementById('bar-judge').style.width = '0%';
+                document.getElementById('bar-integrate').style.width = '0%';
+            }
+
+            goToStep(0);
+        });
+    </script>
+</body>
+</html>

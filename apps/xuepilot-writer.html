@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 写作启发工具 - 派乐伴学 XuePilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: transparent; color: #e2e8f0; font-family: -apple-system, sans-serif; min-height: 100vh; }
+        .glass-panel { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+        .input-dark { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; transition: all 0.3s; }
+        .input-dark:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        
+        /* 付费锁效果 */
+        .premium-lock { position: relative; overflow: hidden; }
+        .premium-lock::after {
+            content: ''; position: absolute; inset: 0; top: 40%;
+            background: linear-gradient(to bottom, transparent, rgba(15,23,42,1) 80%);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center min-h-screen" x-data="writerApp()">
+
+    <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl">
+        
+        <div class="w-full md:w-5/12 p-8 border-r border-slate-700/50 flex flex-col bg-slate-900/50">
+            <header class="mb-8">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">🧭</span>
+                    <h1 class="text-xl font-bold text-white tracking-wider">AI 写作启发工具</h1>
+                </div>
+                <div class="mt-4 text-xs text-blue-300/80 bg-blue-900/20 p-3 rounded-lg border border-blue-500/20">
+                    不代写，只启发。输入题目，获取专业的写作框架指导。
+                </div>
+            </header>
+
+            <div class="space-y-6 flex-1">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 tracking-widest mb-2">1. 目标星系 [文体]</label>
+                    <select x-model="genre" class="input-dark w-full p-3 rounded-lg text-sm appearance-none">
+                        <option value="narrative">记叙文 (写人/记事/写景)</option>
+                        <option value="argumentative">议论文 (观点/论证)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 tracking-widest mb-2">2. 任务坐标 [作文题目/主题]</label>
+                    <input x-model="topic" type="text" placeholder="例如：一次难忘的秋游" class="input-dark w-full p-3 rounded-lg text-sm">
+                </div>
+                
+                <button @click="generateAdvice()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
+                    🚀 获取 AI 启发方案
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full md:w-7/12 p-8 flex flex-col relative bg-[#030712]/60">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-sm font-bold text-slate-300 tracking-widest">领航员指导手册</h2>
+                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700" x-text="statusText">等待输入</span>
+            </div>
+
+            <div class="flex-1 rounded-xl relative" :class="hasContent ? 'premium-lock' : ''">
+                
+                <div x-show="!hasContent" class="h-full flex flex-col items-center justify-center text-slate-500 opacity-50">
+                    <span class="text-4xl mb-4">📝</span>
+                    <p class="text-sm">在左侧输入题目，云端大模型将为您生成指导方案</p>
+                </div>
+
+                <div x-show="hasContent" class="text-slate-300 text-sm leading-relaxed" x-html="adviceContent"></div>
+
+                <div x-show="hasContent" class="absolute bottom-6 left-0 w-full text-center z-10 flex flex-col items-center">
+                    <div class="bg-blue-900/80 border border-blue-500 text-white px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(59,130,246,0.3)] backdrop-blur-md max-w-sm">
+                        <h4 class="font-bold mb-2 flex items-center justify-center gap-2"><span>✨</span> 解锁动态 AI 润色引擎</h4>
+                        <p class="text-xs text-blue-200 mb-4">体验版仅提供静态大纲框架。升级 Pro 版，输入孩子的草稿，获取逐句智能纠偏与词汇升级指导。</p>
+                        <button @click="triggerUpgrade()" class="w-full bg-white text-blue-900 font-bold py-2 rounded-lg text-xs hover:bg-slate-200 transition">
+                            获取专业版密钥
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('writerApp', () => ({
+                genre: 'narrative',
+                topic: '',
+                statusText: 'AWAITING_INPUT',
+                hasContent: false,
+                adviceContent: '',
+
+                generateAdvice() {
+                    if (!this.topic.trim()) {
+                        Swal.fire({ title: '坐标缺失', text: '请先输入作文题目', icon: 'warning', background: '#0f172a', color: '#fff' });
+                        return;
+                    }
+                    
+                    this.statusText = 'ANALYZING...';
+                    this.hasContent = false;
+
+                    // 模拟大模型思考延迟
+                    setTimeout(() => {
+                        this.statusText = 'ADVICE_READY';
+                        this.hasContent = true;
+                        
+                        // 伪造优质的结构化建议
+                        let content = '';
+                        if (this.genre === 'narrative') {
+                            content = `
+                                <h3 class="text-lg font-bold text-blue-400 mb-4">题目分析：关于《${this.topic}》的破题思路</h3>
+                                <div class="space-y-4">
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="font-bold text-white mb-2">💡 思路一：欲扬先抑（反差法）</h4>
+                                        <p class="text-slate-400">不要一上来就写多开心。可以先写出发前的麻烦、天气不好或者心情糟糕，最后通过某件具体的小事发生转折。这样情感张力更足。</p>
+                                    </div>
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="font-bold text-white mb-2">💡 思路二：微观聚焦法</h4>
+                                        <p class="text-slate-400">大多数孩子会写“流水账”。建议只挑整个过程中**最惊险/最感人/最搞笑的 5 分钟**进行放大描写，其他的用一笔带过。</p>
+                                    </div>
+                                    <div class="mt-8 pt-4 border-t border-slate-700">
+                                        <h4 class="font-bold text-emerald-400 mb-2">🔍 结构搭建建议</h4>
+                                        <ul class="list-disc pl-5 text-slate-400 space-y-2">
+                                            <li><b>开头：</b> 尝试用声音或动作切入（例：“砰的一声，车门关上了...”），取代“今天天气晴朗”。</li>
+                                            <li><b>中间：</b> 加入至少两种感官描写（视觉+嗅觉/听觉）。</li>
+                                            <li><b>结尾升华：</b> [需要 Pro 版实时 AI 运算引擎生成具体升华方向...]</li>
+                                            <li>[实时草稿逐句润色检测中...]</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            content = `
+                                <h3 class="text-lg font-bold text-blue-400 mb-4">逻辑框架分析：《${this.topic}》</h3>
+                                <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700 mb-4">
+                                    <h4 class="font-bold text-white mb-2">📌 核心论点确立</h4>
+                                    <p class="text-slate-400">面对这个题目，最容易陷入平庸的写法是“各打五十大板”。建议选择一个稍微偏激但在理的角度切入，让观点更鲜明。</p>
+                                </div>
+                                <p class="text-slate-400 mb-8">
+                                    结构建议采用“递进式”：<br>
+                                    1. 抛出常理认知<br>
+                                    2. 提出核心反转观点<br>
+                                    3. [实时逻辑漏洞演算引擎锁定中...]
+                                </p>
+                            `;
+                        }
+                        this.adviceContent = content;
+                    }, 800);
+                },
+
+                triggerUpgrade() {
+                    Swal.fire({
+                        title: '升级薛定谔引擎 (Pro)',
+                        text: '解锁基于真实草稿的互动式点评。AI 将扮演苏格拉底教练，逐句指出逻辑漏洞，绝不代写。',
+                        icon: 'info',
+                        background: '#0f172a', color: '#f8fafc',
+                        html: `
+                            <p class="text-sm text-slate-300 mb-4">升级即享：支持复制孩子原文，AI 动态生成【修改指导】而非死板的提示词。</p>
+                            <div class="bg-slate-800 p-3 rounded-lg border border-blue-500/30">
+                                <span class="text-xs text-slate-400 block mb-1">私域通道密钥：</span>
+                                <span class="font-mono text-lg text-blue-400 font-bold tracking-widest">PETER_AI_EDU</span>
+                            </div>
+                        `,
+                        confirmButtonText: '复制密钥',
+                        confirmButtonColor: '#3b82f6'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            navigator.clipboard.writeText('PETER_AI_EDU');
+                            Swal.fire({ title: '密钥已复制', icon: 'success', background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false});
+                        }
+                    });
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

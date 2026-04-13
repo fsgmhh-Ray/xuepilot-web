@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XuePilot - Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .hidden-step { display: none !important; }
+        body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow-x: hidden; margin: 0; }
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; outline: none; transition: border-color 0.3s; }
+        .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        button, select { cursor: pointer !important; }
+        .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-primary:hover { box-shadow: 0 0 20px rgba(79, 70, 229, 0.6); transform: translateY(-2px); }
+        .btn-disabled { opacity: 0.5; cursor: not-allowed !important; pointer-events: none; filter: grayscale(100%); }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body x-data="simApp()" class="min-h-screen text-slate-200 flex flex-col">
+    <div class="space-bg"></div><div class="grid-bg"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-blue-900/50">
+        <div class="flex items-center gap-3">
+            <button @click="goHome()" class="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition shadow-lg group mr-4">
+                <span class="group-hover:-translate-x-1 transition-transform">⬅</span> <span x-text="dict.btnBackHome"></span>
+            </button>
+            <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">🚀</span>
+            <div><h1 class="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400" x-text="dict.game"></h1></div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto w-full p-6 mt-4 relative flex-1 flex flex-col">
+        <!-- Step 0 -->
+        <div x-show="step === 0" x-transition.duration.400ms class="glass-panel rounded-3xl p-10 text-center fade-in m-auto w-full">
+            <div class="mb-10"><h2 class="text-4xl font-black text-white mb-4" x-text="dict.simS0Title"></h2><p class="text-slate-400" x-text="dict.simS0Desc"></p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div @click="startSim('young')" class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-8 hover:bg-emerald-900/40 hover:-translate-y-1 transition-all cursor-pointer shadow-lg">
+                    <div class="text-6xl mb-4 drop-shadow-md">🍭</div><h3 class="text-xl font-bold text-emerald-400 mb-2" x-text="dict.simA1"></h3><p class="text-xs text-slate-500" x-text="dict.simA1d"></p>
+                </div>
+                <div @click="startSim('mid')" class="bg-slate-900 border border-blue-500/30 rounded-2xl p-8 hover:bg-blue-900/40 hover:-translate-y-1 transition-all cursor-pointer shadow-lg">
+                    <div class="text-6xl mb-4 drop-shadow-md">🦖</div><h3 class="text-xl font-bold text-blue-400 mb-2" x-text="dict.simA2"></h3><p class="text-xs text-slate-500" x-text="dict.simA2d"></p>
+                </div>
+                <div @click="startSim('old')" class="bg-slate-900 border border-purple-500/30 rounded-2xl p-8 hover:bg-purple-900/40 hover:-translate-y-1 transition-all cursor-pointer shadow-lg">
+                    <div class="text-6xl mb-4 drop-shadow-md">⚛️</div><h3 class="text-xl font-bold text-purple-400 mb-2" x-text="dict.simA3"></h3><p class="text-xs text-slate-500" x-text="dict.simA3d"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div x-show="step === 1" x-cloak x-transition.duration.400ms class="glass-panel rounded-3xl p-10 text-center fade-in m-auto w-full">
+            <div class="text-7xl mb-6 drop-shadow-2xl" x-text="mission?.icon"></div>
+            <h2 class="text-3xl font-black text-white mb-4" x-text="mission?.title"></h2>
+            <p class="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed mb-8 bg-slate-900/50 p-6 rounded-xl border border-slate-700" x-html="mission?.desc"></p>
+            <button @click="step = 2" class="btn-primary px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg tracking-wider animate-pulse" x-text="dict.simStartBtn"></button>
+        </div>
+
+        <!-- Step 2 -->
+        <div x-show="step === 2" x-cloak x-transition.duration.400ms class="glass-panel rounded-3xl p-8 fade-in m-auto w-full">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4"><h2 class="text-2xl font-black text-blue-400 flex items-center gap-3"><span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span> <span x-text="dict.simS1Title"></span></h2></div>
+            <div class="mb-6 bg-blue-900/20 border border-blue-800/50 p-4 rounded-xl text-sm text-blue-200" x-html="mission?.hint"></div>
+            <textarea x-model="prompt" @input="evalSimPrompt()" class="w-full input-dark p-6 rounded-xl text-lg leading-relaxed resize-none h-48 mb-4" :placeholder="dict.simS1Place"></textarea>
+            <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="w-full md:w-1/2 bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                    <div class="text-xs font-bold text-slate-400 mb-2 font-mono flex justify-between"><span x-text="dict.simS1Radar"></span><span class="text-blue-400 font-black text-sm" x-text="score + '%'"></span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden shadow-inner"><div class="bg-gradient-to-r from-blue-600 to-cyan-400 h-2 rounded-full transition-all duration-500" :style="`width: ${score}%`"></div></div>
+                </div>
+                <button @click="step = 3" class="btn-primary px-8 py-4 rounded-xl font-bold text-white shadow-lg" :class="score < 20 ? 'btn-disabled' : ''" :disabled="score < 20" x-text="dict.simS1Btn"></button>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div x-show="step === 3" x-cloak x-transition.duration.400ms class="glass-panel rounded-3xl p-8 fade-in m-auto w-full">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4"><h2 class="text-2xl font-black text-purple-400 flex items-center gap-3"><span class="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> <span x-text="dict.simS2Title"></span></h2></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <template x-for="(flaw, i) in mission?.flaws" :key="i">
+                    <div class="bg-slate-900/80 border rounded-2xl p-5 flex flex-col transition" :class="judgments[i] ? 'border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-700'">
+                        <h3 class="font-bold text-lg text-white mb-2" x-text="flaw.title"></h3><p class="text-sm text-slate-400 mb-6 flex-1" x-text="flaw.desc"></p>
+                        <div x-show="!judgments[i]" class="space-y-3">
+                            <button @click="checkSimFlaw(i, flaw.opt1.correct)" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 transition" x-text="flaw.opt1.text"></button>
+                            <button @click="checkSimFlaw(i, flaw.opt2.correct)" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 transition" x-text="flaw.opt2.text"></button>
+                        </div>
+                        <div x-show="judgments[i]" class="text-emerald-400 font-bold flex justify-center mt-auto bg-emerald-900/30 p-3 rounded-xl border border-emerald-800/50">✅ <span x-text="dict.simSolved"></span></div>
+                    </div>
+                </template>
+            </div>
+            <div x-show="judgments.every(j=>j)" class="mt-8 text-center fade-in"><button @click="step = 4" class="bg-rose-600 hover:bg-rose-500 px-12 py-4 rounded-full font-bold text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse text-lg" x-text="dict.simS2Btn"></button></div>
+        </div>
+
+        <!-- Step 4 -->
+        <div x-show="step === 4" x-cloak x-transition.duration.400ms class="glass-panel rounded-3xl p-8 fade-in relative m-auto w-full">
+            <div class="absolute inset-0 bg-rose-600/5 pointer-events-none rounded-3xl animate-pulse"></div>
+            <div class="flex justify-between items-center mb-6 border-b border-rose-800/50 pb-4 relative z-10"><h2 class="text-2xl font-black text-emerald-400 flex items-center gap-3"><span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span> <span x-text="dict.simS3Title"></span></h2></div>
+            <div class="space-y-6 max-w-2xl mx-auto relative z-10">
+                <template x-for="(int, i) in mission?.integrations" :key="i">
+                    <div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 shadow-lg">
+                        <h4 class="font-bold text-slate-200 mb-4 text-lg" x-text="int.title"></h4>
+                        <select x-model="integSelections[i]" class="w-full input-dark p-4 rounded-xl text-sm"><option value="" x-text="dict.simSelectPlace"></option><option value="wrong" x-text="int.wrong"></option><option value="right" x-text="int.right"></option></select>
+                    </div>
+                </template>
+            </div>
+            <div class="mt-10 text-center relative z-10"><button @click="finishSim()" class="btn-primary px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg" :disabled="integSelections.includes('')" :class="integSelections.includes('')?'btn-disabled':''" x-text="dict.simS3Btn"></button></div>
+        </div>
+
+        <!-- Step 5 -->
+        <div x-show="step === 5" x-cloak x-transition.duration.800ms class="glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in m-auto w-full">
+            <div class="absolute inset-0 bg-emerald-600/10 blur-3xl rounded-full pointer-events-none"></div>
+            <div class="text-7xl mb-4 drop-shadow-lg">🎖️</div>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-8" x-text="dict.simSuccess"></h2>
+            <button @click="step = 0" class="btn-primary px-8 py-3 rounded-full font-bold text-white shadow-lg transition" x-text="dict.simRestart"></button>
+        </div>
+    </main>
+
+    <script>
+        function simApp() {
+            return {
+                lang: localStorage.getItem('xp_lang') || 'zh',
+                step: 0, mission: null, prompt: '', score: 0, judgments: [false,false,false], integSelections: ['','',''],
+                
+                i18n: {
+                    zh: {
+                        game: 'AI 指挥官模拟舱', btnBackHome: '返回主控舱',
+                        simS0Title: '欢迎登舰，准指挥官', simS0Desc: '请选择你的年龄段开启实战演练：', simA1: '星际幼崽', simA1d: '最初的提问与选择。', simA2: '少年先锋', simA2d: '逻辑推演与方案漏洞。', simA3: '银河领航员', simA3d: '极限跨域整合能力。', simStartBtn: '开启全息指挥台 ➔',
+                        simS1Title: '明确需求 (Prompt)', simS1Place: '我是总指挥，我的要求是...', simS1Radar: '指令思考维度雷达', simS1Btn: '发送指令 🚀',
+                        simS2Title: '找出漏洞 (Judge)', simSolved: '漏洞已排除', simS2Btn: '⚠️ 开始架构重组 ➔',
+                        simS3Title: '危机整合 (Integrate)', simSelectPlace: '点击选择你认为最优的架构组件...', simS3Btn: '🚀 部署最终挽救方案',
+                        simSuccess: '危机解除，方案部署成功', simRestart: '重新开始训练', swalErr: '错误', swalWrongFlaw: '这不是致命漏洞，请再思考！', swalHasFlaws: '方案中仍包含致命缺陷！'
+                    },
+                    en: {
+                        game: 'Commander Simulator', btnBackHome: 'Return to Portal',
+                        simS0Title: 'Welcome, Commander', simS0Desc: 'Select your cohort for training:', simA1: 'Cadet', simA1d: 'Basic choices.', simA2: 'Vanguard', simA2d: 'Identify AI flaws.', simA3: 'Navigator', simA3d: 'Hardcore integration.', simStartBtn: 'Enter Holo-Deck ➔',
+                        simS1Title: 'Define (Prompt)', simS1Place: 'I am the commander, I need...', simS1Radar: 'Radar', simS1Btn: 'Deploy 🚀',
+                        simS2Title: 'Find Flaws (Judge)', simSolved: 'Flaw Fixed', simS2Btn: '⚠️ Restructure Architecture ➔',
+                        simS3Title: 'Integrate Solutions', simSelectPlace: 'Select optimal component...', simS3Btn: '🚀 Deploy Final Plan',
+                        simSuccess: 'Crisis Averted. Plan Deployed.', simRestart: 'Restart Training', swalErr: 'Error', swalWrongFlaw: 'That is not the fatal flaw. Think again!', swalHasFlaws: 'Your architecture still contains fatal flaws!'
+                    }
+                },
+                get dict() { return this.i18n[this.lang]; },
+
+                simData: {
+                    zh: {
+                        'young': { icon: '🍭', title: '保卫棉花糖星球', desc: '蛀牙怪兽来了！保护星球。', hint: '提示：城堡需要什么防御材料？', keywords: {'材料':['石头','铁'], '防御':['墙','护城河']}, flaws: [{title:'方案 A：巧克力墙', desc:'黑巧克力城墙', opt1:{text:'不够好看', correct:false}, opt2:{text:'会融化', correct:true}}, {title:'方案 B：果冻陷阱', desc:'铺满果冻', opt1:{text:'怪兽不爱吃', correct:false}, opt2:{text:'会粘住自己人', correct:true}}], integrations: [{title:'🧱 外墙', wrong:'巧克力', right:'太空石头'}, {title:'🪤 陷阱', wrong:'全方位果冻', right:'定向安全果冻'}] },
+                        'mid': { icon: '🌖', title: '月球自动化矿场', desc: '建立一个月球自动化开采阵列。', hint: '考虑：没有空气、防陨石、低重力。', keywords: {'真空':['空气','真空'], '陨石':['防御','地下'], '重力':['重力','漂浮']}, flaws: [{title:'方案 A：露天传送带', desc:'地表长皮带', opt1:{text:'太费电', correct:false}, opt2:{text:'会被陨石砸毁', correct:true}}, {title:'方案 B：燃油挖掘机', desc:'强劲燃油机', opt1:{text:'真空无法燃烧', correct:true}, opt2:{text:'污染环境', correct:false}}], integrations: [{title:'🛡️ 基地位置', wrong:'露天', right:'深埋地下'}, {title:'⚡ 动力', wrong:'内燃机', right:'核能电池'}] },
+                        'old': { icon: '⚛️', title: '戴森球捕获', desc: '在太阳轨道建设恒星能量捕获系统。', hint: '提示：结构材质、部署方式。', keywords: {'结构':['材料','镜面'], '建造':['机器','自动']}, flaws: [{title:'方案 A：实心壳', desc:'实心金属包裹', opt1:{text:'会被引力撕裂', correct:true}, opt2:{text:'挡住阳光', correct:false}}, {title:'方案 B：人工接力', desc:'派人组装', opt1:{text:'激光衰减', correct:false}, opt2:{text:'辐射太强人会死', correct:true}}], integrations: [{title:'🏗️ 结构', wrong:'实心壳', right:'戴森云卫星群'}, {title:'🤖 部署', wrong:'人类宇航员', right:'抗辐射AI机器人'}] }
+                    },
+                    en: {
+                        'young': { icon: '🍭', title: 'Marshmallow Defense', desc: 'Monsters are coming!', hint: 'Hint: What materials?', keywords: {'Material':['stone','iron'], 'Defense':['wall','moat']}, flaws: [{title:'Plan A: Chocolate', desc:'Chocolate wall', opt1:{text:'Ugly', correct:false}, opt2:{text:'Melts', correct:true}}, {title:'Plan B: Jelly', desc:'Jelly trap', opt1:{text:'Tastes bad', correct:false}, opt2:{text:'Traps friends', correct:true}}], integrations: [{title:'🧱 Wall', wrong:'Chocolate', right:'Space Stone'}, {title:'🪤 Trap', wrong:'Everywhere', right:'Directed Only'}] },
+                        'mid': { icon: '🌖', title: 'Lunar Auto-Mine', desc: 'Build an automated mine.', hint: 'Consider: Vacuum, meteors, low-G.', keywords: {'Vacuum':['air','vacuum'], 'Meteor':['defense','underground'], 'Gravity':['gravity','float']}, flaws: [{title:'Plan A: Surface Belt', desc:'Long belt', opt1:{text:'High power', correct:false}, opt2:{text:'Meteor targets', correct:true}}, {title:'Plan B: Gas Digger', desc:'Gasoline engine', opt1:{text:'No oxygen', correct:true}, opt2:{text:'Pollution', correct:false}}], integrations: [{title:'🛡️ Base', wrong:'Surface', right:'Underground'}, {title:'⚡ Power', wrong:'Gas', right:'Nuclear'}] },
+                        'old': { icon: '⚛️', title: 'Dyson Sphere', desc: 'Capture star energy.', hint: 'Structure & Deployment.', keywords: {'Structure':['nano','mirror'], 'Build':['robot','auto']}, flaws: [{title:'Plan A: Solid Shell', desc:'Solid metal', opt1:{text:'Gravity tear', correct:true}, opt2:{text:'Blocks light', correct:false}}, {title:'Plan B: Human Build', desc:'Send humans', opt1:{text:'Laser decay', correct:false}, opt2:{text:'Radiation death', correct:true}}], integrations: [{title:'🏗️ Structure', wrong:'Solid Shell', right:'Dyson Swarm'}, {title:'🤖 Deploy', wrong:'Humans', right:'AI Bots'}] }
+                    }
+                },
+
+                goHome() { try { window.location.assign('index.html'); } catch(e) { window.location.href = 'index.html'; } },
+                startSim(age) { this.mission = this.simData[this.lang][age]; this.step = 1; this.prompt=''; this.score=0; this.judgments=[false,false,false]; this.integSelections=['','','']; },
+                evalSimPrompt() {
+                    const txt = this.prompt.toLowerCase(); let s = 0;
+                    for(const [c, words] of Object.entries(this.mission.keywords)) { if(words.some(w => txt.includes(w))) s += 30; }
+                    this.score = Math.min(100, s);
+                },
+                checkSimFlaw(i, isCor) { if(isCor) this.judgments[i]=true; else Swal.fire(this.dict.swalErr, this.dict.swalWrongFlaw, 'error'); },
+                finishSim() { if(this.integSelections.includes('wrong')) Swal.fire(this.dict.swalErr, this.dict.swalHasFlaws, 'error'); else this.step=5; }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</body>
+</html>

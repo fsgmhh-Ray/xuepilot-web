@@ -3,241 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XuePilot Command</title>
+    <title>XuePilot COMMAND OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
-        
-        .glass-sidebar { 
-            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(16px); 
-            border-right: 1px solid rgba(255,255,255,0.05); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 17rem;
-        }
-        .sidebar-hidden { transform: translateX(-100%); width: 0 !important; opacity: 0; pointer-events: none; }
-        .nav-item { transition: all 0.3s ease; position: relative; cursor: pointer; }
-        .nav-item.active { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent); border-left: 4px solid #3b82f6; color: #fff; }
-        
-        .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
-        .nova-float:active { cursor: grabbing; }
-        .nova-orb-inner { 
-            width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); 
-            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); animation: novaBreath 3s infinite alternate; border: 2px solid rgba(255,255,255,0.2); 
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
-        @keyframes novaBreath { from { transform: scale(1); } to { transform: scale(1.05); } }
-        
-        .nova-chat-panel { 
-            position: fixed; width: 360px; height: 500px; z-index: 99; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(25px); 
-            border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { transition: all 0.3s ease; cursor: pointer; }
+        .nav-item:hover { background: rgba(30, 41, 59, 0.6); }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
-        .input-dark:focus { border-color: #3b82f6; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
     </style>
 </head>
-<body x-data="osApp()" @message.window="handleChildMessage($event)" class="flex h-screen w-screen relative overflow-hidden">
+<body x-data="portalApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+    <div class="space-bg"></div><div class="grid-bg"></div>
 
-    <aside class="flex flex-col glass-sidebar z-20 shrink-0" :class="activeApp === 'pro' ? 'sidebar-hidden' : ''">
+    <aside class="flex flex-col glass-panel border-r border-slate-800/50 w-[18rem] z-30 shrink-0 shadow-2xl">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
-            <div class="flex items-center"><span class="text-3xl mr-3">🚀</span><div><h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="i18n[lang].brand"></h1><div class="text-[9px] text-slate-500 font-mono mt-0.5" x-text="i18n[lang].version"></div></div></div>
-            <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-2 py-1 rounded border border-slate-700" x-text="lang === 'zh' ? 'EN' : '中'"></button>
+            <div class="flex items-center">
+                <span class="text-3xl mr-3 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
+                <div>
+                    <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="dict.brand"></h1>
+                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest">MULTI-PAGE OS v3.0</div>
+                </div>
+            </div>
+            <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition hover:bg-slate-700 shadow-sm" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
         </div>
         
-        <div class="flex-1 py-8 px-3 space-y-2">
-            <!-- 核心：PRO 星际教室 -->
-            <a @click.prevent="selectApp('pro')" class="nav-item flex items-center justify-between px-4 py-3 rounded-xl" :class="activeApp === 'pro' ? 'active' : ''">
-                <div class="flex items-center"><span class="text-xl mr-3">🌌</span> <span class="font-bold text-sm text-slate-200" x-text="i18n[lang].pro"></span></div>
+        <div class="flex-1 py-8 px-4 space-y-3">
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.coreMod"></div>
+            <a @click.prevent="goTo('classroom.html', true)" class="nav-item flex items-center justify-between px-4 py-3.5 rounded-xl border border-slate-800">
+                <div class="flex items-center"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">🌌</span> <span class="font-bold text-sm text-blue-100" x-text="dict.pro"></span></div>
                 <span x-show="!isPro" class="text-[9px] font-black border border-amber-500/50 text-amber-500 px-1.5 py-0.5 rounded shadow-sm">PRO</span>
             </a>
             
-            <!-- 免费体验：模拟演练舱 -->
-            <a @click.prevent="selectApp('game')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'game' ? 'active' : ''">
-                <div class="flex items-center"><span class="text-xl mr-3">🎮</span> <span class="text-sm" x-text="i18n[lang].game"></span></div>
+            <div class="h-px bg-slate-800/50 my-4 mx-2"></div>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.freeMod"></div>
+            
+            <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl">
+                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🎮</span> <span class="text-sm font-bold text-slate-300" x-text="dict.game"></span></div>
             </a>
-
-            <!-- 🚀 满血恢复：免费引流 - 资源探索 -->
-            <a @click.prevent="selectApp('tools')" class="nav-item flex items-center px-4 py-3 rounded-xl" :class="activeApp === 'tools' ? 'active' : ''">
-                <div class="flex items-center"><span class="text-xl mr-3">🌍</span> <span class="text-sm" x-text="i18n[lang].tools"></span></div>
+            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl" :class="view === 'tools' ? 'bg-slate-800/60' : ''">
+                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🌍</span> <span class="text-sm font-bold text-slate-300" x-text="dict.tools"></span></div>
             </a>
         </div>
-        <div class="p-4 border-t border-slate-800/50"><button @click="showSettings = true" class="w-full py-3 bg-slate-800/40 hover:bg-slate-700/60 rounded-xl text-[10px] font-bold text-slate-400 hover:text-white transition" x-text="i18n[lang].settingsBtn"></button></div>
+        <div class="p-4 border-t border-slate-800/50">
+            <button @click="modals.settings = true" class="w-full py-3.5 bg-slate-800/40 hover:bg-slate-700/60 rounded-xl text-[10px] font-bold text-slate-400 hover:text-white transition shadow-sm border border-transparent hover:border-slate-600" x-text="dict.settingsBtn"></button>
+        </div>
     </aside>
 
-    <main class="flex-1 relative bg-[#02040a]">
-        <!-- 🚀 平滑加载遮罩层，杜绝切换时的白屏和零乱 -->
-        <div x-show="appLoading" x-transition.opacity.duration.300ms class="absolute inset-0 z-10 bg-[#02040a] flex flex-col items-center justify-center">
-            <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">Initializing Interface...</div>
-        </div>
-
-        <!-- 应用渲染层 -->
-        <iframe id="app-frame" :src="iframeSrc" @load="appLoading = false" class="w-full h-full border-none relative z-0"></iframe>
-
-        <!-- 🤖 NOVA 导师 (右下角防误触) -->
-        <div x-show="user" x-cloak>
-            <div id="nova-draggable" class="nova-float" :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`" @mousedown="startDrag($event)">
-                <div class="nova-orb-inner shadow-[0_0_15px_rgba(59,130,246,0.4)]">🤖</div>
-            </div>
-
-            <div x-show="novaOpen" x-transition.origin.bottom.right class="nova-chat-panel" :style="`left: ${Math.min(Math.max(20, novaPos.x), window.innerWidth-380)}px; top: ${Math.max(20, novaPos.y-510)}px;`" @click.away="novaOpen = false">
-                <div class="p-4 bg-blue-900/30 border-b border-blue-500/30 flex justify-between items-center">
-                    <span class="text-[10px] font-black uppercase text-blue-300 tracking-widest" x-text="i18n[lang].novaTitle"></span>
-                    <button @click="novaOpen = false" class="text-slate-500 hover:text-white transition">✖</button>
-                </div>
-                <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs" id="nova-chat-content">
-                    <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 leading-relaxed text-slate-300" x-text="i18n[lang].novaGreeting"></div>
-                    <template x-for="m in novaMsgs">
-                        <div :class="m.role==='user'?'text-right':'text-left'"><div class="inline-block p-3 rounded-2xl mt-2 shadow-lg" :class="m.role==='user'?'bg-blue-600 text-white':'bg-slate-800 border border-slate-700 text-slate-200'" x-text="m.content"></div></div>
-                    </template>
-                    <div x-show="novaLoading" class="text-blue-400 animate-pulse text-[10px] font-mono" x-text="i18n[lang].novaLoading"></div>
-                </div>
-                <div class="p-3 border-t border-slate-800 bg-slate-900">
-                    <div class="flex items-center gap-2">
-                        <input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-3 rounded-xl text-xs" :placeholder="i18n[lang].novaPlaceholder">
-                        <button @click="novaAsk()" class="bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-500 transition">🚀</button>
-                    </div>
-                </div>
+    <main class="flex-1 relative bg-transparent overflow-hidden flex items-center justify-center p-8">
+        <div class="text-center glass-panel p-12 rounded-[2.5rem] max-w-2xl shadow-2xl border border-blue-500/20 fade-in">
+            <div class="text-7xl mb-6 drop-shadow-lg animate-bounce" x-text="view === 'tools' ? '🌍' : '🛸'"></div>
+            <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
+            <p class="text-slate-400 text-sm leading-relaxed mb-8" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
+            <div x-show="!isPro" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-8">
+                <p class="text-amber-400 text-xs font-bold mb-3" x-text="dict.upgHint"></p>
+                <button @click="modals.upgrade = true" class="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-500 rounded-lg text-white text-xs font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
             </div>
         </div>
 
-        <!-- ✨ 商业化：专业版 PRO 升级面板 -->
-        <div x-show="showUpgradeModal" x-cloak class="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-xl">
-             <div class="w-full max-w-md bg-slate-900 border border-amber-500/30 p-8 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] relative">
-                 <button @click="showUpgradeModal = false" class="absolute top-5 right-5 text-slate-500 hover:text-white transition">✖</button>
-                 <div class="text-5xl mb-4 text-center">✨</div>
-                 <h2 class="text-2xl font-black mb-2 text-amber-400 text-center tracking-tight" x-text="i18n[lang].upgradeTitle"></h2>
-                 <p class="text-slate-400 text-xs mb-6 text-center leading-relaxed" x-text="i18n[lang].upgradeDesc"></p>
-                 
-                 <!-- 核心权益展示 -->
-                 <div class="text-left space-y-3 mb-8 bg-black/40 p-5 rounded-2xl border border-amber-500/10">
-                     <div class="flex items-center gap-3 text-sm text-amber-100"><span class="text-amber-500 text-lg">✓</span> 专属定制知识大纲星图</div>
-                     <div class="flex items-center gap-3 text-sm text-amber-100"><span class="text-amber-500 text-lg">✓</span> 解锁启发式写作与批阅系统</div>
-                     <div class="flex items-center gap-3 text-sm text-amber-100"><span class="text-amber-500 text-lg">✓</span> 私有文档导入与苏格拉底伴读</div>
-                 </div>
-
-                 <button @click="upgradeToPro()" class="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 rounded-xl font-bold text-white shadow-lg text-sm transition tracking-widest" x-text="i18n[lang].upgradeBtn"></button>
-             </div>
-        </div>
-
-        <!-- 🎛️ 双引擎算力节点配置 -->
-        <div x-show="showSettings" x-cloak class="absolute inset-0 bg-black/95 z-50 flex items-center justify-center p-4 md:p-8 backdrop-blur-xl overflow-y-auto">
-             <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto">
-                 <h2 class="text-xl font-bold mb-6 text-white" x-text="i18n[lang].settingsTitle"></h2>
+        <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
+             <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
+                 <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
                  <div class="space-y-6">
-                     <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20">
-                         <div class="font-bold text-blue-400 mb-4 text-sm">🌌 规划与教案引擎 (Planning Core)</div>
-                         <div class="space-y-3">
-                             <input type="password" x-model="sysConfig.apiKey" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
-                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="sysConfig.baseUrl" placeholder="Base URL (/proxy/groq)" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="sysConfig.modelId" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
+                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
+                         <div class="font-bold text-blue-400 mb-4 text-sm tracking-widest uppercase">🌌 Main Planning Core (Groq / OpenAI)</div>
+                         <div class="space-y-4">
+                             <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono shadow-inner">
+                             <div class="grid grid-cols-2 gap-4"><input type="text" x-model="config.sys.url" placeholder="Base URL" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"></div>
                          </div>
                      </div>
-                     <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
-                         <div class="font-bold text-indigo-400 mb-4 text-sm">🤖 NOVA 伴读引擎 (Tutor Core)</div>
-                         <div class="space-y-3">
-                             <input type="password" x-model="novaConfig.apiKey" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
-                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="novaConfig.baseUrl" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="novaConfig.modelId" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
+                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
+                         <div class="font-bold text-indigo-400 mb-4 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (Nvidia / Groq)</div>
+                         <div class="space-y-4">
+                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono shadow-inner">
+                             <div class="grid grid-cols-2 gap-4"><input type="text" x-model="config.nova.url" placeholder="Base URL" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"></div>
                          </div>
                      </div>
                  </div>
                  <div class="mt-8 flex gap-4">
-                     <button @click="saveSettings()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-white transition" x-text="i18n[lang].save"></button>
-                     <button @click="showSettings = false" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl text-white transition" x-text="i18n[lang].cancel"></button>
+                     <button @click="saveConfig()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-white transition shadow-lg text-sm tracking-widest" x-text="dict.setSave"></button>
+                     <button @click="modals.settings = false" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-white transition font-bold text-sm" x-text="dict.setCancel"></button>
                  </div>
+             </div>
+        </div>
+
+        <div x-show="modals.upgrade" x-cloak class="absolute inset-0 bg-black/90 z-[70] flex items-center justify-center p-8 backdrop-blur-xl">
+             <div class="w-full max-w-md bg-slate-900 border border-amber-500/30 p-8 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] fade-in">
+                 <button @click="modals.upgrade = false" class="absolute top-5 right-5 text-slate-500 hover:text-white transition text-2xl">✖</button>
+                 <div class="text-6xl mb-4 text-center drop-shadow-lg">✨</div>
+                 <h2 class="text-2xl font-black mb-3 text-amber-400 text-center tracking-tight" x-text="dict.upgTitle"></h2>
+                 <p class="text-slate-400 text-xs mb-6 text-center leading-relaxed" x-text="dict.upgDesc"></p>
+                 <div class="text-left space-y-4 mb-8 bg-black/40 p-5 rounded-2xl border border-amber-500/10 shadow-inner">
+                     <div class="flex items-center gap-3 text-sm text-amber-100 font-bold"><span class="text-amber-500 text-xl">✓</span> <span x-text="dict.upg1"></span></div>
+                     <div class="flex items-center gap-3 text-sm text-amber-100 font-bold"><span class="text-amber-500 text-xl">✓</span> <span x-text="dict.upg2"></span></div>
+                 </div>
+                 <button @click="executeUpgrade()" class="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] text-base transition tracking-widest uppercase" x-text="dict.upgBtn"></button>
              </div>
         </div>
     </main>
 
     <script>
-        window.osApp = function() {
+        function portalApp() {
             return {
-                activeApp: 'game', iframeSrc: 'apps/game.html', user: {id:1},
-                appLoading: false, // 控制 iframe 丝滑切换
-                isPro: localStorage.getItem('xp_is_pro') === 'true', 
-                lang: 'zh',
-                
+                lang: localStorage.getItem('xp_lang') || 'zh',
+                isPro: localStorage.getItem('xp_is_pro') === 'true',
+                view: 'welcome', modals: { upgrade: false, settings: false },
+                config: {
+                    sys: { key: localStorage.getItem('xp_sys_key')||'', url: localStorage.getItem('xp_sys_url')||'/proxy/groq', model: localStorage.getItem('xp_sys_model')||'llama-3.3-70b-versatile' },
+                    nova: { key: localStorage.getItem('xp_nova_key')||'', url: localStorage.getItem('xp_nova_url')||'/proxy/nvidia', model: localStorage.getItem('xp_nova_model')||'google/gemma-4-31b-it' }
+                },
                 i18n: {
-                    zh: { brand: 'XuePilot', version: 'COMMAND OS v12.0', pro: '星际教室', game: '模拟演练舱', tools: '资源探索', settingsBtn: '🎛️ 引擎配置', settingsTitle: '🎛️ 双通道引擎节点配置', novaTitle: 'Nova 随舰导师', novaGreeting: '指挥官，我是随舰导师 NOVA。需要进行思维推演吗？', novaPlaceholder: '输入你的疑惑...', novaLoading: '正在解析逻辑...', save: '💾 保存并应用节点', cancel: '取消', upgradeTitle: '获取领航员通行证', upgradeDesc: '升级以解锁 XuePilot 专属高级教育套件，让每一分算力为您所用。', upgradeBtn: '升级至 PRO (演示)' },
-                    en: { brand: 'XuePilot', version: 'COMMAND OS v12.0', pro: 'Interstellar Class', game: 'Simulator', tools: 'Global Resources', settingsBtn: '🎛️ Engine Config', settingsTitle: '🎛️ Dual Node Config', novaTitle: 'Nova Advisor', novaGreeting: 'Greetings, Commander. Need any cognitive guidance?', novaPlaceholder: 'Ask your advisor...', novaLoading: 'Analyzing...', save: '💾 Apply Config', cancel: 'Cancel', upgradeTitle: 'Get Commander Access', upgradeDesc: 'Unlock the full educational suite and leverage maximum computing power.', upgradeBtn: 'Upgrade to PRO (Mock)' }
-                },
-
-                novaOpen: false, novaInput: '', novaMsgs: [], novaLoading: false, showSettings: false, showUpgradeModal: false,
-                
-                sysConfig: { apiKey: localStorage.getItem('xp_sys_key') || '', baseUrl: localStorage.getItem('xp_sys_url') || '/proxy/groq', modelId: localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile' },
-                novaConfig: { apiKey: localStorage.getItem('xp_nova_key') || '', baseUrl: localStorage.getItem('xp_nova_url') || '/proxy/nvidia', modelId: localStorage.getItem('xp_nova_model') || 'google/gemma-4-31b-it' },
-
-                novaPos: { x: window.innerWidth - 100, y: window.innerHeight - 100 },
-                isDragging: false, dragStartPos: {x:0, y:0}, offset: { x: 0, y: 0 },
-
-                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; },
-
-                // 处理子页面发来的消息
-                handleChildMessage(e) {
-                    if (e.data && e.data.type === 'GO_HOME') { 
-                        this.appLoading = true;
-                        this.activeApp = 'game'; 
-                        this.iframeSrc = 'apps/game.html'; 
-                    }
-                    if (e.data && e.data.type === 'UPGRADE_PRO') { this.showUpgradeModal = true; }
-                },
-
-                // 核心应用切换逻辑
-                selectApp(id) { 
-                    if (id === 'pro' && !this.isPro) { this.showUpgradeModal = true; return; }
-                    if (this.activeApp !== id) {
-                        this.appLoading = true; // 开启遮罩动画
-                        this.activeApp = id; 
-                        const paths = { pro:'apps/xuepilot-pro-core.html', game:'apps/game.html', tools:'apps/xuepilot-tools.html' };
-                        this.iframeSrc = paths[id];
+                    zh: {
+                        brand: 'XuePilot', coreMod: '核心中枢', freeMod: '开放体验', pro: '星际教室 (Pro)', game: '指挥官模拟舱', tools: '全球资源探索',
+                        welcome: '欢迎登舰，指挥官', welcomeDesc: '请在左侧选择您要进入的模块。所有模块均已链接您的全局算力节点。',
+                        toolsDesc: '全球顶尖的教育 AI 工具集与外接算力正在对接中，敬请期待。',
+                        upgHint: '您尚未获得领航员最高权限，星际教室的部分高级功能已被锁定。', upgBtn: '获取权限 (演示)',
+                        settingsBtn: '🎛️ 引擎节点配置', setMenu: '🎛️ 双通道算力节点配置', setSave: '💾 保存全局配置', setCancel: '取消',
+                        upgTitle: '获取领航员通行证', upgDesc: '解锁 XuePilot 专属教育套件。', upg1: '苏格拉底富文本备课', upg2: '私有文档导入伴读'
+                    },
+                    en: {
+                        brand: 'XuePilot', coreMod: 'Core Modules', freeMod: 'Free Access', pro: 'Interstellar Class', game: 'Simulator Deck', tools: 'Global AI Tools',
+                        welcome: 'Welcome Aboard', welcomeDesc: 'Select a module on the left. All modules share your global AI config.',
+                        toolsDesc: 'Integration with top global AI tools is currently underway.',
+                        upgHint: 'You do not have Commander Pro access yet. Some classroom features are locked.', upgBtn: 'Unlock Pro (Mock)',
+                        settingsBtn: '🎛️ Engine Config', setMenu: '🎛️ Dual Node Config', setSave: '💾 Save Config', setCancel: 'Cancel',
+                        upgTitle: 'Get Commander Access', upgDesc: 'Unlock the full educational suite.', upg1: 'Socratic Rich Text Editor', upg2: 'Private Doc Reading Tutor'
                     }
                 },
+                get dict() { return this.i18n[this.lang]; },
+                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 
-                upgradeToPro() {
-                    this.isPro = true; localStorage.setItem('xp_is_pro', 'true'); this.showUpgradeModal = false;
-                    Swal.fire({ title: '权限已解锁', icon: 'success', background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false }).then(() => this.selectApp('pro'));
+                goTo(url, requiresPro) { 
+                    if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; }
+                    if (url) { window.location.href = url; }
                 },
-
-                // 拖拽判定与防误触
-                startDrag(e) {
-                    this.isDragging = false; 
-                    this.dragStartPos = { x: e.clientX, y: e.clientY };
-                    this.offset.x = e.clientX - this.novaPos.x;
-                    this.offset.y = e.clientY - this.novaPos.y;
-                    const move = (ev) => {
-                        const dist = Math.hypot(ev.clientX - this.dragStartPos.x, ev.clientY - this.dragStartPos.y);
-                        if (dist > 5) { this.isDragging = true; this.novaPos.x = ev.clientX - this.offset.x; this.novaPos.y = ev.clientY - this.offset.y; }
-                    };
-                    const stop = () => {
-                        window.removeEventListener('mousemove', move);
-                        window.removeEventListener('mouseup', stop);
-                        if (!this.isDragging) this.novaOpen = !this.novaOpen;
-                        setTimeout(() => { this.isDragging = false; }, 50);
-                    };
-                    window.addEventListener('mousemove', move);
-                    window.addEventListener('mouseup', stop);
+                
+                executeUpgrade() { 
+                    this.isPro = true; localStorage.setItem('xp_is_pro', 'true'); this.modals.upgrade = false; 
+                    Swal.fire({ title: 'Success', icon: 'success', background: '#0f172a', color: '#fff', timer: 1000, showConfirmButton: false });
                 },
-
-                saveSettings() {
-                    localStorage.setItem('xp_sys_key', this.sysConfig.apiKey); localStorage.setItem('xp_sys_url', this.sysConfig.baseUrl); localStorage.setItem('xp_sys_model', this.sysConfig.modelId);
-                    localStorage.setItem('xp_nova_key', this.novaConfig.apiKey); localStorage.setItem('xp_nova_url', this.novaConfig.baseUrl); localStorage.setItem('xp_nova_model', this.novaConfig.modelId);
-                    this.showSettings = false; location.reload();
-                },
-
-                async novaAsk() {
-                    const q = this.novaInput.trim(); if(!q || this.novaLoading) return;
-                    this.novaInput = ''; this.novaMsgs.push({role:'user', content:q}); this.novaLoading = true;
-                    try {
-                        const key = this.novaConfig.apiKey || this.sysConfig.apiKey; const url = this.novaConfig.baseUrl || this.sysConfig.baseUrl; const model = this.novaConfig.modelId || this.sysConfig.modelId;
-                        const res = await fetch(`${url}/chat/completions`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-                            body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are NOVA, a Socratic mentor. Guide thinking. Chinese.' }, ...this.novaMsgs] })
-                        });
-                        const data = await res.json(); this.novaMsgs.push({role:'assistant', content: data.choices[0].message.content});
-                    } catch(e) { this.novaMsgs.push({role:'assistant', content: '⚠️ 节点通讯受阻。'}); }
-                    this.novaLoading = false; setTimeout(() => { const c = document.getElementById('nova-chat-content'); if(c) c.scrollTop = c.scrollHeight; }, 100);
+                saveConfig() { 
+                    localStorage.setItem('xp_sys_key', this.config.sys.key); localStorage.setItem('xp_sys_url', this.config.sys.url); localStorage.setItem('xp_sys_model', this.config.sys.model);
+                    localStorage.setItem('xp_nova_key', this.config.nova.key); localStorage.setItem('xp_nova_url', this.config.nova.url); localStorage.setItem('xp_nova_model', this.config.nova.model);
+                    this.modals.settings = false; Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Config Saved', showConfirmButton: false, timer: 1500 });
                 }
             }
-        };
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>

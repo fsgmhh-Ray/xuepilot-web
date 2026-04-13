@@ -2,154 +2,129 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>XuePilot Pro - 核心母舰</title>
+    <title>XuePilot Pro - 星际教室核心</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-        .planet:hover { transform: scale(1.1); filter: brightness(1.2); }
-        .orbit { border: 1px dashed rgba(59, 130, 246, 0.1); border-radius: 50%; position: absolute; pointer-events: none; }
+        .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: absolute; transform: translate(-50%, -50%); z-index: 10; }
+        .planet:hover { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.2); }
+        .orbit { border: 1px dashed rgba(59, 130, 246, 0.1); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
+        .btn-nav { @apply w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-left text-sm font-bold; }
     </style>
 </head>
-<body x-data="proApp()" class="flex h-screen">
+<body x-data="proApp()" class="flex h-screen overflow-hidden">
 
-    <!-- 侧边栏 -->
     <aside class="w-64 border-r border-slate-800 flex flex-col py-6 glass z-20">
-        <div class="px-6 mb-8 font-black text-blue-400 text-xl tracking-tighter">XuePilot PRO</div>
-        <nav class="flex-1 px-3 space-y-1">
-            <button @click="view = 'galaxy'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400'">🌌 学期科目星系</button>
-            <button @click="view = 'bookshelf'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-2" :class="view==='bookshelf'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400'">📚 指挥官书架</button>
+        <div class="px-6 mb-2">
+            <button @click="goHome()" class="text-[10px] text-slate-500 hover:text-blue-400 flex items-center gap-2 mb-4 font-mono transition">← BACK TO COMMAND CENTER</button>
+            <div class="font-black text-blue-400 text-xl tracking-tighter">XuePilot PRO</div>
+        </div>
+
+        <nav class="flex-1 px-3 mt-6 space-y-8">
+            <div>
+                <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">战略规划 (Strategy)</div>
+                <button @click="view = 'galaxy'" class="btn-nav" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border border-blue-500/30':'text-slate-400'">🌌 学期全科目星系</button>
+                <button @click="showPlanner = true" class="btn-nav mt-1 text-purple-400 border border-purple-500/20 bg-purple-900/10 hover:bg-purple-900/30">✨ 启动学期规划引擎</button>
+            </div>
+            <div>
+                <div class="text-[10px] text-slate-600 font-bold px-4 mb-2 uppercase tracking-widest text-slate-500">战术执行 (Tactics)</div>
+                <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30':'text-slate-400'">🇬🇧 英文智能伴读</button>
+                <button @click="openReading('zh')" class="btn-nav mt-1" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30':'text-slate-400'">🇨🇳 大语文智慧传承</button>
+            </div>
         </nav>
+
         <div class="p-4 mt-auto">
-            <div class="bg-slate-900 rounded-xl p-3 border border-slate-800">
-                <div class="text-[10px] text-slate-500 font-bold mb-1 uppercase">学情统计</div>
-                <div class="flex justify-between text-[10px] text-blue-400"><span>本周进步</span><span>+12.5%</span></div>
-                <div class="w-full bg-slate-800 h-1 mt-1 rounded-full"><div class="bg-blue-500 h-1 w-2/3"></div></div>
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 text-[10px]">
+                <div class="text-slate-500 font-bold mb-2 flex justify-between"><span>指挥官成长曲线</span><span>LV.12</span></div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-blue-600 to-indigo-400 h-full w-2/3"></div></div>
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 relative overflow-hidden">
-        
-        <!-- ================= 场景 1: 学期科目星系 (Semester Galaxy) ================= -->
-        <div x-show="view === 'galaxy'" class="h-full relative flex items-center justify-center">
-            <div class="orbit w-[400px] h-[400px]"></div>
-            <div class="orbit w-[700px] h-[700px]"></div>
-            
-            <template x-for="subject in subjects">
-                <div class="planet absolute flex flex-col items-center" 
-                     :style="`left: calc(50% + ${Math.cos(subject.angle) * subject.radius}px); top: calc(50% + ${Math.sin(subject.angle) * subject.radius}px);`"
-                     @click="openSubjectDetail(subject)">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-600 shadow-xl flex items-center justify-center text-3xl" x-text="subject.icon"></div>
-                    <span class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="subject.title"></span>
+    <main class="flex-1 relative overflow-hidden bg-[#02040a]">
+        <!-- 场景：星系地图 -->
+        <div x-show="view === 'galaxy'" x-transition class="h-full relative flex items-center justify-center">
+            <template x-for="r in [400, 700]"><div class="orbit" :style="`width: ${r}px; height: ${r}px;`"></div></template>
+            <template x-for="s in subjects" :key="s.id">
+                <div class="planet flex flex-col items-center" :style="`left: calc(50% + ${Math.cos(s.angle) * s.radius}px); top: calc(50% + ${Math.sin(s.angle) * s.radius}px);`" @click="openSubjectDetail(s)">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 shadow-xl flex items-center justify-center text-3xl" x-text="s.icon"></div>
+                    <span class="mt-2 text-[10px] font-bold text-slate-400 uppercase" x-text="s.title"></span>
                 </div>
             </template>
-
-            <div class="absolute bottom-10 right-10 flex gap-4">
-                <button @click="showPlanner = true" class="px-8 py-4 bg-purple-600 rounded-full font-bold shadow-2xl hover:scale-105 transition">✨ 启动学期全科目规划</button>
-            </div>
+            <div x-show="subjects.length === 0" class="text-center text-slate-600"><div class="text-6xl mb-4 opacity-20">🌌</div><p class="font-mono text-[10px] uppercase">请启动学期规划引擎映射知识星系</p></div>
         </div>
 
-        <!-- ================= 场景 2: 书架系统 (Commander Bookshelf) ================= -->
-        <div x-show="view === 'bookshelf'" x-cloak class="p-8 h-full overflow-y-auto">
+        <!-- 场景：伴读舱 (含书架) -->
+        <div x-show="view.startsWith('reading')" x-cloak x-transition class="h-full flex flex-col p-8 overflow-y-auto">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-black text-white">指挥官个人书架</h2>
-                <button @click="importBook()" class="px-6 py-2 bg-emerald-600 rounded-lg font-bold">📥 导入新读本</button>
+                <div class="flex items-center gap-4"><span class="text-4xl" x-text="view==='reading-en'?'🇬🇧':'🇨🇳'"></span><h2 class="text-3xl font-black" x-text="view==='reading-en'?'英文智能伴读':'大语文智慧传承'"></h2></div>
+                <button @click="importBook()" class="px-6 py-3 bg-blue-600 rounded-xl font-bold shadow-lg">📥 导入新读本</button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <template x-for="book in books">
-                    <div class="shelf-card p-6 rounded-2xl relative group cursor-pointer hover:border-emerald-500/50 transition">
-                        <div class="text-4xl mb-4">📖</div>
-                        <h3 class="font-bold text-lg mb-1" x-text="book.title"></h3>
-                        <div class="text-[10px] text-slate-500 mb-4">阅读进度: <span x-text="book.progress"></span>%</div>
-                        <div class="w-full bg-slate-800 h-1 rounded-full mb-4"><div class="bg-emerald-500 h-1" :style="`width: ${book.progress}%`"></div></div>
-                        <button class="w-full py-2 bg-slate-700 rounded-lg text-xs font-bold group-hover:bg-emerald-600 transition">开启伴读交互</button>
+            <div class="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">指挥官书架 (SHELF)</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <template x-for="book in filteredBooks" :key="book.title">
+                    <div class="shelf-card p-6 rounded-2xl relative group hover:border-blue-500/50 transition">
+                        <div class="flex justify-between mb-4"><span class="text-4xl">📖</span><span class="text-[10px] font-mono text-emerald-400" x-text="`准确率 ${book.accuracy}%`"></span></div>
+                        <h3 class="font-bold text-lg mb-1 truncate text-slate-200" x-text="book.title"></h3>
+                        <div class="text-[9px] text-slate-500 mb-4">PROGRESS: <span x-text="book.progress"></span>%</div>
+                        <div class="w-full bg-slate-800 h-1 rounded-full mb-6 overflow-hidden"><div class="bg-blue-500 h-full" :style="`width: ${book.progress}%`"></div></div>
+                        <button @click="startReading(book)" class="w-full py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold hover:bg-blue-600 transition">进入交互阅读</button>
                     </div>
                 </template>
             </div>
         </div>
 
-        <!-- ================= 🚀 全新 Mission Planner (三段式逻辑) ================= -->
+        <!-- 弹窗：三段式规划器 -->
         <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-md">
-            <div class="glass w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/20">
-                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl">✖</button>
-                
-                <template x-if="plannerStep === 1">
-                    <div>
-                        <h2 class="text-2xl font-black text-blue-400 mb-6 font-mono">STEP 1: 国家大纲与政策定位</h2>
-                        <div class="space-y-6">
-                            <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm">
-                                <option>中国义务教育课标 (2022版)</option>
-                                <option>英国 National Curriculum (KS2/KS3)</option>
-                                <option>美国 Common Core State Standards</option>
-                            </select>
-                            <select x-model="planConfig.grade" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm">
-                                <option>小学三年级</option><option>小学四年级</option><option>初中一年级</option>
-                            </select>
-                            <button @click="generateSemesterMap()" class="w-full py-5 bg-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3">
-                                <span x-show="loading" class="animate-spin">↻</span> 一键生成学期全科目星图
-                            </button>
-                        </div>
+            <div class="glass w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/20">
+                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500">✖</button>
+                <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase">Strategic Planner</h2><p class="text-slate-500 text-[10px] mt-2">AI 将根据国家政策大纲与年级标准，为您映射学期知识星系。</p></div>
+                <div class="space-y-4">
+                    <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>中国义务教育课标 (2022版)</option><option>英国 National Curriculum (KS2/KS3)</option><option>美国 Common Core State Standards</option></select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>三年级</option><option>四年级</option><option>五年级</option></select>
+                        <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none"><option>上学期</option><option>下学期</option></select>
                     </div>
-                </template>
-
-                <template x-if="plannerStep === 2">
-                    <div class="text-center">
-                        <div class="text-5xl mb-6">🌌</div>
-                        <h2 class="text-2xl font-black text-white mb-2">全科目星系已生成</h2>
-                        <p class="text-slate-400 text-sm mb-8">AI 已根据大纲自动规划了语文、数学、英语、科学、艺术等核心科目。</p>
-                        <div class="flex flex-wrap justify-center gap-3 mb-8">
-                            <template x-for="s in subjects">
-                                <span class="bg-blue-900/40 border border-blue-500/30 px-3 py-1 rounded-full text-xs" x-text="s.title"></span>
-                            </template>
-                        </div>
-                        <button @click="showPlanner = false; plannerStep = 1" class="px-10 py-4 bg-emerald-600 rounded-full font-bold">进入星图开始微调</button>
-                    </div>
-                </template>
+                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3">
+                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在解析教育政策映射...' : '🚀 启动规划并生成星图'"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- 科目详情与内容编辑器 -->
+        <!-- 科目卫星编辑界面 (🚀 修复 null.title 报错的地方) -->
         <div x-show="editingSubject" x-cloak class="fixed inset-0 bg-slate-950 z-40 p-8 overflow-y-auto">
             <div class="max-w-5xl mx-auto">
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                    <div class="flex items-center gap-4">
-                        <span class="text-4xl" x-text="editingSubject?.icon"></span>
-                        <h2 class="text-3xl font-black" x-text="editingSubject?.title"></h2>
-                    </div>
-                    <button @click="editingSubject = null" class="px-6 py-2 bg-slate-800 rounded-lg">返回星图</button>
+                    <div class="flex items-center gap-4"><span class="text-4xl" x-text="editingSubject?.icon"></span><h2 class="text-3xl font-black" x-text="editingSubject?.title"></h2></div>
+                    <button @click="editingSubject = null" class="px-6 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition">返回星图</button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- 左侧：章节卫星列表 -->
                     <div class="space-y-4">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">课程章节章节 (Satellites)</h3>
-                        <template x-for="lesson in activeLessons">
-                            <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer" @click="editLesson(lesson)">
-                                <div class="font-bold text-sm" x-text="lesson.title"></div>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">学习卫星 (Chapter Satellites)</h3>
+                        <template x-for="lesson in activeLessons" :key="lesson.title">
+                            <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer" @click="currentLesson = lesson"><div class="font-bold text-sm" x-text="lesson.title"></div></div>
+                        </template>
+                        <button @click="generateLessons()" class="w-full py-3 border border-dashed border-slate-700 rounded-xl text-[10px] text-slate-500 hover:text-blue-400 transition">一键生成核心教学章节</button>
+                    </div>
+                    <div class="md:col-span-2 glass p-8 rounded-3xl min-h-[500px] flex flex-col">
+                        <!-- 🚀 核心修复：使用 x-if 确保 currentLesson 不为 null 才会绑定 title -->
+                        <template x-if="!currentLesson">
+                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-40"><div class="text-6xl mb-4">✍️</div><p>选择一个卫星节点进行苏格拉底式教案微调</p></div>
+                        </template>
+                        <template x-if="currentLesson">
+                            <div class="flex-1 flex flex-col">
+                                <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4 text-blue-300">
+                                <div id="editor" class="flex-1 bg-black/20 p-6 rounded-xl text-sm leading-relaxed overflow-y-auto border border-slate-800 text-slate-300 outline-none" contenteditable="true">
+                                    [AI 导师已载入教学策略...] <br><br>1. 核心问题定位：为什么这部分知识对现实世界有意义？<br>2. 指挥官引导：请通过提问促使学生自己定义该概念。<br>3. 迁移挑战：将其应用到另一个学科场景。
+                                </div>
+                                <div class="mt-6 flex justify-end gap-4"><button class="px-6 py-2 bg-blue-600 rounded-lg font-bold shadow-lg">💾 保存同步</button></div>
                             </div>
                         </template>
-                        <button @click="generateLessons()" class="w-full py-3 border border-dashed border-slate-700 rounded-xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500">一键生成基础教学章节</button>
-                    </div>
-                    <!-- 右侧：精修编辑区 -->
-                    <div class="md:col-span-2 glass p-8 rounded-3xl min-h-[500px] flex flex-col">
-                        <div x-show="!currentLesson" class="flex-1 flex flex-col items-center justify-center text-slate-600">
-                            <div class="text-6xl mb-4">✍️</div>
-                            <p>选择一个章节或卫星节点进行精修编辑</p>
-                        </div>
-                        <div x-show="currentLesson" class="flex-1 flex flex-col">
-                            <input x-model="currentLesson.title" class="bg-transparent text-2xl font-black border-none outline-none mb-4">
-                            <div id="editor" class="flex-1 bg-black/20 p-6 rounded-xl text-sm leading-relaxed overflow-y-auto border border-slate-800" contenteditable="true">
-                                加载章节核心内容...
-                            </div>
-                            <div class="mt-6 flex justify-end gap-4">
-                                <button class="px-6 py-2 bg-blue-600 rounded-lg font-bold">保存并同步至 AI 导师</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -159,53 +134,20 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('proApp', () => ({
-                view: 'galaxy', subjects: [], showPlanner: false, plannerStep: 1, loading: false,
-                planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '小学四年级' },
+                view: 'galaxy', subjects: [], showPlanner: false, loading: false, planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '四年级', term: '上学期' },
                 editingSubject: null, activeLessons: [], currentLesson: null,
-                books: [
-                    { title: '《小王子》英文导读', progress: 45, accuracy: 88 },
-                    { title: '《论语》精选二十章', progress: 12, accuracy: 92 }
-                ],
-
-                async generateSemesterMap() {
-                    this.loading = true;
-                    // 模拟 AI 生成过程
-                    setTimeout(() => {
-                        this.subjects = [
-                            { id:1, title:'语文', icon:'🇨🇳', radius:200, angle: 0 },
-                            { id:2, title:'数学', icon:'📐', radius:200, angle: 2.1 },
-                            { id:3, title:'英语', icon:'🇬🇧', radius:200, angle: 4.2 },
-                            { id:4, title:'自然科学', icon:'🧪', radius:320, angle: 1.05 }
-                        ];
-                        this.loading = false;
-                        this.plannerStep = 2;
-                    }, 2000);
-                },
-
+                books: [ { title: 'The Little Prince', lang: 'en', progress: 45, accuracy: 88 }, { title: '论语·学而篇', lang: 'zh', progress: 12, accuracy: 92 } ],
+                get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
+                goHome() { window.parent.postMessage({ type: 'GO_HOME' }, '*'); },
+                openReading(lang) { this.view = 'reading-' + lang; },
+                async generateSemesterMap() { this.loading = true; setTimeout(() => { this.subjects = [ { id:1, title:'大语文', icon:'🇨🇳', radius:200, angle: 0.5 }, { id:2, title:'奥数思维', icon:'📐', radius:200, angle: 2.2 }, { id:3, title:'高阶英语', icon:'🇬🇧', radius:200, angle: 4.5 }, { id:4, title:'自然科学', icon:'🧪', radius:320, angle: 1.2 }, { id:5, title:'AI 指挥艺术', icon:'🤖', radius:320, angle: 5.8 } ]; this.loading = false; this.showPlanner = false; Swal.fire('生成成功','','success'); }, 2500); },
                 openSubjectDetail(s) { this.editingSubject = s; this.activeLessons = []; this.currentLesson = null; },
-                
-                generateLessons() {
-                    this.activeLessons = [
-                        { title: '第一章：核心概念定义' }, { title: '第二章：批判性思维练习' }, { title: '第三章：跨学科整合实践' }
-                    ];
-                },
-                
-                editLesson(l) { 
-                    this.currentLesson = l;
-                    document.getElementById('editor').innerText = "AI 已为您准备好该章节的苏格拉底式教案：\n\n1. 核心问题引导...\n2. 盲点排查逻辑...\n3. 知识迁移挑战...";
-                },
-
-                importBook() {
-                    Swal.fire({ title: '导入文档', input: 'textarea', inputPlaceholder: '将书籍内容或文档文本粘贴于此...', background: '#0f172a', color: '#fff' })
-                    .then(res => {
-                        if(res.value) {
-                            this.books.unshift({ title: '新导入读本 ' + (this.books.length + 1), progress: 0, accuracy: 0 });
-                            Swal.fire('成功', '文档已存入书架并建立索引', 'success');
-                        }
-                    });
-                }
+                generateLessons() { this.activeLessons = [ { title: '卫星 1：问题定义' }, { title: '卫星 2：漏洞筛查' }, { title: '卫星 3：跨域整合' } ]; },
+                importBook() { Swal.fire({ title: '导入文档', input: 'textarea', background: '#0f172a', color: '#fff' }).then(r => { if(r.value) this.books.unshift({ title: '新导入读本', lang: this.view==='reading-en'?'en':'zh', progress: 0, accuracy: 0 }); }); },
+                startReading(book) { Swal.fire('开启任务', book.title, 'question'); }
             }));
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

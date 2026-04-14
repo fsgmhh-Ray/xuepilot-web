@@ -15,8 +15,12 @@
         .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
         .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
         .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .btn-nav-class { @apply w-full flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 text-left text-sm font-bold border border-transparent cursor-pointer; }
+        
+        /* 🚀 统一、规范的导航按钮样式 */
+        .btn-nav-class { @apply w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-left text-sm font-bold border border-transparent cursor-pointer; }
         .btn-nav-class:hover { @apply bg-slate-800/60 border-slate-700 shadow-lg; }
+        .nav-icon { @apply w-8 flex items-center justify-center text-xl drop-shadow-md shrink-0; }
+        
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: absolute; transform: translate(-50%, -50%); z-index: 10; }
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9); border-radius: 1rem 1rem 0 0; }
@@ -34,7 +38,7 @@
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
     <div class="space-bg"></div><div class="grid-bg"></div>
 
-    <!-- 侧边栏：优化排版与间距 -->
+    <!-- 侧边栏：修复缩进，使用绝对对其的 Flex 布局 -->
     <aside class="w-[19rem] border-r border-slate-800 flex flex-col py-8 px-5 glass-panel z-20 shrink-0 shadow-2xl relative">
         <button @click="toggleLang()" class="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition" x-text="lang === 'zh' ? 'EN' : '中'"></button>
         
@@ -42,39 +46,39 @@
             <span class="group-hover:-translate-x-1 transition-transform text-lg">⬅</span> <span x-text="dict.back"></span>
         </button>
 
-        <div class="mb-10 px-2">
+        <div class="mb-8 px-2">
             <div class="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-2xl tracking-tighter" x-text="dict.brand"></div>
             <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Unified Command Center</div>
         </div>
 
-        <nav class="flex-1 space-y-6 overflow-y-auto mt-2 px-1 scrollbar-hide">
-            <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30':'text-slate-400'">
-                <span class="text-xl w-6 text-center">🌌</span> <span x-text="dict.navMap"></span>
+        <!-- 🚀 所有菜单项拉平层级，统一间距 -->
+        <nav class="flex-1 flex flex-col gap-2 overflow-y-auto mt-2 px-1 scrollbar-hide">
+            
+            <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]':'text-slate-400'">
+                <span class="nav-icon">🌌</span> <span x-text="dict.navMap"></span>
             </button>
-            <button @click="modals.planner = true" class="btn-nav-class" :class="modals.planner?'bg-purple-600/20 text-purple-400 border-purple-500/30':'text-slate-400'">
-                <span class="text-xl w-6 text-center">✨</span> <span x-text="dict.navEngine"></span>
+            <button @click="modals.planner = true" class="btn-nav-class" :class="modals.planner?'bg-purple-600/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]':'text-slate-400'">
+                <span class="nav-icon">✨</span> <span x-text="dict.navEngine"></span>
             </button>
 
-            <div class="h-px bg-slate-800/30 my-4 mx-2"></div>
+            <div class="h-px bg-slate-800/40 my-3 mx-2 shrink-0"></div>
 
-            <!-- 🚀 强行分离的中英文伴读菜单 (使用独立的 flex-col 容器保证绝对分行) -->
-            <div class="flex flex-col gap-4 w-full">
-                <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-400'">
-                    <span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span>
-                </button>
-                <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-400'">
-                    <span class="text-xl w-6 text-center">📙</span> <span x-text="dict.navReadZh"></span>
-                </button>
-            </div>
-
-            <div class="h-px bg-slate-800/30 my-4 mx-2"></div>
-
-            <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-400'">
-                <span class="text-xl w-6 text-center">✍️</span> <span x-text="dict.navWrite"></span>
+            <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400'">
+                <span class="nav-icon">📘</span> <span x-text="dict.navReadEn"></span>
             </button>
+            <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]':'text-slate-400'">
+                <span class="nav-icon">📙</span> <span x-text="dict.navReadZh"></span>
+            </button>
+
+            <div class="h-px bg-slate-800/40 my-3 mx-2 shrink-0"></div>
+
+            <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)]':'text-slate-400'">
+                <span class="nav-icon">✍️</span> <span x-text="dict.navWrite"></span>
+            </button>
+
         </nav>
         
-        <div class="p-4 border-t border-slate-800/50 text-[10px] font-mono text-center text-slate-500" x-text="dbConnected ? 'SUPABASE CONNECTED' : 'LOCAL FALLBACK'"></div>
+        <div class="p-4 border-t border-slate-800/50 text-[10px] font-mono text-center text-slate-500 shrink-0" x-text="dbConnected ? 'SUPABASE CONNECTED' : 'LOCAL FALLBACK'"></div>
     </aside>
 
     <main class="flex-1 relative overflow-hidden bg-transparent">
@@ -170,7 +174,6 @@
                             </div>
                         </div>
                     </template>
-                    <!-- 🚀 修复生成逻辑与显示状态 -->
                     <button @click="generateUnits()" class="w-full py-5 border-2 border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 hover:text-blue-400 transition font-bold" :disabled="loading">
                         <span x-show="loading" class="animate-spin inline-block mr-2">↻</span> <span x-text="loading ? '正在根据大纲拆解全学期课表...' : '✨ 智能拆解全学期课表'"></span>
                     </button>

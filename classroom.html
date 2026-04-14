@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Classroom</title>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
@@ -16,64 +18,65 @@
         .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
         .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
         
-        /* 🚀 统一、规范的导航按钮样式 */
-        .btn-nav-class { @apply w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-left text-sm font-bold border border-transparent cursor-pointer; }
-        .btn-nav-class:hover { @apply bg-slate-800/60 border-slate-700 shadow-lg; }
-        .nav-icon { @apply w-8 flex items-center justify-center text-xl drop-shadow-md shrink-0; }
+        /* 🚀 彻底重写的按钮样式，防坍塌，防缩进，绝对独占一行 */
+        .btn-nav-class { display: flex; width: 100%; align-items: center; padding: 1rem 1.25rem; margin-bottom: 0.5rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: left; }
+        .btn-nav-class:hover { background-color: rgba(30, 41, 59, 0.6); border-color: rgba(51, 65, 85, 1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .nav-icon { width: 2.5rem; display: inline-flex; align-items: center; justify-content: flex-start; font-size: 1.25rem; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.07)); flex-shrink: 0; }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         .planet { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: absolute; transform: translate(-50%, -50%); z-index: 10; }
-        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9); border-radius: 1rem 1rem 0 0; }
-        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 1rem 1rem; background: rgba(0,0,0,0.5); color: #e2e8f0; }
-        .ql-editor { min-height: 400px; line-height: 1.8; }
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9); border-radius: 1rem 1rem 0 0; padding: 10px; }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 1rem 1rem; background: rgba(0,0,0,0.5); color: #e2e8f0; font-size: 1rem; }
+        .ql-editor { min-height: 450px; line-height: 1.8; padding: 2rem; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
         
         .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
         .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); }
-        .nova-chat-panel { position: fixed; width: 380px; height: 550px; z-index: 99; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-        .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
+        .nova-chat-panel { position: fixed; width: 380px; height: 550px; z-index: 99; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }
     </style>
 </head>
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
     <div class="space-bg"></div><div class="grid-bg"></div>
 
-    <!-- 侧边栏：修复缩进，使用绝对对其的 Flex 布局 -->
-    <aside class="w-[19rem] border-r border-slate-800 flex flex-col py-8 px-5 glass-panel z-20 shrink-0 shadow-2xl relative">
+    <!-- 🚀 侧边栏：彻底根除缩进问题，绝对块级排版 -->
+    <aside class="w-[19rem] border-r border-slate-800 flex flex-col py-8 px-4 glass-panel z-20 shrink-0 shadow-2xl relative">
         <button @click="toggleLang()" class="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition" x-text="lang === 'zh' ? 'EN' : '中'"></button>
         
         <button @click="goHome()" class="w-full mb-10 flex items-center justify-center gap-2 px-4 py-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm text-xs font-bold uppercase tracking-wider group cursor-pointer">
             <span class="group-hover:-translate-x-1 transition-transform text-lg">⬅</span> <span x-text="dict.back"></span>
         </button>
 
-        <div class="mb-8 px-2">
+        <div class="mb-8 px-3">
             <div class="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-2xl tracking-tighter" x-text="dict.brand"></div>
-            <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Unified Command Center</div>
+            <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Global Standard Edition</div>
         </div>
 
-        <!-- 🚀 所有菜单项拉平层级，统一间距 -->
-        <nav class="flex-1 flex flex-col gap-2 overflow-y-auto mt-2 px-1 scrollbar-hide">
+        <nav class="flex-1 overflow-y-auto mt-2 px-2 scrollbar-hide block w-full">
             
+            <!-- 模块 1：排课系统 -->
             <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]':'text-slate-400'">
-                <span class="nav-icon">🌌</span> <span x-text="dict.navMap"></span>
+                <span class="nav-icon">🌌</span> <span><span x-text="dict.navMap"></span></span>
             </button>
             <button @click="modals.planner = true" class="btn-nav-class" :class="modals.planner?'bg-purple-600/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]':'text-slate-400'">
-                <span class="nav-icon">✨</span> <span x-text="dict.navEngine"></span>
+                <span class="nav-icon">✨</span> <span><span x-text="dict.navEngine"></span></span>
             </button>
 
-            <div class="h-px bg-slate-800/40 my-3 mx-2 shrink-0"></div>
+            <div class="h-px bg-slate-800/40 my-6 mx-2 w-[90%]"></div>
 
+            <!-- 模块 2：伴读系统 (绝对同级，无嵌套) -->
             <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400'">
-                <span class="nav-icon">📘</span> <span x-text="dict.navReadEn"></span>
+                <span class="nav-icon">📘</span> <span><span x-text="dict.navReadEn"></span></span>
             </button>
             <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]':'text-slate-400'">
-                <span class="nav-icon">📙</span> <span x-text="dict.navReadZh"></span>
+                <span class="nav-icon">📙</span> <span><span x-text="dict.navReadZh"></span></span>
             </button>
 
-            <div class="h-px bg-slate-800/40 my-3 mx-2 shrink-0"></div>
+            <div class="h-px bg-slate-800/40 my-6 mx-2 w-[90%]"></div>
 
+            <!-- 模块 3：写作系统 -->
             <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)]':'text-slate-400'">
-                <span class="nav-icon">✍️</span> <span x-text="dict.navWrite"></span>
+                <span class="nav-icon">✍️</span> <span><span x-text="dict.navWrite"></span></span>
             </button>
 
         </nav>
@@ -83,21 +86,22 @@
 
     <main class="flex-1 relative overflow-hidden bg-transparent">
         
-        <!-- 星系视图 -->
+        <!-- ================= 视图：星系地图 ================= -->
         <div x-show="view === 'galaxy'" x-transition class="absolute inset-0 flex items-center justify-center min-h-full">
             <template x-for="r in [300, 500, 700]"><div class="orbit" :style="`width: ${r}px; height: ${r}px;`"></div></template>
             <template x-for="s in subjects" :key="s.id">
                 <div class="planet flex flex-col items-center" :style="`left: calc(50% + ${Math.cos(s.angle) * s.radius}px); top: calc(50% + ${Math.sin(s.angle) * s.radius}px);`" @click="openSubject(s)">
                     <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 shadow-xl flex items-center justify-center text-3xl hover:scale-110 transition shadow-blue-900/20" x-text="s.icon"></div>
-                    <span class="mt-3 text-[10px] font-bold text-slate-200 uppercase tracking-widest bg-black/60 px-2.5 py-1 rounded-lg border border-slate-800" x-text="s.title"></span>
+                    <span class="mt-3 text-[10px] font-bold text-slate-200 uppercase tracking-widest bg-black/60 px-2.5 py-1 rounded-lg border border-slate-800 shadow-lg" x-text="s.title"></span>
                 </div>
             </template>
             <div x-show="subjects.length === 0" class="text-center opacity-30">
-                <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest" x-text="dict.emptyMap"></p>
+                <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase" x-text="dict.emptyMap"></p>
+                <button @click="modals.planner = true" class="mt-6 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg">🚀 激活全局引擎</button>
             </div>
         </div>
 
-        <!-- 伴读书架与对话区 -->
+        <!-- ================= 视图：伴读书架与对话区 ================= -->
         <div x-show="view.startsWith('reading')" x-cloak class="absolute inset-0 flex flex-col p-10 overflow-y-auto fade-in">
             <div x-show="!activeBook">
                 <div class="flex justify-between items-center mb-10">
@@ -146,76 +150,110 @@
             </div>
         </div>
 
-        <!-- 5级排课编辑器 (Level 2->3->4->5) -->
+        <!-- ================= 视图：动态大纲编辑器 (Level 2->3->4->5) ================= -->
         <div x-show="editingSubject" x-cloak class="absolute inset-0 bg-slate-950 z-[55] p-6 flex flex-col fade-in">
             <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                 <div class="flex items-center gap-5">
-                    <span class="text-5xl" x-text="editingSubject?.icon"></span>
+                    <span class="text-5xl drop-shadow-md" x-text="editingSubject?.icon"></span>
                     <div>
                         <h2 class="text-3xl font-black text-blue-300 tracking-tight" x-text="editingSubject?.title"></h2>
                         <div class="text-[10px] text-slate-500 font-mono tracking-widest uppercase mt-1" x-text="editingSubject?.region === 'CN' ? 'China Standard' : 'International Standard'"></div>
                     </div>
                 </div>
-                <button @click="closeSubject()" class="px-8 py-2.5 bg-slate-800 rounded-xl hover:bg-slate-700 font-bold transition text-sm" x-text="dict.backMap"></button>
+                <button @click="closeSubject()" class="px-8 py-2.5 bg-slate-800 rounded-xl hover:bg-slate-700 font-bold transition text-sm border border-slate-700 shadow-md" x-text="dict.backMap"></button>
             </div>
             
             <div class="flex flex-1 gap-6 min-h-0">
+                <!-- 左侧：全局排课树 -->
                 <div class="w-80 flex flex-col gap-4 overflow-y-auto pr-2 scrollbar-hide">
                     <template x-for="unit in editingSubject?.units" :key="unit.id">
-                        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
-                            <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex justify-between items-center border-b border-slate-800/50 pb-2"><span x-text="unit.title"></span></div>
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex justify-between items-center border-b border-slate-800/50 pb-2">
+                                <span x-text="unit.title"></span>
+                                <span class="bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded" x-text="`${unit.lessons.length}L`"></span>
+                            </div>
                             <div class="space-y-2 mt-3">
                                 <template x-for="lesson in unit.lessons" :key="lesson.id">
-                                    <div @click="selectLesson(unit, lesson)" class="p-3 rounded-xl border border-slate-800 bg-slate-800/40 hover:border-blue-500/50 transition cursor-pointer flex justify-between items-center" :class="curLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/30' : ''">
+                                    <div @click="selectLesson(unit, lesson)" class="p-3 rounded-xl border border-slate-800 bg-slate-800/40 hover:border-blue-500/50 transition cursor-pointer flex justify-between items-center" :class="curLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : ''">
                                         <span class="text-xs font-bold text-slate-200" x-text="lesson.title"></span>
-                                        <span x-show="lesson.content" class="text-[10px]">📝</span>
+                                        <span x-show="lesson.content" class="text-[10px] opacity-60">📝</span>
                                     </div>
                                 </template>
                             </div>
                         </div>
                     </template>
-                    <button @click="generateUnits()" class="w-full py-5 border-2 border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 hover:text-blue-400 transition font-bold" :disabled="loading">
-                        <span x-show="loading" class="animate-spin inline-block mr-2">↻</span> <span x-text="loading ? '正在根据大纲拆解全学期课表...' : '✨ 智能拆解全学期课表'"></span>
+                    <button @click="generateUnits()" class="w-full py-5 border-2 border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 hover:text-blue-400 hover:border-blue-500/50 transition font-bold bg-slate-900/20" :disabled="loading">
+                        <span x-show="loading" class="animate-spin inline-block mr-2">↻</span> 
+                        <span x-text="loading ? (lang==='zh'?'正在根据真实大纲查阅排课...':'Parsing true curriculum...') : (lang==='zh'?'✨ 获取官方学期大纲与课表':'✨ Fetch True Curriculum Plan')"></span>
                     </button>
                 </div>
 
-                <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col relative bg-slate-900/40 border border-slate-800">
+                <!-- 右侧：备课区 -->
+                <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col relative bg-slate-900/40 border border-slate-800 shadow-2xl">
                     <template x-if="!curLesson">
                         <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-40"><div class="text-8xl mb-6">🖋️</div><p class="font-bold text-sm tracking-widest uppercase">Select a lesson to start</p></div>
                     </template>
                     <template x-if="curLesson">
                         <div class="flex flex-col h-full fade-in">
-                            <div class="flex justify-between items-center mb-4 shrink-0">
-                                <input x-model="curLesson.title" class="bg-transparent text-2xl font-black border-none outline-none text-white w-2/3 transition tracking-tight">
-                                <button @click="generatePlan()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:scale-105 transition" :disabled="loading">✨ AI 生成苏格拉底教案</button>
+                            <div class="flex justify-between items-center mb-6 shrink-0 bg-indigo-900/10 p-4 rounded-2xl border border-indigo-500/10">
+                                <div class="flex-1 mr-4">
+                                    <div class="text-[10px] text-indigo-400 font-mono font-black uppercase mb-1">Active Lesson Planning</div>
+                                    <input x-model="curLesson.title" class="bg-transparent text-2xl font-black border-none outline-none text-white w-full transition tracking-tight">
+                                </div>
+                                <button @click="generatePlan()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:scale-105 transition flex items-center gap-2" :disabled="loading">
+                                    <span x-show="loading" class="animate-spin text-lg">↻</span> ✨ AI 生成苏格拉底教案
+                                </button>
                             </div>
                             <div id="toolbar-container" class="shrink-0 mb-2">
                                 <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
                                 <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
                                 <span class="ql-formats"><button class="ql-image"></button><button class="ql-video"></button></span>
                             </div>
-                            <div id="editor-container" class="flex-1 overflow-y-auto mb-4 border border-slate-800 rounded-2xl"></div>
-                            <div class="flex justify-end border-t border-slate-800 pt-4"><button @click="savePlan()" class="px-12 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg transition text-sm">💾 保存节点并同步</button></div>
+                            <div id="editor-container" class="flex-1 overflow-y-auto mb-4 border border-slate-800 rounded-2xl bg-black/40"></div>
+                            <div class="flex justify-end border-t border-slate-800 pt-4"><button @click="savePlan()" class="px-12 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg transition text-sm flex items-center gap-2">💾 <span>同步存档至云端</span></button></div>
                         </div>
                     </template>
                 </div>
             </div>
         </div>
 
-        <!-- 排课弹窗 -->
+        <!-- 🚀 弹窗：全球智能排课系统 (全局无限制版) -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
-                <div class="text-center mb-8"><div class="text-6xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest" x-text="dict.planTitle"></h2></div>
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔮</div>
+                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest" x-text="dict.planTitle"></h2>
+                    <p class="text-slate-500 text-[10px] mt-2 tracking-widest uppercase">Global Standard Matrix Engine</p>
+                </div>
+                
+                <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
+                    <button @click="planMode = 'standard'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'standard' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">官方真题大纲</button>
+                    <button @click="planMode = 'custom'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'custom' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">自由主题建模</button>
+                </div>
+
                 <div class="space-y-6">
-                    <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200">
-                        <template x-for="c in dict.curries"><option :value="c" x-text="c"></option></template>
-                    </select>
-                    <div class="grid grid-cols-2 gap-4">
-                        <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200"><template x-for="g in dict.grades"><option :value="g" x-text="g"></option></template></select>
-                        <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200"><template x-for="t in dict.terms"><option :value="t" x-text="t"></option></template></select>
-                    </div>
-                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-xl transition text-white" :disabled="loading"><span x-show="loading" class="animate-spin text-xl mr-2">↻</span> 🚀 构建全局知识星图</button>
+                    <template x-if="planMode === 'standard'">
+                        <div class="space-y-4 fade-in">
+                            <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-purple-500 transition">
+                                <template x-for="c in dict.curries"><option :value="c" x-text="c"></option></template>
+                            </select>
+                            <div class="grid grid-cols-2 gap-4">
+                                <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-blue-500 transition"><template x-for="g in dict.grades"><option :value="g" x-text="g"></option></template></select>
+                                <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-blue-500 transition"><template x-for="t in dict.terms"><option :value="t" x-text="t"></option></template></select>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="planMode === 'custom'">
+                        <div class="fade-in">
+                            <input type="text" x-model="customTheme" placeholder="例如：少儿AI启蒙、机器人学、达芬奇艺术..." class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm text-slate-200 outline-none focus:border-purple-500 transition shadow-inner">
+                        </div>
+                    </template>
+
+                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-3 transition text-white text-base tracking-widest" :disabled="loading">
+                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在调取全球算力节点...' : '🚀 构建全局知识星图'"></span>
+                    </button>
+                    <button x-show="subjects.length > 0 && !loading" @click="clearGalaxy()" class="w-full py-2 text-rose-500 text-[10px] font-bold uppercase tracking-widest underline mt-2 bg-transparent opacity-50 hover:opacity-100 transition">Reset All Cloud Data (危险操作)</button>
                 </div>
             </div>
         </div>
@@ -239,7 +277,7 @@
             return {
                 lang: localStorage.getItem('xp_lang') || 'zh', isPro: localStorage.getItem('xp_is_pro') === 'true',
                 view: 'galaxy', subjects: [], loading: false, modals: { planner: false },
-                planConfig: { curriculum: '', grade: '', term: '' },
+                planMode: 'standard', planConfig: { curriculum: '', grade: '', term: '' }, customTheme: '',
                 editingSubject: null, curLesson: null,
                 
                 // 伴读状态
@@ -247,7 +285,7 @@
                     { id: 'b1', title: 'The Little Prince (Chapter 1)', lang: 'en', progress: 45, accuracy: 88, content: 'Once when I was six years old I saw a magnificent picture in a book...', chatLog: [] }, 
                     { id: 'b2', title: '《西游记》第一回：灵根育孕源流出', lang: 'zh', progress: 20, accuracy: 82, content: '混沌未分天地乱，茫茫渺渺无人见...', chatLog: [] }
                 ],
-                activeBook: null, readInput: '',
+                activeBook: null, readInput: '', readLoading: false,
                 
                 novaOpen: false, novaInput: '', novaMsgs: [], novaPos: {x: window.innerWidth - 100, y: window.innerHeight - 100}, isDragging: false, start: {x:0,y:0}, offset: {x:0,y:0},
                 supaClient: null, dbConnected: false,
@@ -255,16 +293,16 @@
                 i18n: {
                     zh: {
                         brand: 'XuePilot PRO', back: '返回主控舱', navMap: '云端知识星系', navEngine: '全球智能排课系统', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
-                        emptyMap: '星系空旷，请启动排课引擎映射知识星球。', planTitle: '智能排课引擎',
-                        curries: ['中国义务教育课标 (2022版)', 'US Common Core', 'UK National Curriculum', 'Singapore Standards'],
-                        grades: ['三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
+                        emptyMap: '星系空旷，请启动全局排课引擎。', planTitle: '智能排课引擎',
+                        curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
+                        grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
                         backMap: '返回星图', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨核心思想...'
                     },
                     en: {
                         brand: 'XuePilot PRO', back: 'Return', navMap: 'Cloud Galaxy', navEngine: 'Smart Scheduling', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage',
                         emptyMap: 'Your galaxy is empty. Start the engine to map planets.', planTitle: 'Scheduling Engine',
-                        curries: ['CN Curriculum', 'US Common Core', 'UK National Curriculum', 'Singapore Standards'],
-                        grades: ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
+                        curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
+                        grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
                         backMap: 'Back to Map', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore ideas...'
                     }
                 },
@@ -273,7 +311,7 @@
 
                 async init() {
                     if(!this.isPro) window.location.href = 'index.html';
-                    this.planConfig.curriculum = this.dict.curries[0]; this.planConfig.grade = this.dict.grades[1]; this.planConfig.term = this.dict.terms[0];
+                    this.planConfig.curriculum = this.dict.curries[0]; this.planConfig.grade = this.dict.grades[2]; this.planConfig.term = this.dict.terms[0];
                     const url = localStorage.getItem('xp_supa_url'), key = localStorage.getItem('xp_supa_key');
                     if (url && key && window.supabase) {
                         try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
@@ -305,14 +343,15 @@
                     let sysMsg = customSys || 'You are an elite Socratic educator. NEVER give answers.';
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: sysMsg }, { role: 'user', content: prompt }] }) });
+                        if(!res.ok) throw new Error();
                         const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { return null; }
+                    } catch(e) { Swal.fire('请求失败', '网络或 API 接口存在异常', 'error'); return null; }
                 },
 
-                // 核心：伴读对话逻辑 (Socratic)
+                // 伴读对话逻辑
                 async sendReadText() {
-                    const t = this.readInput.trim(); if(!t || this.loading) return;
-                    this.readInput = ''; this.activeBook.chatLog.push({ role: 'user', text: t }); this.loading = true;
+                    const t = this.readInput.trim(); if(!t || this.readLoading) return;
+                    this.readInput = ''; this.activeBook.chatLog.push({ role: 'user', text: t }); this.readLoading = true;
                     this.$nextTick(() => { const b = document.getElementById('read-chat-box'); b.scrollTop = b.scrollHeight; });
 
                     const isEn = this.activeBook.lang === 'en';
@@ -321,25 +360,33 @@
                     const prompt = `Text Material:\n${this.activeBook.content.substring(0, 1500)}\n\nStudent says: ${t}`;
                     const res = await this.callAI(prompt, 'nova', sysMsg);
                     if(res) { this.activeBook.chatLog.push({ role: 'nova', text: res.replace(/\n/g, '<br>') }); this.sync(); }
-                    this.loading = false;
+                    this.readLoading = false;
                     this.$nextTick(() => { const b = document.getElementById('read-chat-box'); b.scrollTop = b.scrollHeight; });
                 },
 
                 startReading(book) { this.activeBook = book; if(this.activeBook.chatLog.length === 0) { this.activeBook.chatLog.push({ role: 'nova', text: this.lang === 'en' ? "Welcome, Commander. I've analyzed this piece. What intrigues you the most?" : "欢迎指挥官。我已经解析了这份卷宗，你对文中的哪个细节最感兴趣？" }); } },
 
-                // 排课逻辑
+                // 🚀 全局宏观建图 (Level 1: 真实学科映射，无硬编码限制)
                 async generateSemesterMap() {
                     this.loading = true;
                     const isIntl = !this.planConfig.curriculum.includes('中国');
                     const targetLang = isIntl ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nBased on ${this.planConfig.curriculum} grade ${this.planConfig.grade}, generate 5 Subjects.\nJSON: [{"title": "...", "icon": "emoji"}]`;
+                    const context = this.planMode === 'standard' ? `【${this.planConfig.curriculum}】在【${this.planConfig.grade}】` : `自定义探索领域：【${this.customTheme}】`;
+                    
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
+作为全球顶尖教育大纲专家，请严格遵循${context}的官方最新课程标准（或逻辑结构）。
+要求：
+1. 输出该学期官方规定的所有核心标准学科（Subjects）。
+2. 学科数量由该国真实大纲决定，不要自行增减或生搬硬套（例如中国课标必须有“语文”“道德与法治”等，决不能有机翻的“社会课”；美国课标必须包含 Language Arts 等原生术语）。
+必须返回严格JSON格式: [{"title": "学科官方原生名称", "icon": "单字符emoji"}]`;
+
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
-                            this.subjects = parsed.map((s,i)=>({ ...s, id: `sub_${Date.now()}_${i}`, region: isIntl?'INTL':'CN', radius:200+(i%2?200:0), angle:i*1.2, units:[] }));
+                            this.subjects = parsed.map((s,i)=>({ ...s, id: `sub_${Date.now()}_${i}`, region: isIntl?'INTL':'CN', radius:200+(Math.floor(i/3)*150), angle:(i*1.2)+Math.random()*0.5, units:[] }));
                             await this.sync(); this.modals.planner = false;
-                        } catch(e) {}
+                        } catch(e) { Swal.fire('Error', '格式解析失败，大模型返回异常', 'error'); }
                     }
                     this.loading = false;
                 },
@@ -347,26 +394,33 @@
                 openSubject(s) { this.editingSubject = s; this.curLesson = null; window.quillEditor = null; },
                 closeSubject() { if(this.curLesson) this.savePlan(); this.editingSubject = null; },
 
-                // 🚀 修复全学期拆解：要求严格按官方标准拆解 8-12 个核心单元
+                // 🚀 中微观拆解 (Level 2 & 3: 真实课表结构映射，无硬编码限制)
                 async generateUnits() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n作为该地区的教育专家，请根据当地官方教学大纲，为《${this.editingSubject.title}》规划整个学期完整的课程计划。请包含全学期约8-12个核心教学单元(Units)，每个单元拆解2-4个具体课时(Lessons)。确保系统性和完整性。\n必须返回严格JSON格式: [{"title": "Unit 1: ...", "lessons": [{"title": "1.1 ..."}]}]`;
+                    
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
+作为该地区的教育大纲编制专家，请严格根据该地区的官方最新教学大纲，为《${this.editingSubject.title}》科目规划完整的学期教学计划。
+要求：
+1. 单元(Units)和课时(Lessons)的数量必须严格符合该地区该学期的实际教学周数和标准课时量。
+2. 内容必须系统、完整，不要遗漏官方大纲要求的核心知识点。
+必须返回严格JSON格式: [{"title": "单元或周次名称: 主题", "lessons": [{"title": "课时具体名称"}]}]`;
+
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
-                            this.editingSubject.units = parsed.map((u, i) => ({ ...u, id: `unit_${i}_${Date.now()}`, lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) }));
+                            this.editingSubject.units = parsed.map((u, i) => ({ 
+                                ...u, 
+                                id: `unit_${i}_${Date.now()}`, 
+                                lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) 
+                            }));
                             
-                            // 更新并强制云端同步
                             const subIdx = this.subjects.findIndex(s => s.id === this.editingSubject.id);
-                            if (subIdx !== -1) {
-                                this.subjects[subIdx] = this.editingSubject;
-                                await this.sync();
-                            }
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang==='zh'?'全学期课表已生成并存入云端':'Semester planned and synced', showConfirmButton: false, timer: 2000 });
+                            if (subIdx !== -1) { this.subjects[subIdx] = this.editingSubject; await this.sync(); }
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang==='zh'?'真实大纲已下载并入库':'Curriculum synced', showConfirmButton: false, timer: 2000 });
                         } catch(e) {
-                            Swal.fire('Error', this.lang==='zh'?'大纲解析失败，请重试':'Failed to parse curriculum', 'error');
+                            Swal.fire('Error', this.lang==='zh'?'由于真实大纲数据过于庞大，大模型生成可能截断。请换个更强力的节点或重试。':'Failed to parse full curriculum. Try again.', 'error');
                         }
                     }
                     this.loading = false;
@@ -384,7 +438,7 @@
                 async generatePlan() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}".\nHTML only (h3, ul, li, p). No markdown wrapper.`;
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}".\nHTML only (h3, ul, li, p). No markdown wrapper. Never give direct answers, use 3 questions to end.`;
                     const res = await this.callAI(prompt);
                     if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
                     this.loading = false;
@@ -394,7 +448,13 @@
                     if (window.quillEditor) this.curLesson.content = window.quillEditor.root.innerHTML;
                     const subIdx = this.subjects.findIndex(s => s.id === this.editingSubject.id);
                     if (subIdx !== -1) { this.subjects[subIdx] = this.editingSubject; this.sync(); }
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Synced', showConfirmButton: false, timer: 1500 });
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved to Database', showConfirmButton: false, timer: 1500 });
+                },
+
+                clearGalaxy() {
+                    Swal.fire({ title: '危险操作', text: '确认清除所有星图数据？此操作不可逆！', icon: 'warning', showCancelButton: true, background: '#0f172a', color: '#fff' }).then(res => {
+                        if(res.isConfirmed) { this.subjects = []; this.sync(); this.modals.planner = false; }
+                    });
                 },
 
                 // NOVA 拖拽

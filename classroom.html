@@ -134,14 +134,14 @@
             </div>
 
             <!-- 🚀 星系容器：利用绝对定位渲染每一颗星系 -->
-            <div class="absolute w-full h-full pointer-events-none">
+            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点 (仅对活跃星系应用平移变换，实现独立移动并防遮挡) -->
+                    <!-- 🚀 独立星系根节点 -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: translate(0px, 0px) scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
@@ -165,20 +165,23 @@
                             </template>
                         </svg>
 
+                        <!-- 🚀 星系核心恒星 (智能判别点击动作) -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
-                                 @click.stop="if(g.id === activeGalaxyId) openCurriculumEditor(g)">
+                                 @click.stop="g.id === activeGalaxyId ? openCurriculumEditor(g) : activateGalaxy(g.id)">
                                 <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
                                 <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
                                 <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg" x-text="dict.editBtnText || 'EDIT'"></div>
                             </div>
                             
                             <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
+                                <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
                                 <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
                             </div>
                         </div>
 
+                        <!-- 学科行星群 -->
                         <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
                             <template x-for="s in g.subjects" :key="s.id">
                                 <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 

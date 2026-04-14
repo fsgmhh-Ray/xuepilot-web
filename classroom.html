@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
-        body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
+        body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; perspective: 1000px; }
         
         .glass-panel { background: rgba(10, 15, 30, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
         
@@ -34,14 +34,15 @@
             to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 40px rgba(59,130,246,0.7); transform: scale(1.05); }
         }
 
+        /* 🚀 核心恒星：加入淡淡的高温火焰光芒 (黄白内核 -> 金橙边 -> 紫色光晕) */
         .planet-core {
-            background: radial-gradient(circle at 35% 35%, rgba(216, 180, 254, 1) 0%, rgba(147, 51, 234, 0.8) 45%, rgba(2, 6, 23, 0.95) 100%);
-            border: 1px solid rgba(216, 180, 254, 0.4);
+            background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 20%, #f59e0b 45%, #9333ea 85%, #020617 100%);
+            border: 1px solid rgba(253, 230, 138, 0.5);
         }
-        .core-breath { animation: coreBreath 4s ease-in-out infinite alternate; }
+        .core-breath { animation: coreBreath 3s ease-in-out infinite alternate; }
         @keyframes coreBreath {
-            from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 25px rgba(168,85,247,0.3); transform: scale(1); }
-            to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 60px rgba(168,85,247,0.8); transform: scale(1.05); }
+            from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 30px rgba(245, 158, 11, 0.5), 0 0 60px rgba(147, 51, 234, 0.4); transform: scale(1); }
+            to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.9), 0 0 60px rgba(245, 158, 11, 0.9), 0 0 120px rgba(147, 51, 234, 0.8); transform: scale(1.05); }
         }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -115,9 +116,12 @@
         <!-- ================= 视图：多重宇宙星系 (自由平移架构) ================= -->
         <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms 
              class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
-             @mousedown="startPan" @mousemove.window="doPan" @mouseup.window="endPan"
-             @touchstart="startPan" @touchmove.window="doPan" @touchend.window="endPan">
+             @mousemove.window="doPan" @mouseup.window="endPan"
+             @touchmove.window="doPan" @touchend.window="endPan">
             
+            <!-- 🚀 拖拽感应层 (彻底解决事件穿透) -->
+            <div class="absolute inset-0 z-0 bg-[rgba(0,0,0,0.01)]" @mousedown="startPan" @touchstart="startPan"></div>
+
             <!-- 🚀 浪漫神经网 Canvas 层 (完全覆盖整个视野) -->
             <canvas id="network-canvas"></canvas>
 
@@ -128,55 +132,73 @@
             </div>
 
             <!-- 🚀 星系容器：利用真实的物理平移响应鼠标拖拽 -->
-            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <div class="absolute w-full h-full pointer-events-none" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 星系绝对坐标系 (动画平滑切换视角) -->
-                    <div class="absolute flex items-center justify-center w-0 h-0 transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                         :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: scale(1); z-index: 20; opacity: 1; pointer-events: none;` 
-                                 : `left: ${g.bgX}%; top: ${g.bgY}%; transform: scale(0.05); z-index: 10; opacity: 0.5; cursor: pointer; pointer-events: auto;`"
+                    <!-- 🚀 独立星系容器 -->
+                    <div class="absolute flex items-center justify-center w-0 h-0 group"
+                         :class="g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none'"
+                         :style="`left: ${g.bgX}%; top: ${g.bgY}%;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <!-- 隐形引力结界 -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 pointer-events-none opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]"
-                             style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
-
-                        <!-- 轨道环 (仅激活状态显示) -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
-                            <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
+                        <!-- 🚀 远距离探测雷达 (Hover 放大显示名称，解决微雕问题) -->
+                        <div x-show="g.id !== activeGalaxyId" class="absolute -top-24 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 whitespace-nowrap flex flex-col items-center">
+                            <span class="bg-slate-900/95 text-amber-300 px-6 py-3 rounded-2xl border border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.6)] text-xl font-black tracking-widest uppercase flex items-center gap-3">
+                                <span class="text-3xl animate-pulse">🔥</span> <span x-text="g.title"></span>
+                            </span>
+                            <div class="w-1 h-8 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
-                        <!-- 🚀 星系核心 (恒星) 与延迟悬停控制台 -->
-                        <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
-                            <!-- 核心发光球体 -->
-                            <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
-                                 :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 600px; height: 600px;'">
-                                <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-9xl'">🔮</div>
-                                <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
-                                <div x-show="g.id !== activeGalaxyId" class="text-6xl font-black text-purple-200 mt-10 tracking-widest whitespace-nowrap" x-text="g.title"></div>
-                            </div>
+                        <!-- 🚀 缩放控制层 -->
+                        <div class="relative flex items-center justify-center w-0 h-0 transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                             :class="g.id !== activeGalaxyId ? 'group-hover:scale-[0.2]' : ''"
+                             :style="g.id === activeGalaxyId ? 'transform: scale(1); opacity: 1; z-index: 20;' : 'transform: scale(0.15); opacity: 0.8; z-index: 10;'">
                             
-                            <!-- 🚀 悬停延迟控制台 (Delay 400ms) -->
-                            <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
-                                <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
-                                <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
+                            <!-- 隐形引力结界 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]"
+                                 style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
+
+                            <!-- 轨道环 (仅激活状态显示) -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
+                                <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
                             </div>
-                        </div>
 
-                        <!-- 🚀 学科行星群 (仅激活时可视与点击) -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
-                            <template x-for="s in g.subjects" :key="s.id">
-                                <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
-                                     :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
-                                     @click.stop="openSubject(g, s)">
-                                    
-                                    <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
-                                    <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                            <!-- 🚀 SVG 灵动连接线层 -->
+                            <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
+                                <template x-for="s in g.subjects" :key="s.id">
+                                    <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
+                                </template>
+                            </svg>
+
+                            <!-- 🚀 星系核心恒星 (高温火焰光芒) -->
+                            <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
+                                <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
+                                     :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'">
+                                    <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
+                                    <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
                                 </div>
-                            </template>
-                        </div>
+                                
+                                <!-- 🚀 悬停延迟控制台 (Delay 400ms) -->
+                                <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
+                                    <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
+                                    <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
+                                </div>
+                            </div>
 
+                            <!-- 🚀 学科行星群 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
+                                <template x-for="s in g.subjects" :key="s.id">
+                                    <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
+                                         :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
+                                         @click.stop="openSubject(g, s)">
+                                        
+                                        <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
+                                        <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                        </div>
                     </div>
                 </template>
             </div>
@@ -389,7 +411,12 @@
                     if (data.galaxies) this.galaxies = data.galaxies;
                     else if (data.subjects && data.subjects.length > 0) this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, subjects: data.subjects }];
                     this.books = data.books || this.books;
-                    if(this.galaxies.length > 0 && !this.activeGalaxyId) this.activeGalaxyId = this.galaxies[0].id;
+                    if(this.galaxies.length > 0 && !this.activeGalaxyId) {
+                        this.activeGalaxyId = this.galaxies[0].id;
+                        // Center camera on active galaxy
+                        this.panX = 50 - this.galaxies[0].bgX * 10;
+                        this.panY = 50 - this.galaxies[0].bgY * 10;
+                    }
                 },
                 async sync() { 
                     if (this.supaClient) await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { galaxies: this.galaxies, books: this.books } });
@@ -400,11 +427,19 @@
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
                 
-                activateGalaxy(gid) { this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; },
+                activateGalaxy(gid) { 
+                    this.activeGalaxyId = gid;
+                    const g = this.galaxies.find(x => x.id === gid);
+                    if (g) {
+                        // Optional: Auto pan to center the newly activated galaxy
+                        // this.panX = 50 - g.bgX * 10; 
+                        // this.panY = 50 - g.bgY * 10;
+                    }
+                },
 
                 // 全局引力拖拽引擎
                 startPan(e) {
-                    if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-container') || e.target.closest('.planet-core')) return;
+                    if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d')) return;
                     this.isPanning = true;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -415,8 +450,8 @@
                     if (!this.isPanning) return;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.panX = Math.max(-1000, Math.min(1000, cx - this.startX));
-                    this.panY = Math.max(-1000, Math.min(1000, cy - this.startY));
+                    this.panX = Math.max(-1500, Math.min(1500, cx - this.startX));
+                    this.panY = Math.max(-1500, Math.min(1500, cy - this.startY));
                 },
                 endPan() { this.isPanning = false; },
 
@@ -467,7 +502,8 @@
                                 id: `gal_${Date.now()}`,
                                 title: this.planMode === 'standard' ? `${this.planConfig.grade} ${this.planConfig.curriculum.split(' ')[0]}` : this.customTheme,
                                 region: isIntl ? 'INTL' : 'CN',
-                                bgX: 10 + Math.random() * 80, bgY: 10 + Math.random() * 80,
+                                bgX: 50 + (Math.random() * 80 - 40), // Cluster near center for easier finding
+                                bgY: 50 + (Math.random() * 80 - 40),
                                 subjects: parsed.map((s,i) => {
                                     let orbitIndex = Math.floor(i / 5); 
                                     let r = 240 + orbitIndex * 140; 
@@ -475,7 +511,9 @@
                                     return { ...s, id: `sub_${Date.now()}_${i}`, radius: r, angle: angle, units:[] };
                                 })
                             };
-                            this.galaxies.push(newGalaxy); this.activeGalaxyId = newGalaxy.id; this.panX = 0; this.panY = 0;
+                            this.galaxies.push(newGalaxy); 
+                            this.activeGalaxyId = newGalaxy.id; 
+                            this.panX = 0; this.panY = 0; // Reset pan to center new galaxy
                             await this.sync(); this.modals.planner = false;
                         } catch(e) { Swal.fire('Error', 'AI format error', 'error'); }
                     }
@@ -538,150 +576,6 @@
                 }
             }
         }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-    <!-- 🚀 纯粹的 3D 星空与浪漫拓扑网络 Canvas 渲染引擎 -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // --- 1. 3D 飞星宇宙背景 ---
-            const bgCanvas = document.getElementById('bg-starfield');
-            const bgCtx = bgCanvas.getContext('2d');
-            let stars = [];
-            const numStars = 800;
-
-            function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
-            window.addEventListener('resize', resizeBg); resizeBg();
-
-            for (let i = 0; i < numStars; i++) {
-                stars.push({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000 });
-            }
-
-            function animateBg() {
-                bgCtx.fillStyle = '#02040a';
-                bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-                const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2;
-
-                stars.forEach(star => {
-                    star.z -= 2; 
-                    if (star.z <= 0) { star.z = 2000; star.x = Math.random() * 2000 - 1000; star.y = Math.random() * 2000 - 1000; }
-                    const k = 128.0 / star.z;
-                    const px = star.x * k + cx; const py = star.y * k + cy;
-                    const size = (1 - star.z / 2000) * 2;
-                    if (px >= 0 && px <= bgCanvas.width && py >= 0 && py <= bgCanvas.height) {
-                        bgCtx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/2000})`;
-                        bgCtx.beginPath(); bgCtx.arc(px, py, size, 0, Math.PI * 2); bgCtx.fill();
-                    }
-                });
-                requestAnimationFrame(animateBg);
-            }
-            animateBg();
-
-            // --- 2. 浪漫拓扑神经网 (Romantic Dynamic Mesh) ---
-            const netCanvas = document.getElementById('network-canvas');
-            const netCtx = netCanvas.getContext('2d');
-            let dustNodes = [];
-            const numDust = 60; // 提升暗物质节点数量，使网格更繁密
-            let mouse = { x: -1000, y: -1000 };
-
-            function resizeNet() { netCanvas.width = window.innerWidth; netCanvas.height = window.innerHeight; }
-            window.addEventListener('resize', resizeNet); resizeNet();
-
-            window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
-
-            for (let i = 0; i < numDust; i++) {
-                dustNodes.push({
-                    baseAngle: Math.random() * Math.PI * 2,
-                    baseRadius: 100 + Math.random() * 800,
-                    speed: (Math.random() - 0.5) * 0.002,
-                    x: window.innerWidth / 2, y: window.innerHeight / 2,
-                    size: Math.random() * 2 + 1
-                });
-            }
-
-            function animateNet() {
-                netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
-                
-                const appState = window.galaxyState;
-                if (appState && appState.view === 'galaxy' && appState.activeGalaxyId) {
-                    const activeG = appState.galaxies.find(g => g.id === appState.activeGalaxyId);
-                    if (!activeG) return requestAnimationFrame(animateNet);
-
-                    // 绝对坐标中心：屏幕中央 + 物理拖拽偏移量
-                    const cx = netCanvas.width / 2 + appState.panX;
-                    const cy = netCanvas.height / 2 + appState.panY;
-                    
-                    const planets = activeG.subjects.map(s => ({
-                        x: cx + Math.cos(s.angle) * s.radius,
-                        y: cy + Math.sin(s.angle) * s.radius,
-                        isPlanet: true
-                    }));
-                    const core = { x: cx, y: cy, isPlanet: true };
-                    
-                    dustNodes.forEach(node => {
-                        node.baseAngle += node.speed;
-                        let targetX = cx + Math.cos(node.baseAngle) * node.baseRadius;
-                        let targetY = cy + Math.sin(node.baseAngle) * node.baseRadius;
-                        
-                        const dx = mouse.x - targetX; const dy = mouse.y - targetY;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        
-                        // 🚀 浪漫追逐特效：距离鼠标 250px 内会被引力拉扯旋转
-                        if (dist < 250) {
-                            const force = (250 - dist) / 250;
-                            targetX += (dx / dist) * force * 120; // 靠近鼠标
-                            targetX += (dy / dist) * force * 60;  // 产生漩涡位移
-                            targetY -= (dx / dist) * force * 60;
-                        }
-                        
-                        node.x += (targetX - node.x) * 0.08;
-                        node.y += (targetY - node.y) * 0.08;
-                        
-                        netCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
-                        netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
-                    });
-
-                    const allNodes = [core, ...planets, ...dustNodes];
-                    
-                    for (let i = 0; i < allNodes.length; i++) {
-                        for (let j = i + 1; j < allNodes.length; j++) {
-                            const n1 = allNodes[i]; const n2 = allNodes[j];
-                            const dx = n1.x - n2.x; const dy = n1.y - n2.y;
-                            const dist = Math.sqrt(dx*dx + dy*dy);
-                            
-                            // 连线阈值
-                            const threshold = (n1.isPlanet && n2.isPlanet) ? 400 : (n1.isPlanet || n2.isPlanet) ? 250 : 150;
-                            
-                            if (dist < threshold) {
-                                const opacity = (1 - dist / threshold) * (n1.isPlanet || n2.isPlanet ? 0.7 : 0.3);
-                                netCtx.beginPath();
-                                netCtx.moveTo(n1.x, n1.y);
-                                
-                                // 🚀 鼠标波动干扰特效
-                                const midX = (n1.x + n2.x)/2; const midY = (n1.y + n2.y)/2;
-                                const mdx = mouse.x - midX; const mdy = mouse.y - midY;
-                                const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
-                                
-                                if (mdist < 200) {
-                                    const bend = (200 - mdist) * 0.6;
-                                    const cpX = midX - (mdx/mdist)*bend;
-                                    const cpY = midY - (mdy/mdist)*bend;
-                                    netCtx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
-                                } else {
-                                    netCtx.lineTo(n2.x, n2.y);
-                                }
-                                
-                                netCtx.strokeStyle = `rgba(147, 197, 253, ${opacity})`;
-                                netCtx.lineWidth = n1.isPlanet && n2.isPlanet ? 2 : 1;
-                                netCtx.stroke();
-                            }
-                        }
-                    }
-                }
-                requestAnimationFrame(animateNet);
-            }
-            animateNet();
-        });
     </script>
 </body>
 </html>

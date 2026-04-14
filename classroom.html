@@ -4,43 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Explorer Deck</title>
-    <!-- PWA -->
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22XuePilot%20Explorer%22%2C%22short_name%22%3A%22Explorer%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%7D">
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/sweetalert2@11](https://cdn.jsdelivr.net/npm/sweetalert2@11)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; perspective: 1000px; }
         .glass-panel { background: rgba(10, 15, 30, 0.5); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        
         .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; position: relative; transition: transform 0.3s ease; }
         .planet-3d { background: radial-gradient(circle at 35% 35%, rgba(147, 197, 253, 1) 0%, rgba(37, 99, 235, 0.8) 45%, rgba(2, 6, 23, 0.95) 100%); border: 1px solid rgba(147, 197, 253, 0.4); }
         .planet-breath { animation: planetBreath 4s ease-in-out infinite alternate; }
         @keyframes planetBreath { from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(59,130,246,0.2); transform: scale(1); } to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 40px rgba(59,130,246,0.7); transform: scale(1.05); } }
-
         .planet-core { background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 20%, #f59e0b 45%, #9333ea 85%, #020617 100%); border: 1px solid rgba(253, 230, 138, 0.5); }
         .core-breath { animation: coreBreath 3s ease-in-out infinite alternate; }
         @keyframes coreBreath { from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 30px rgba(245, 158, 11, 0.5); transform: scale(1); } to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 120px rgba(147, 51, 234, 0.8); transform: scale(1.05); } }
-        .planet-core:hover { transform: scale(1.15) !important; animation-play-state: paused; z-index: 50; }
-        
-        .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        .no-select { user-select: none; -webkit-user-select: none; }
-        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
-        
-        /* 🚀 物理法则：引力丝线样式 */
         .galaxy-line { stroke: rgba(59, 130, 246, 0.2); stroke-width: 1.5; stroke-dasharray: 4; }
-
+        .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         #bg-starfield { position: fixed; inset: 0; z-index: -3; pointer-events: none; background: #02040a; }
         #network-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-        /* 🚀 跃迁载入屏 (解决卡顿感) */
         .warp-overlay { position: fixed; inset: 0; z-index: 100; background: #02040a; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
         .warp-spinner { width: 60px; height: 60px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
     <script>
         window.safeStorage = {
@@ -51,7 +38,6 @@
 </head>
 <body x-data="explorerApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
 
-    <!-- 🚀 跃迁缓冲层 -->
     <div x-show="isWarping" x-transition.opacity class="warp-overlay">
         <div class="warp-spinner mb-6"></div>
         <div class="text-blue-400 font-mono tracking-[0.5em] animate-pulse text-xs uppercase">Quantum Linking...</div>
@@ -59,31 +45,20 @@
 
     <canvas id="bg-starfield"></canvas>
 
-    <!-- 返回主页按钮 -->
+    <!-- 🚀 左上角返回主页按钮 (修正文案) -->
     <div @click="goHome()" class="absolute top-6 left-6 z-40 flex items-center gap-4 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-slate-700 shadow-xl cursor-pointer hover:bg-slate-800 transition group">
         <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition border border-slate-600 shadow-inner">🏠</button>
         <div>
-            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Explorer</div>
+            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Deck</div>
             <div class="font-bold text-sm tracking-wide">返回主页面</div>
         </div>
     </div>
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full">
-        
-        <!-- ================= 视图：3D 宇宙航线漫游 ================= -->
         <div class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
-             @mousedown="startPan" @touchstart="startPan"
-             @mousemove.window="doPan" @mouseup.window="endPan" 
-             @touchmove.window="doPan" @touchend.window="endPan">
-            
+             @mousedown="startPan" @touchstart="startPan" @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
             <canvas id="network-canvas"></canvas>
-
-            <!-- 空状态 -->
-            <div x-show="!isWarping && galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
-                <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase">等待指挥官部署星系任务...</p>
-            </div>
-
-            <!-- 星系容器 (独立平移架构) -->
+            
             <div class="absolute w-full h-full pointer-events-none">
                 <template x-for="g in galaxies" :key="g.id">
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
@@ -93,24 +68,16 @@
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <!-- 逆向物理缩放名牌 -->
                         <div x-show="g.id !== activeGalaxyId" class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); transform-origin: bottom center; bottom: 140px;">
                             <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-xs font-black tracking-widest uppercase flex items-center gap-2 whitespace-nowrap"><span class="text-base animate-pulse">🔥</span> <span x-text="g.title"></span></span>
                             <div class="w-px h-6 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
-                        <!-- 激活态视觉元素 -->
                         <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]" style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
                         <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;"><template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template></div>
+                        
+                        <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;"><template x-for="s in g.subjects" :key="s.id"><line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line></template></svg>
 
-                        <!-- 引力丝线 -->
-                        <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
-                            <template x-for="s in g.subjects" :key="s.id">
-                                <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
-                            </template>
-                        </svg>
-
-                        <!-- 星系核心恒星 (智能点击路由修复) -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
@@ -121,7 +88,6 @@
                             </div>
                         </div>
 
-                        <!-- 学科行星群 -->
                         <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
                             <template x-for="s in g.subjects" :key="s.id">
                                 <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
@@ -137,76 +103,22 @@
             </div>
         </div>
 
-        <!-- ================= 任务清单侧边栏 ================= -->
         <div x-show="activeSubject && !activeLesson" x-cloak class="absolute right-0 top-0 bottom-0 w-96 bg-slate-900/80 backdrop-blur-2xl border-l border-blue-500/30 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] flex flex-col z-40 transform transition-transform duration-500" x-transition:enter="translate-x-full" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-full">
-            <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-black/40">
-                <div class="flex items-center gap-3">
-                    <span class="text-3xl" x-text="activeSubject?.icon"></span>
-                    <div>
-                        <h3 class="font-black text-blue-400 text-lg tracking-tight" x-text="activeSubject?.title"></h3>
-                        <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Mission Log</div>
-                    </div>
-                </div>
-                <button @click="activeSubject = null" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition text-slate-400">✖</button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-                <template x-for="(unit, uIdx) in activeSubject?.units" :key="unit.id">
-                    <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-3 shadow-inner">
-                        <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><span>📂</span> <span x-text="unit.title"></span></div>
-                        <div class="space-y-2">
-                            <template x-for="(lesson, lIdx) in unit.lessons" :key="lesson.id">
-                                <div @click="startLessonChat(lesson)" class="p-3 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-blue-600/20 hover:border-blue-500 transition cursor-pointer flex items-center gap-3 group">
-                                    <div class="w-6 h-6 rounded-full bg-slate-950 flex items-center justify-center text-[10px] font-mono text-slate-500 group-hover:text-blue-400 border border-slate-700" x-text="lIdx+1"></div>
-                                    <span class="text-sm font-bold text-slate-300 group-hover:text-white flex-1 truncate" x-text="lesson.title"></span>
-                                    <span class="text-xs opacity-0 group-hover:opacity-100 transition">🚀</span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </div>
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-black/40"><div class="flex items-center gap-3"><span class="text-3xl" x-text="activeSubject?.icon"></span><div><h3 class="font-black text-blue-400 text-lg tracking-tight" x-text="activeSubject?.title"></h3><div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Mission Log</div></div></div><button @click="activeSubject = null" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition text-slate-400">✖</button></div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide"><template x-for="(unit, uIdx) in activeSubject?.units" :key="unit.id"><div class="bg-slate-900/50 border border-slate-800 rounded-xl p-3 shadow-inner"><div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><span>📂</span> <span x-text="unit.title"></span></div><div class="space-y-2"><template x-for="(lesson, lIdx) in unit.lessons" :key="lesson.id"><div @click="startLessonChat(lesson)" class="p-3 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-blue-600/20 hover:border-blue-500 transition cursor-pointer flex items-center gap-3 group"><div class="w-6 h-6 rounded-full bg-slate-950 flex items-center justify-center text-[10px] font-mono text-slate-500 group-hover:text-blue-400 border border-slate-700" x-text="lIdx+1"></div><span class="text-sm font-bold text-slate-300 group-hover:text-white flex-1 truncate" x-text="lesson.title"></span><span class="text-xs opacity-0 group-hover:opacity-100 transition">🚀</span></div></template></div></div></template></div>
         </div>
 
-        <!-- ================= 苏格拉底交互舱 ================= -->
         <div x-show="activeLesson" x-cloak class="absolute inset-0 bg-[#030712] z-50 p-6 md:p-10 flex flex-col fade-in">
             <div class="max-w-6xl w-full mx-auto flex-1 flex flex-col h-full bg-slate-900/60 rounded-3xl border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden backdrop-blur-md">
-                <div class="h-16 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center px-6 shrink-0">
-                    <button @click="activeLesson = null" class="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-lg transition border border-slate-700 shadow-sm flex items-center gap-2">
-                        <span>⬅</span> 撤离轨道
-                    </button>
-                    <div class="flex flex-col items-center">
-                        <div class="text-[10px] text-blue-500 font-mono tracking-widest uppercase font-black">COMM LINK ACTIVE</div>
-                        <h3 class="font-black text-blue-300 text-sm tracking-wide" x-text="activeLesson?.title"></h3>
-                    </div>
-                    <div class="w-20"></div>
-                </div>
-                <div class="flex-1 flex min-h-0 relative">
-                    <div class="w-1/3 border-r border-slate-800 p-6 overflow-y-auto bg-black/40 scrollbar-hide" x-show="showBriefing" x-transition>
-                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 flex justify-between"><span>Mission Briefing</span><button @click="showBriefing = false" class="text-slate-400 hover:text-white">隐藏</button></div>
-                        <div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content"></div>
-                    </div>
-                    <div class="flex-1 flex flex-col bg-slate-900/20 relative">
-                        <button x-show="!showBriefing" @click="showBriefing = true" class="absolute top-4 left-4 z-10 text-[10px] bg-slate-800/80 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2 backdrop-blur-md"><span>📖</span> 查看学习资料</button>
-                        <div class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6 scrollbar-hide" id="chat-container">
-                            <template x-for="(msg, idx) in chatLog" :key="idx">
-                                <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
-                                    <span class="text-[9px] font-bold text-slate-600 mb-1 tracking-widest uppercase" x-text="msg.role === 'user' ? 'Explorer' : 'NOVA 导师'"></span>
-                                    <div class="max-w-[85%] p-4 md:p-5 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role === 'user' ? 'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none' : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-tl-none backdrop-blur-sm'"><span x-html="msg.text"></span></div>
-                                </div>
-                            </template>
-                            <div x-show="chatLoading" class="flex items-start"><div class="bg-slate-800/50 p-4 rounded-2xl rounded-tl-none border border-slate-700 text-blue-400 text-xs font-mono animate-pulse flex items-center gap-3"><span class="text-lg">🤖</span> NOVA 正在连接智库节点...</div></div>
-                        </div>
-                        <div class="p-6 bg-slate-950/80 border-t border-slate-800 shrink-0">
-                            <div class="flex gap-3 max-w-4xl mx-auto relative">
-                                <input type="text" x-model="chatInput" @keydown.enter="sendChatMessage()" class="flex-1 input-dark px-6 py-4 rounded-2xl text-sm shadow-inner" placeholder="向 NOVA 发送你的思考..." :disabled="chatLoading">
-                                <button @click="sendChatMessage()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transition transform hover:scale-105 active:scale-95 flex items-center gap-2" :disabled="chatLoading || !chatInput.trim()">🚀</button>
-                            </div>
-                        </div>
+                <div class="h-16 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center px-6 shrink-0"><button @click="activeLesson = null" class="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-lg transition border border-slate-700 shadow-sm flex items-center gap-2"><span>⬅</span> 撤离轨道</button><div class="flex flex-col items-center"><div class="text-[10px] text-blue-500 font-mono tracking-widest uppercase font-black">COMM LINK ACTIVE</div><h3 class="font-black text-blue-300 text-sm tracking-wide" x-text="activeLesson?.title"></h3></div><div class="w-20"></div></div>
+                <div class="flex-1 flex min-h-0 relative"><div class="w-1/3 border-r border-slate-800 p-6 overflow-y-auto bg-black/40 scrollbar-hide" x-show="showBriefing" x-transition><div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 flex justify-between"><span>Mission Briefing</span><button @click="showBriefing = false" class="text-slate-400 hover:text-white">隐藏</button></div><div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content"></div></div>
+                    <div class="flex-1 flex flex-col bg-slate-900/20 relative"><button x-show="!showBriefing" @click="showBriefing = true" class="absolute top-4 left-4 z-10 text-[10px] bg-slate-800/80 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2 backdrop-blur-md"><span>📖</span> 查看学习资料</button>
+                        <div class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6 scrollbar-hide" id="chat-container"><template x-for="(msg, idx) in chatLog" :key="idx"><div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'"><span class="text-[9px] font-bold text-slate-600 mb-1 tracking-widest uppercase" x-text="msg.role === 'user' ? 'Explorer' : 'NOVA 导师'"></span><div class="max-w-[85%] p-4 md:p-5 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role === 'user' ? 'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none' : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-tl-none backdrop-blur-sm'"><span x-html="msg.text"></span></div></div></template><div x-show="chatLoading" class="flex items-start"><div class="bg-slate-800/50 p-4 rounded-2xl rounded-tl-none border border-slate-700 text-blue-400 text-xs font-mono animate-pulse flex items-center gap-3"><span class="text-lg">🤖</span> NOVA 正在连接智库节点...</div></div></div>
+                        <div class="p-6 bg-slate-950/80 border-t border-slate-800 shrink-0"><div class="flex gap-3 max-w-4xl mx-auto relative"><input type="text" x-model="chatInput" @keydown.enter="sendChatMessage()" class="flex-1 input-dark px-6 py-4 rounded-2xl text-sm shadow-inner" placeholder="向 NOVA 发送你的思考..." :disabled="chatLoading"><button @click="sendChatMessage()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transition transform hover:scale-105 active:scale-95 flex items-center gap-2" :disabled="chatLoading || !chatInput.trim()">🚀</button></div></div>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -215,8 +127,7 @@
                 dbConnected: false, supaClient: null,
                 galaxies: [], activeGalaxyId: null,
                 panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
-                isWarping: true, // 初始载入屏
-                
+                isWarping: true, 
                 activeSubject: null, activeLesson: null,
                 showBriefing: false, chatLog: [], chatInput: '', chatLoading: false,
 
@@ -226,33 +137,46 @@
                 },
 
                 async init() {
+                    // 🚀 核心修复：异步脱耦执行，防止数据库请求挂起导致转圈屏不消失
+                    this.setupConnection().finally(() => {
+                        // 强制在1.5秒后解除载入状态，无论网络如何
+                        setTimeout(() => { this.isWarping = false; }, 1500);
+                    });
+                    window.galaxyState = this;
+                },
+
+                async setupConnection() {
                     const url = this.config.supa.url; const key = this.config.supa.key;
                     if (url && key && window.supabase) {
-                        try { 
-                            this.supaClient = window.supabase.createClient(url, key); 
-                            this.dbConnected = true; 
-                            await this.loadFromCloud(); 
-                        } catch (e) { this.fallbackLoad(); }
+                        try {
+                            this.supaClient = window.supabase.createClient(url, key);
+                            this.dbConnected = true;
+                            await this.loadFromCloud();
+                        } catch (e) { console.warn("Cloud connection error, using local data."); this.fallbackLoad(); }
                     } else { this.fallbackLoad(); }
-                    window.galaxyState = this;
-                    
-                    // 数据加载完，延迟关闭缓冲屏，增加沉浸感
-                    setTimeout(() => { this.isWarping = false; }, 1200);
                 },
 
                 async loadFromCloud() {
-                    const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
-                    if (!error && data?.data?.galaxies) this.applyLoadedData({ galaxies: data.data.galaxies });
+                    try {
+                        const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
+                        if (!error && data?.data?.galaxies) {
+                            this.applyLoadedData({ galaxies: data.data.galaxies });
+                        } else { this.fallbackLoad(); }
+                    } catch(e) { this.fallbackLoad(); }
                 },
+                
                 fallbackLoad() { 
                     const s = window.safeStorage.get('xp_galaxies'); 
-                    if(s) { const p = JSON.parse(s); if(Array.isArray(p)) this.applyLoadedData({ galaxies: p }); }
+                    if(s) { try { const p = JSON.parse(s); if(Array.isArray(p)) this.applyLoadedData({ galaxies: p }); } catch(e){} }
                 },
 
                 applyLoadedData(data) {
-                    if (data.galaxies) this.galaxies = data.galaxies;
-                    if (this.galaxies.length > 0 && !this.activeGalaxyId) {
-                        this.activateGalaxy(this.galaxies[0].id);
+                    if (Array.isArray(data.galaxies)) {
+                        this.galaxies = data.galaxies;
+                        // 🚀 自动跃迁逻辑：确保进入后有一个处于激活状态的星系
+                        if (this.galaxies.length > 0 && !this.activeGalaxyId) {
+                            this.activateGalaxy(this.galaxies[0].id);
+                        }
                     }
                 },
                 
@@ -270,16 +194,13 @@
                 startPan(e) {
                     if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || this.activeSubject || this.activeLesson) return;
                     this.isPanning = true;
-                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; 
-                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
                     this.startX = cx - this.panX; this.startY = cy - this.panY;
                 },
                 doPan(e) {
                     if (!this.isPanning) return;
-                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; 
-                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.panX = Math.max(-2000, Math.min(2000, cx - this.startX)); 
-                    this.panY = Math.max(-2000, Math.min(2000, cy - this.startY));
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.panX = Math.max(-2000, Math.min(2000, cx - this.startX)); this.panY = Math.max(-2000, Math.min(2000, cy - this.startY));
                 },
                 endPan() { this.isPanning = false; },
 
@@ -291,7 +212,7 @@
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are NOVA, a Socratic AI tutor.' }, { role: 'user', content: prompt }] }) });
                         if(!res.ok) throw new Error(); const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { Swal.fire('Error', '导师引擎连接失败', 'error'); return null; }
+                    } catch(e) { return null; }
                 },
 
                 openMissionLog(subject) { this.activeSubject = subject; },
@@ -309,8 +230,7 @@
                     const t = this.chatInput.trim(); if(!t || this.chatLoading) return;
                     this.chatInput = ''; this.chatLog.push({role: 'user', text: t}); this.chatLoading = true;
                     this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
-                    const prompt = `【教案背景】：\n${this.activeLesson.content}\n\n【学生发言】：${t}`;
-                    const reply = await this.callAI(prompt);
+                    const reply = await this.callAI(`背景：${this.activeLesson.content}\n学生说：${t}\n要求：苏格拉底提问。`);
                     if(reply) { this.chatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); this.activeLesson.chatLog = this.chatLog; this.sync(); }
                     this.chatLoading = false;
                     this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
@@ -318,34 +238,26 @@
             }
         }
     </script>
-    <script src="[https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js](https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js)" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <!-- 🚀 3D 星空渲染引擎 (优化：限制帧率提高切换流畅度) -->
+    <!-- 星空背景渲染保持不变 -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const bgCanvas = document.getElementById('bg-starfield');
             const bgCtx = bgCanvas.getContext('2d');
             let stars = [];
-            const numStars = 600; // 减少粒子数提高性能
-
             function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
             window.addEventListener('resize', resizeBg); resizeBg();
-
-            for (let i = 0; i < numStars; i++) {
-                stars.push({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000 });
-            }
-
+            for (let i = 0; i < 600; i++) stars.push({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000 });
             function animateBg() {
                 bgCtx.fillStyle = '#02040a'; bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
                 const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2;
                 stars.forEach(star => {
-                    star.z -= 2.5; 
-                    if (star.z <= 0) { star.z = 2000; star.x = Math.random() * 2000 - 1000; star.y = Math.random() * 2000 - 1000; }
+                    star.z -= 2.5; if (star.z <= 0) star.z = 2000;
                     const k = 128.0 / star.z; const px = star.x * k + cx; const py = star.y * k + cy;
-                    const size = (1 - star.z / 2000) * 2;
                     if (px >= 0 && px <= bgCanvas.width && py >= 0 && py <= bgCanvas.height) {
                         bgCtx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/2000})`;
-                        bgCtx.beginPath(); bgCtx.arc(px, py, size, 0, Math.PI * 2); bgCtx.fill();
+                        bgCtx.beginPath(); bgCtx.arc(px, py, (1 - star.z / 2000) * 2, 0, Math.PI * 2); bgCtx.fill();
                     }
                 });
                 requestAnimationFrame(animateBg);
@@ -355,17 +267,9 @@
             const netCanvas = document.getElementById('network-canvas');
             const netCtx = netCanvas.getContext('2d');
             let dustNodes = [];
-            const numDust = 40; 
-            let mouse = { x: -1000, y: -1000 };
-
             function resizeNet() { netCanvas.width = window.innerWidth; netCanvas.height = window.innerHeight; }
             window.addEventListener('resize', resizeNet); resizeNet();
-            window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
-
-            for (let i = 0; i < numDust; i++) {
-                dustNodes.push({ baseAngle: Math.random()*Math.PI*2, baseRadius: 100+Math.random()*800, speed: (Math.random()-0.5)*0.002, x: 0, y: 0, size: Math.random()*2+1 });
-            }
-
+            for (let i = 0; i < 40; i++) dustNodes.push({ baseAngle: Math.random()*Math.PI*2, baseRadius: 100+Math.random()*800, speed: (Math.random()-0.5)*0.002, x: 0, y: 0, size: Math.random()*2+1 });
             function animateNet() {
                 netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
                 const appState = window.galaxyState;
@@ -381,17 +285,14 @@
                         netCtx.fillStyle = 'rgba(147, 197, 253, 0.5)';
                         netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
                     });
-                    // 只在激活状态下绘制少量连线提高切换性能
                     const all = [{x:cx,y:cy,isPlanet:true}, ...planets];
-                    all.forEach((n1, i) => {
-                        all.slice(i+1).forEach(n2 => {
-                            const d = Math.hypot(n1.x-n2.x, n1.y-n2.y);
-                            if(d < 400) {
-                                netCtx.beginPath(); netCtx.moveTo(n1.x, n1.y); netCtx.lineTo(n2.x, n2.y);
-                                netCtx.strokeStyle = `rgba(147,197,253,${(1-d/400)*0.1})`; netCtx.stroke();
-                            }
-                        });
-                    });
+                    all.forEach((n1, i) => { all.slice(i+1).forEach(n2 => {
+                        const d = Math.hypot(n1.x-n2.x, n1.y-n2.y);
+                        if(d < 400) {
+                            netCtx.beginPath(); netCtx.moveTo(n1.x, n1.y); netCtx.lineTo(n2.x, n2.y);
+                            netCtx.strokeStyle = `rgba(147,197,253,${(1-d/400)*0.1})`; netCtx.stroke();
+                        }
+                    }); });
                 }
                 requestAnimationFrame(animateNet);
             }

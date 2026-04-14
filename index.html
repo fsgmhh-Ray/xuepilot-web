@@ -18,7 +18,14 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* 🚀 3D 翻牌特效核心 CSS */
+        .flip-card { background-color: transparent; perspective: 1000px; height: 180px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: left; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 1rem; }
+        .flip-card-front { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; justify-content: center; padding: 1.5rem; }
+        .flip-card-back { background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(79, 70, 229, 0.9)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; border: 1px solid rgba(96, 165, 250, 0.5); box-shadow: 0 0 20px rgba(59,130,246,0.4); }
     </style>
 </head>
 <body x-data="portalApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
@@ -30,7 +37,7 @@
                 <span class="text-3xl mr-3 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="dict.brand"></h1>
-                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest">MULTI-PAGE OS v4.0</div>
+                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest">MULTI-PAGE OS v4.5</div>
                 </div>
             </div>
             <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition hover:bg-slate-700 shadow-sm" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
@@ -49,7 +56,7 @@
             <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40 cursor-pointer transition">
                 <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🎮</span> <span class="text-sm font-bold text-slate-300" x-text="dict.game"></span></div>
             </a>
-            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40 cursor-pointer transition" :class="view === 'tools' ? 'bg-slate-800/60' : ''">
+            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40 cursor-pointer transition" :class="view === 'tools' ? 'bg-slate-800/60 shadow-inner border border-slate-700' : ''">
                 <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🌍</span> <span class="text-sm font-bold text-slate-300" x-text="dict.tools"></span></div>
             </a>
         </div>
@@ -58,54 +65,76 @@
         </div>
     </aside>
 
-    <main class="flex-1 relative bg-transparent overflow-hidden flex items-center justify-center p-8">
-        <!-- 默认欢迎区或工具区 -->
-        <div class="text-center glass-panel p-12 rounded-[2.5rem] shadow-2xl border border-blue-500/20 fade-in transition-all duration-500 my-auto"
-             :class="view === 'tools' ? 'max-w-4xl w-full' : 'max-w-2xl w-full'">
+    <main class="flex-1 relative bg-transparent overflow-hidden flex items-start justify-center p-8 overflow-y-auto">
+        <!-- 🚀 动态调整宽度的容器 -->
+        <div class="text-center glass-panel p-10 md:p-12 rounded-[2.5rem] shadow-2xl border border-blue-500/20 fade-in transition-all duration-500 my-auto"
+             :class="view === 'tools' ? 'max-w-5xl w-full' : 'max-w-2xl w-full'">
+            
             <div class="text-7xl mb-6 drop-shadow-lg animate-bounce" x-text="view === 'tools' ? '🌍' : '🛸'"></div>
             <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
-            <p class="text-slate-400 text-sm leading-relaxed mb-8" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
+            <p class="text-slate-400 text-sm leading-relaxed mb-10" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
             
-            <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mb-8 fade-in">
-                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">🧠</div><h3 class="font-bold text-blue-300 text-sm mb-2">DeepSeek / OpenAI</h3><p class="text-xs text-slate-500 leading-relaxed">提供核心大纲解析与逻辑推演算力节点。</p></div>
-                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">⚡</div><h3 class="font-bold text-emerald-300 text-sm mb-2">Groq LPU</h3><p class="text-xs text-slate-500 leading-relaxed">超低延迟流式响应，NOVA 伴读导师核心驱动。</p></div>
-                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">🗄️</div><h3 class="font-bold text-purple-300 text-sm mb-2">Supabase Cloud</h3><p class="text-xs text-slate-500 leading-relaxed">已无缝接入，提供企业级数据持久化与跨平台同步。</p></div>
+            <!-- 🚀 全球顶级教育资源矩阵 (代替原本的AI引擎) -->
+            <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left mb-4 fade-in">
+                <template x-for="tool in toolsList" :key="tool.id">
+                    <div class="flip-card cursor-pointer group" @click="window.open(tool.link, '_blank')">
+                        <div class="flip-card-inner shadow-lg">
+                            <!-- 牌面正面 -->
+                            <div class="flip-card-front group-hover:border-emerald-400 transition-colors">
+                                <div class="text-4xl mb-3 drop-shadow-md" x-text="tool.icon"></div>
+                                <h3 class="font-bold text-emerald-300 text-lg mb-1 tracking-wide" x-text="tool.name"></h3>
+                                <p class="text-xs text-slate-400" x-text="lang === 'zh' ? tool.descZh : tool.descEn"></p>
+                            </div>
+                            <!-- 牌面反面 (带传送门) -->
+                            <div class="flip-card-back !bg-gradient-to-br !from-emerald-700 !to-blue-800 !border-emerald-400/50">
+                                <p class="text-xs text-emerald-50 leading-relaxed flex-1" x-text="lang === 'zh' ? tool.detailZh : tool.detailEn"></p>
+                                <div class="mt-4 flex items-center justify-between border-t border-emerald-400/30 pt-3">
+                                    <span class="text-[10px] font-mono tracking-widest uppercase opacity-80" x-text="tool.id"></span>
+                                    <span class="text-[10px] font-bold bg-white text-emerald-700 px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1">
+                                        <span x-text="dict.visitSite"></span> ↗
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
 
-            <div x-show="!isPro && view !== 'tools'" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-8">
+            <!-- PRO 升级提示 (仅在欢迎页显示) -->
+            <div x-show="!isPro && view !== 'tools'" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-4">
                 <p class="text-amber-400 text-xs font-bold mb-3" x-text="dict.upgHint"></p>
-                <button @click="modals.upgrade = true" class="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-500 rounded-lg text-white text-xs font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
+                <button @click="modals.upgrade = true" class="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl text-white text-sm font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
             </div>
         </div>
 
-        <!-- 🎛️ 终极版算力配置弹窗 (含 Supabase) -->
+        <!-- 🎛️ 后台：算力与存储配置弹窗 -->
         <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto scrollbar-hide">
              <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
                  <h2 class="text-xl font-black mb-6 text-white tracking-wide flex items-center gap-2" x-text="dict.setMenu"></h2>
+                 <p class="text-xs text-slate-400 mb-6">此处为薛定谔飞船底层算力接口，非核心指挥官请勿修改。</p>
                  <div class="space-y-4">
                      <!-- 算力引擎 -->
                      <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20">
-                         <div class="font-bold text-blue-400 mb-3 text-sm tracking-widest uppercase">🌌 Main Planning Core (OpenAI/Groq)</div>
+                         <div class="font-bold text-blue-400 mb-3 text-sm tracking-widest uppercase">🌌 Main Planning Core</div>
                          <div class="space-y-3">
                              <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
-                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.sys.url" placeholder="Base URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
+                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.sys.url" placeholder="Base URL (/proxy/groq)" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
                          </div>
                      </div>
                      <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
-                         <div class="font-bold text-indigo-400 mb-3 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (Groq/Nvidia)</div>
+                         <div class="font-bold text-indigo-400 mb-3 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core</div>
                          <div class="space-y-3">
                              <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
-                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.nova.url" placeholder="Base URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
+                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.nova.url" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
                          </div>
                      </div>
-                     <!-- 🚀 恢复 Supabase 配置 -->
+                     <!-- Supabase 配置 -->
                      <div class="bg-emerald-900/10 p-5 rounded-2xl border border-emerald-500/20">
                          <div class="font-bold text-emerald-400 mb-3 text-sm tracking-widest uppercase">🗄️ Supabase Cloud Storage</div>
                          <div class="grid grid-cols-2 gap-3">
                              <input type="text" x-model="config.supa.url" placeholder="Supabase Project URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
                              <input type="password" x-model="config.supa.key" placeholder="Supabase Anon Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
                          </div>
-                         <p class="text-[10px] text-emerald-500/60 mt-2">提示：配置后系统将自动将排课及教案数据同步至您的云数据库 (表名: user_data)。</p>
                      </div>
                  </div>
                  <div class="mt-6 flex gap-4">
@@ -125,6 +154,7 @@
                  <div class="text-left space-y-4 mb-8 bg-black/40 p-5 rounded-2xl border border-amber-500/10 shadow-inner">
                      <div class="flex items-center gap-3 text-sm text-amber-100 font-bold"><span class="text-amber-500 text-xl">✓</span> <span x-text="dict.upg1"></span></div>
                      <div class="flex items-center gap-3 text-sm text-amber-100 font-bold"><span class="text-amber-500 text-xl">✓</span> <span x-text="dict.upg2"></span></div>
+                     <div class="flex items-center gap-3 text-sm text-amber-100 font-bold"><span class="text-amber-500 text-xl">✓</span> <span x-text="dict.upg3"></span></div>
                  </div>
                  <button @click="executeUpgrade()" class="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] text-base transition tracking-widest uppercase" x-text="dict.upgBtn"></button>
              </div>
@@ -142,22 +172,33 @@
                     nova: { key: localStorage.getItem('xp_nova_key')||'', url: localStorage.getItem('xp_nova_url')||'/proxy/nvidia', model: localStorage.getItem('xp_nova_model')||'google/gemma-4-31b-it' },
                     supa: { key: localStorage.getItem('xp_supa_key')||'', url: localStorage.getItem('xp_supa_url')||'' }
                 },
+                
+                // 🚀 核心：替换为真正的全球顶尖儿童教育资源
+                toolsList: [
+                    { id: 'anton', name: 'ANTON', icon: '🦉', descZh: '欧洲最受欢迎的无广告全学科学习应用', descEn: 'The free learning app for school', detailZh: '宝藏级资源！提供极其优质的互动练习，涵盖语文、数学、科学和音乐等，非常适合低幼至初中阶段，完全免费且无广告。', detailEn: 'High-quality, ad-free interactive exercises covering languages, math, science, and music. Perfect for K-12.', link: 'https://anton.app/' },
+                    { id: 'khan', name: 'Khan Academy', icon: '🏛️', descZh: '全球顶尖的免费全学科教育平台', descEn: 'World-class free education for anyone, anywhere', detailZh: '教育界的常青树。涵盖数学、科学、编程等几乎所有学科。是 XuePilot 构建知识地基的首选推荐库。', detailEn: 'Covers math, science, computing and more. The cornerstone of XuePilot knowledge building.', link: 'https://www.khanacademy.org/' },
+                    { id: 'scratch', name: 'Scratch', icon: '🐱', descZh: 'MIT 出品的少儿编程逻辑启蒙平台', descEn: 'MIT\'s coding platform for kids', detailZh: '不只是学写代码，更是学习如何表达和整合逻辑。孩子们可以创造属于自己的互动故事、游戏和动画。', detailEn: 'Create interactive stories, games, and animations. Develops computational thinking.', link: 'https://scratch.mit.edu/' },
+                    { id: 'phet', name: 'PhET', icon: '🔬', descZh: '诺贝尔奖得主创立的互动仿真实验室', descEn: 'Interactive science & math simulations', detailZh: '科罗拉多大学提供。极其生动的物理、化学、生物和数学互动模拟实验，让抽象的科学概念触手可及。', detailEn: 'Engaging interactive simulations for physics, chemistry, biology, and math. Makes abstract concepts real.', link: 'https://phet.colorado.edu/' },
+                    { id: 'natgeo', name: 'Nat Geo Kids', icon: '🌍', descZh: '国家地理少儿版，绝佳的自然探索营', descEn: 'Explore the natural world', detailZh: '极其丰富的自然、动物、地理和历史知识，搭配精美的互动游戏与纪录片视频，极大开阔指挥官的视野。', detailEn: 'Rich knowledge in nature, animals, and geography with beautiful games and videos.', link: 'https://kids.nationalgeographic.com/' },
+                    { id: 'nasa', name: 'NASA Kids\' Club', icon: '🚀', descZh: '美国宇航局设立的星际科普探索中心', descEn: 'NASA space exploration for kids', detailZh: '最契合 XuePilot 星际设定的宝藏站。让孩子直接接触真实的太空探索任务，获取宇宙学最前沿的知识。', detailEn: 'Learn about real space missions and access cutting-edge cosmology and space exploration resources.', link: 'https://www.nasa.gov/kidsclub/' }
+                ],
+
                 i18n: {
                     zh: {
-                        brand: 'XuePilot', coreMod: '核心中枢', freeMod: '开放体验', pro: '星际教室 (Pro)', game: '指挥官模拟舱', tools: '全球资源探索',
-                        welcome: '欢迎登舰，指挥官', welcomeDesc: '请在左侧选择您要进入的模块。所有模块均已链接您的全局算力节点。',
-                        toolsDesc: '全球顶尖的 AI 工具集与 Supabase 云数据库已成功集成接入！',
+                        brand: 'XuePilot', coreMod: '核心教育中枢', freeMod: '能力评测与拓展', pro: '星际教室 (Pro)', game: '指挥官模拟舱', tools: '全球教育资源库',
+                        welcome: '欢迎登舰，指挥官', welcomeDesc: '请在左侧选择您要进入的模块。这里是薛定谔飞船的主控大厅。',
+                        tools: '全球教育资源矩阵', toolsDesc: '抛开繁杂的算力底层，这里为您和孩子精心挑选了全球最优质、免费的教育与探索平台。', visitSite: '前往探索',
                         upgHint: '您尚未获得领航员最高权限，星际教室的部分高级功能已被锁定。', upgBtn: '获取权限 (演示)',
-                        settingsBtn: '🎛️ 全局架构引擎配置', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 保存并重启节点', setCancel: '取消',
-                        upgTitle: '获取领航员通行证', upgDesc: '解锁 XuePilot 专属教育套件。', upg1: '苏格拉底富文本备课', upg2: '私有文档导入伴读'
+                        settingsBtn: '🎛️ 系统底层管理 (Dev Only)', setMenu: '🎛️ 底层算力与存储节点配置', setSave: '💾 保存并应用节点', setCancel: '取消',
+                        upgTitle: '获取领航员通行证', upgDesc: '解锁 XuePilot 专属定制教育套件。', upg1: '全球智能排课系统', upg2: '苏格拉底富文本备课', upg3: '私有文档导入伴读'
                     },
                     en: {
-                        brand: 'XuePilot', coreMod: 'Core Modules', freeMod: 'Free Access', pro: 'Interstellar Class', game: 'Simulator Deck', tools: 'Global AI Tools',
-                        welcome: 'Welcome Aboard', welcomeDesc: 'Select a module on the left. All modules share your global AI config.',
-                        toolsDesc: 'Global AI tools and Supabase Cloud DB are successfully integrated.',
+                        brand: 'XuePilot', coreMod: 'Core Education', freeMod: 'Assessment & Expand', pro: 'Interstellar Class', game: 'Simulator Deck', tools: 'Global Edu Resources',
+                        welcome: 'Welcome Aboard', welcomeDesc: 'Select a module on the left. This is the main bridge of XuePilot.',
+                        tools: 'Global Education Matrix', toolsDesc: 'We have curated the world\'s top free educational platforms for you and your young commanders.', visitSite: 'Visit Site',
                         upgHint: 'You do not have Commander Pro access yet. Some classroom features are locked.', upgBtn: 'Unlock Pro (Mock)',
-                        settingsBtn: '🎛️ Engine Config', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
-                        upgTitle: 'Get Commander Access', upgDesc: 'Unlock the full educational suite.', upg1: 'Socratic Rich Text Editor', upg2: 'Private Doc Reading Tutor'
+                        settingsBtn: '🎛️ System Backend (Dev)', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
+                        upgTitle: 'Get Commander Access', upgDesc: 'Unlock the full custom educational suite.', upg1: 'Global Smart Scheduling', upg2: 'Socratic Rich Text Editor', upg3: 'Private Doc Reading Tutor'
                     }
                 },
                 get dict() { return this.i18n[this.lang]; },

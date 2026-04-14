@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Classroom</title>
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -13,63 +12,64 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
-        body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; perspective: 1000px; }
-        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
-        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
-        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
         
+        /* 玻璃态面板 */
+        .glass-panel { background: rgba(10, 15, 30, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* 导航按钮 */
         .btn-nav-class { display: flex; width: 100%; align-items: center; padding: 1rem 1.25rem; margin-bottom: 0.5rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: left; }
-        .btn-nav-class:hover { background-color: rgba(30, 41, 59, 0.6); border-color: rgba(51, 65, 85, 1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .nav-icon { width: 2.5rem; display: inline-flex; align-items: center; justify-content: flex-start; font-size: 1.25rem; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.07)); flex-shrink: 0; }
+        .btn-nav-class:hover { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.2); }
+        .nav-icon { width: 2.5rem; display: inline-flex; align-items: center; justify-content: flex-start; font-size: 1.25rem; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.2)); flex-shrink: 0; }
         
-        /* 🚀 3D 星体与呼吸特效 (硬件加速无损版，彻底消灭黑框) */
-        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; }
+        /* 🚀 3D 星体特效 (无黑框物理渲染) */
+        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; position: relative; }
         
         .planet-3d {
-            background: radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.95) 0%, rgba(37, 99, 235, 0.7) 40%, rgba(2, 6, 23, 0.95) 100%);
-            border: 1px solid rgba(147, 197, 253, 0.3);
+            background: radial-gradient(circle at 35% 35%, rgba(147, 197, 253, 1) 0%, rgba(37, 99, 235, 0.8) 45%, rgba(2, 6, 23, 0.95) 100%);
+            border: 1px solid rgba(147, 197, 253, 0.4);
         }
-        .planet-breath { animation: planetBreath 3s ease-in-out infinite alternate; }
+        .planet-breath { animation: planetBreath 4s ease-in-out infinite alternate; }
         @keyframes planetBreath {
-            from { transform: scale(1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 15px rgba(59,130,246,0.3); }
-            to { transform: scale(1.05); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 40px rgba(59,130,246,0.8); }
+            from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 15px rgba(59,130,246,0.2); transform: scale(1); }
+            to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 40px rgba(59,130,246,0.7); transform: scale(1.05); }
         }
 
         .planet-core {
-            background: radial-gradient(circle at 30% 30%, rgba(216, 180, 254, 0.95) 0%, rgba(147, 51, 234, 0.7) 40%, rgba(2, 6, 23, 0.95) 100%);
-            border: 1px solid rgba(216, 180, 254, 0.3);
+            background: radial-gradient(circle at 35% 35%, rgba(216, 180, 254, 1) 0%, rgba(147, 51, 234, 0.8) 45%, rgba(2, 6, 23, 0.95) 100%);
+            border: 1px solid rgba(216, 180, 254, 0.4);
         }
-        .core-breath { animation: coreBreath 3s ease-in-out infinite alternate; }
+        .core-breath { animation: coreBreath 4s ease-in-out infinite alternate; }
         @keyframes coreBreath {
-            from { transform: scale(1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 20px rgba(168,85,247,0.4); }
-            to { transform: scale(1.05); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 50px rgba(168,85,247,0.9); }
+            from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 25px rgba(168,85,247,0.3); transform: scale(1); }
+            to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 60px rgba(168,85,247,0.8); transform: scale(1.05); }
         }
-        
-        /* 🚀 灵动连接线 (流光特效) */
-        .galaxy-line { stroke: rgba(96, 165, 250, 0.8); stroke-width: 2.5px; stroke-dasharray: 6 12; animation: flowLine 20s linear infinite; fill: none; }
-        @keyframes flowLine { to { stroke-dashoffset: -1000; } }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         
+        /* 编辑器UI */
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9); border-radius: 1rem 1rem 0 0; padding: 10px; }
         .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 1rem 1rem; background: rgba(0,0,0,0.5); color: #e2e8f0; font-size: 1rem; }
         .ql-editor { min-height: 450px; line-height: 1.8; padding: 2rem; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
         
-        .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
-        .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); }
-        .nova-chat-panel { position: fixed; width: 380px; height: 550px; z-index: 99; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
 
-        /* 防止拖拽星系时选中文本 */
+        /* 防拖拽误选 */
         .no-select { user-select: none; -webkit-user-select: none; }
+        
+        /* 画布层级 */
+        #bg-starfield { position: fixed; inset: 0; z-index: -3; pointer-events: none; background: #02040a; }
+        #network-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
     </style>
 </head>
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
-    <div class="space-bg"></div><div class="grid-bg"></div>
 
-    <aside class="w-[19rem] border-r border-slate-800 flex flex-col py-8 px-4 glass-panel z-30 shrink-0 shadow-2xl relative">
+    <!-- 🚀 纯粹的 3D 飞星宇宙背景层 -->
+    <canvas id="bg-starfield"></canvas>
+
+    <aside class="w-[19rem] border-r border-slate-800 flex flex-col py-8 px-4 glass-panel z-30 shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)] relative">
         <button @click="toggleLang()" class="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition" x-text="lang === 'zh' ? 'EN' : '中'"></button>
         
         <button @click="goHome()" class="w-full mb-10 flex items-center justify-center gap-2 px-4 py-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm text-xs font-bold uppercase tracking-wider group cursor-pointer">
@@ -78,11 +78,10 @@
 
         <div class="mb-8 px-3">
             <div class="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-2xl tracking-tighter" x-text="dict.brand"></div>
-            <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Multiverse Architecture</div>
+            <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Multiverse Matrix</div>
         </div>
 
         <nav class="flex-1 overflow-y-auto mt-2 px-2 scrollbar-hide block w-full">
-            
             <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]':'text-slate-400'">
                 <span class="nav-icon">🌌</span> <span><span x-text="dict.navMap"></span></span>
             </button>
@@ -106,7 +105,6 @@
             <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)]':'text-slate-400'">
                 <span class="nav-icon">✍️</span> <span><span x-text="dict.navWrite"></span></span>
             </button>
-
         </nav>
         
         <div class="p-4 border-t border-slate-800/50 text-[10px] font-mono text-center text-slate-500 shrink-0" x-text="dbConnected ? 'SUPABASE CONNECTED' : 'LOCAL FALLBACK'"></div>
@@ -114,81 +112,70 @@
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10">
         
-        <!-- ================= 视图：星系地图 (支持全局拖拽 + 物理界限) ================= -->
+        <!-- ================= 视图：多重宇宙星系 (全局自由拖拽) ================= -->
         <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms 
-             class="absolute inset-0 min-h-full no-select cursor-move"
-             @mousedown="startGalaxyPan" @mousemove.window="doGalaxyPan" @mouseup.window="endGalaxyPan"
-             @touchstart="startGalaxyPan" @touchmove.window="doGalaxyPan" @touchend.window="endGalaxyPan">
+             class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
+             @mousedown="startPan" @mousemove.window="doPan" @mouseup.window="endPan"
+             @touchstart="startPan" @touchmove.window="doPan" @touchend.window="endPan">
             
+            <!-- 🚀 灵动神经网 Canvas 层 (完全覆盖整个视野) -->
+            <canvas id="network-canvas"></canvas>
+
             <!-- 空状态 -->
             <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
                 <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase" x-text="dict.emptyMap"></p>
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <!-- 多重星系渲染 -->
-            <template x-for="g in galaxies" :key="g.id">
+            <!-- 🚀 星系容器：利用真实的物理平移响应鼠标拖拽 -->
+            <div class="absolute w-full h-full pointer-events-none" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
-                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考，已修复平移逻辑 -->
-                <div class="absolute flex items-center justify-center transition-all duration-300 ease-out w-0 h-0"
-                     :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(-50%, -50%) translate(${galaxyPan.x}px, ${galaxyPan.y}px) scale(1); z-index: 20;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
-                     @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
-                    
-                    <!-- 🚀 隐形引力边界：区隔各个星系 -->
-                    <div class="absolute rounded-full border-2 border-dashed border-blue-500/20 pointer-events-none transition-opacity duration-1000"
-                         :class="g.id === activeGalaxyId ? 'bg-blue-900/10 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]' : 'bg-slate-900/40 opacity-50'"
-                         style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);">
-                    </div>
-
-                    <!-- 🚀 灵动星际连线 (修复裁切：强制溢出可见，0,0起点) -->
-                    <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
-                        <template x-for="s in g.subjects" :key="s.id">
-                            <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
-                        </template>
-                    </svg>
-
-                    <!-- 轨道环 (仅激活状态显示) -->
-                    <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
-                        <template x-for="r in [240, 380, 520]">
-                            <div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div>
-                        </template>
-                    </div>
-
-                    <!-- 🚀 星系核心 (大纲标识) 与悬停控制台 -->
-                    <div class="absolute z-30 group flex flex-col items-center justify-start" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
-                        <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
-                             :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 200px; height: 200px;'">
-                            <div class="text-4xl mb-1 drop-shadow-md">🔮</div>
-                            <div class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
-                            <div x-show="g.id !== activeGalaxyId" class="mt-4 px-5 py-2 bg-blue-600 rounded-full text-xl text-white font-bold animate-pulse shadow-lg whitespace-nowrap">点击跃迁</div>
-                        </div>
+                <template x-for="g in galaxies" :key="g.id">
+                    <!-- 每个星系的相对坐标中心 -->
+                    <div class="absolute flex items-center justify-center w-0 h-0 transition-opacity duration-500"
+                         :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; z-index: 10; opacity: 0.1;`">
                         
-                        <!-- 🚀 Hover 显示的编辑与毁灭控制台 -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 pointer-events-auto opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                            <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-blue-400/50" title="编辑大纲名称">✏️</button>
-                            <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-rose-400/50" title="摧毁大纲星系">🗑️</button>
+                        <!-- 轨道环 (仅激活状态显示) -->
+                        <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
+                            <template x-for="r in [240, 380, 520, 660]">
+                                <div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div>
+                            </template>
                         </div>
-                    </div>
 
-                    <!-- 🚀 学科行星群 -->
-                    <template x-for="s in g.subjects" :key="s.id">
-                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
-                             :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
-                             @click.stop="g.id === activeGalaxyId ? openSubject(g, s) : activateGalaxy(g.id)">
+                        <!-- 🚀 星系核心 (恒星) 与悬停控制台 -->
+                        <div class="absolute z-30 group flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;" @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
+                            <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
+                                 :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 80px; height: 80px;'">
+                                <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-xl'">🔮</div>
+                                <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
+                            </div>
                             
-                            <!-- 呼吸的 3D 星球 -->
-                            <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform" x-text="s.icon"></div>
-                            
-                            <!-- 悬浮标牌 -->
-                            <span x-show="g.id === activeGalaxyId" class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                            <!-- Hover 触发的编辑与毁灭控制台 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 pointer-events-auto opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
+                                <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
+                            </div>
                         </div>
-                    </template>
-                </div>
-            </template>
+
+                        <!-- 🚀 学科行星群 -->
+                        <template x-for="s in g.subjects" :key="s.id">
+                            <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
+                                 x-show="g.id === activeGalaxyId"
+                                 :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
+                                 @click.stop="openSubject(g, s)">
+                                
+                                <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
+                                <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
         </div>
 
-        <!-- ================= 视图：伴读书架与对话区 ================= -->
-        <div x-show="view.startsWith('reading')" x-cloak class="absolute inset-0 flex flex-col p-10 overflow-y-auto fade-in">
+        <!-- ================= 其他视图 (伴读/编辑器等保持原样) ================= -->
+        <!-- 伴读区 -->
+        <div x-show="view.startsWith('reading')" x-cloak class="absolute inset-0 flex flex-col p-10 overflow-y-auto fade-in bg-[#030712]">
             <div x-show="!activeBook">
                 <div class="flex justify-between items-center mb-10">
                     <div class="flex items-center gap-5"><span class="text-5xl" x-text="view==='reading-en'?'📘':'📙'"></span><h2 class="text-4xl font-black text-slate-100" x-text="view==='reading-en' ? dict.navReadEn : dict.navReadZh"></h2></div>
@@ -205,7 +192,6 @@
                     </template>
                 </div>
             </div>
-
             <div x-show="activeBook" class="h-full flex gap-8 fade-in">
                 <div class="w-1/2 glass-panel rounded-[2.5rem] flex flex-col overflow-hidden border border-slate-800 shadow-2xl">
                     <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -235,8 +221,8 @@
             </div>
         </div>
 
-        <!-- ================= 视图：动态大纲编辑器 ================= -->
-        <div x-show="editingSubject" x-cloak class="absolute inset-0 bg-slate-950 z-[55] p-6 flex flex-col fade-in">
+        <!-- 动态大纲编辑器 -->
+        <div x-show="editingSubject" x-cloak class="absolute inset-0 bg-[#030712] z-[55] p-6 flex flex-col fade-in">
             <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                 <div class="flex items-center gap-5">
                     <div class="w-16 h-16 planet-3d flex items-center justify-center text-3xl shadow-xl" x-text="editingSubject?.icon"></div>
@@ -249,7 +235,6 @@
             </div>
             
             <div class="flex flex-1 gap-6 min-h-0">
-                <!-- 左侧：全局排课树 -->
                 <div class="w-80 flex flex-col gap-4 overflow-y-auto pr-2 scrollbar-hide">
                     <template x-for="unit in editingSubject?.units" :key="unit.id">
                         <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
@@ -273,7 +258,6 @@
                     </button>
                 </div>
 
-                <!-- 右侧：备课区 -->
                 <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col relative bg-slate-900/40 border border-slate-800 shadow-2xl">
                     <template x-if="!curLesson">
                         <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-40"><div class="text-8xl mb-6">🖋️</div><p class="font-bold text-sm tracking-widest uppercase">Select a lesson to start</p></div>
@@ -292,7 +276,6 @@
                             <div id="toolbar-container" class="shrink-0 mb-2">
                                 <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
                                 <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                                <span class="ql-formats"><button class="ql-image"></button><button class="ql-video"></button></span>
                             </div>
                             <div id="editor-container" class="flex-1 overflow-y-auto mb-4 border border-slate-800 rounded-2xl bg-black/40"></div>
                             <div class="flex justify-end border-t border-slate-800 pt-4"><button @click="savePlan()" class="px-12 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg transition text-sm flex items-center gap-2">💾 <span>同步存档至云端</span></button></div>
@@ -302,14 +285,13 @@
             </div>
         </div>
 
-        <!-- 🚀 弹窗：全球智能排课系统 -->
+        <!-- 🚀 排课弹窗 -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
                 <div class="text-center mb-8">
                     <div class="text-6xl mb-4">🔮</div>
                     <h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest" x-text="dict.planTitle"></h2>
-                    <p class="text-slate-500 text-[10px] mt-2 tracking-widest uppercase">Global Standard Matrix Engine</p>
                 </div>
                 
                 <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
@@ -342,58 +324,30 @@
             </div>
         </div>
 
-        <!-- 🤖 NOVA 悬浮导师 -->
-        <div id="nova-draggable" class="nova-float" :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`" @mousedown="startNovaDrag($event)" @touchstart="startNovaDrag($event)" @click="toggleNovaChat()">
-            <div class="nova-orb-inner shadow-blue-600/40">🤖</div>
-        </div>
-        <div x-show="novaOpen" x-transition.origin.bottom.right class="nova-chat-panel border border-blue-500/30" :style="`left: ${Math.min(Math.max(20, novaPos.x), window.innerWidth-400)}px; top: ${Math.max(20, novaPos.y-560)}px;`" @click.away="novaOpen = false">
-            <div class="p-5 bg-blue-900/40 border-b border-blue-500/30 flex justify-between items-center"><span class="text-[10px] font-black uppercase text-blue-300 tracking-widest">Nova Navigator</span><button @click="novaOpen = false" class="text-slate-500 hover:text-white transition text-lg">✖</button></div>
-            <div class="flex-1 p-6 overflow-y-auto space-y-5 text-sm scrollbar-hide" id="nova-chat-box">
-                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 leading-relaxed text-slate-300 shadow-sm">指挥官，我是 NOVA。可以在教室里随时拖拽和呼叫我。</div>
-                <template x-for="m in novaMsgs"><div class="flex flex-col fade-in" :class="m.role==='user'?'items-end':'items-start'"><div class="max-w-[85%] p-4 rounded-2xl mt-2 shadow-lg leading-relaxed text-sm" :class="m.role==='user'?'bg-blue-600 text-white rounded-tr-none':'bg-slate-800 border border-slate-700 text-slate-200 rounded-tl-none'" x-html="m.content"></div></div></template>
-            </div>
-            <div class="p-5 border-t border-slate-800 bg-slate-900 flex gap-3"><input type="text" x-model="novaInput" @keydown.enter="novaAsk()" class="flex-1 input-dark p-4 rounded-2xl text-sm" placeholder="输入疑惑或指令..."><button @click="novaAsk()" class="bg-blue-600 px-6 py-4 rounded-2xl hover:bg-blue-500 transition shadow-lg">🚀</button></div>
-        </div>
     </main>
 
+    <!-- Alpine.js 业务逻辑 -->
     <script>
         function classroomApp() {
             return {
                 lang: localStorage.getItem('xp_lang') || 'zh', isPro: localStorage.getItem('xp_is_pro') === 'true',
                 view: 'galaxy', loading: false, modals: { planner: false },
                 
-                // 🚀 多重宇宙状态架构 & 自由拖拽变量
+                // 多重宇宙状态架构 & 自由拖拽变量
                 galaxies: [], activeGalaxyId: null,
-                galaxyPan: { x: 0, y: 0 }, isGalaxyPanning: false, panStart: { x: 0, y: 0 },
+                panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
                 
                 planMode: 'standard', planConfig: { curriculum: '', grade: '', term: '' }, customTheme: '',
                 editingSubject: null, curLesson: null,
-                
-                // 伴读状态
                 books: [ 
-                    { id: 'b1', title: 'The Little Prince (Chapter 1)', lang: 'en', progress: 45, accuracy: 88, content: 'Once when I was six years old I saw a magnificent picture in a book...', chatLog: [] }, 
-                    { id: 'b2', title: '《西游记》第一回：灵根育孕源流出', lang: 'zh', progress: 20, accuracy: 82, content: '混沌未分天地乱，茫茫渺渺无人见...', chatLog: [] }
+                    { id: 'b1', title: 'The Little Prince', lang: 'en', progress: 45, accuracy: 88, content: 'Once when I was six years old...', chatLog: [] }
                 ],
                 activeBook: null, readInput: '', readLoading: false,
-                
-                novaOpen: false, novaInput: '', novaMsgs: [], novaPos: {x: window.innerWidth - 100, y: window.innerHeight - 100}, isDragging: false, start: {x:0,y:0}, offset: {x:0,y:0},
                 supaClient: null, dbConnected: false,
 
                 i18n: {
-                    zh: {
-                        brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
-                        emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎',
-                        curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
-                        grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
-                        backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨核心思想...'
-                    },
-                    en: {
-                        brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage',
-                        emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine',
-                        curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
-                        grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
-                        backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore ideas...'
-                    }
+                    zh: { brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承', emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎', curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'], backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨...' },
+                    en: { brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage', emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine', curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'], backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore...' }
                 },
                 get dict() { return this.i18n[this.lang]; },
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
@@ -406,31 +360,27 @@
                     if (url && key && window.supabase) {
                         try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
                     } else { this.fallbackLoad(); }
+
+                    // 同步 Alpine 状态给 Canvas 引擎
+                    window.galaxyState = this;
                 },
 
-                // 数据迁移与读取
                 async loadFromCloud() {
                     try { const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
                         if (!error && data?.data) this.applyLoadedData(data.data);
                     } catch (e) { this.fallbackLoad(); }
                 },
                 fallbackLoad() { 
-                    const s = localStorage.getItem('xp_galaxies') || localStorage.getItem('xp_subjects'); 
+                    const s = localStorage.getItem('xp_galaxies'); 
                     if(s) {
                         let parsed = JSON.parse(s);
-                        if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].subjects) {
-                            this.applyLoadedData({ subjects: parsed, books: this.books });
-                        } else {
-                            this.applyLoadedData({ galaxies: parsed, books: this.books });
-                        }
+                        if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].subjects) { this.applyLoadedData({ subjects: parsed, books: this.books }); } 
+                        else { this.applyLoadedData({ galaxies: parsed, books: this.books }); }
                     }
                 },
                 applyLoadedData(data) {
-                    if (data.galaxies) {
-                        this.galaxies = data.galaxies;
-                    } else if (data.subjects && data.subjects.length > 0) {
-                        this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, subjects: data.subjects }];
-                    }
+                    if (data.galaxies) this.galaxies = data.galaxies;
+                    else if (data.subjects && data.subjects.length > 0) this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, subjects: data.subjects }];
                     this.books = data.books || this.books;
                     if(this.galaxies.length > 0 && !this.activeGalaxyId) this.activeGalaxyId = this.galaxies[0].id;
                 },
@@ -443,58 +393,39 @@
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
                 
-                activateGalaxy(gid) { this.activeGalaxyId = gid; this.galaxyPan = { x: 0, y: 0 }; },
+                activateGalaxy(gid) { this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; },
 
-                // 🚀 引力拖拽引擎 (Free Panning)
-                startGalaxyPan(e) {
+                // 🚀 修复的全局引力拖拽引擎 (平移边界限制)
+                startPan(e) {
                     if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-container') || e.target.closest('.planet-core')) return;
-                    this.isGalaxyPanning = true;
+                    this.isPanning = true;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.panStart.x = cx - this.galaxyPan.x;
-                    this.panStart.y = cy - this.galaxyPan.y;
+                    this.startX = cx - this.panX;
+                    this.startY = cy - this.panY;
                 },
-                doGalaxyPan(e) {
-                    if (!this.isGalaxyPanning) return;
+                doPan(e) {
+                    if (!this.isPanning) return;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.galaxyPan.x = Math.max(-1000, Math.min(1000, cx - this.panStart.x));
-                    this.galaxyPan.y = Math.max(-1000, Math.min(1000, cy - this.panStart.y));
+                    // 引力边界阻尼：防止星系拖出屏幕 (-1000 到 1000 像素)
+                    this.panX = Math.max(-1000, Math.min(1000, cx - this.startX));
+                    this.panY = Math.max(-1000, Math.min(1000, cy - this.startY));
                 },
-                endGalaxyPan() { this.isGalaxyPanning = false; },
+                endPan() { this.isPanning = false; },
 
                 extractJSONArray(str) { const s = str.indexOf('['), e = str.lastIndexOf(']'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '[]'; },
-
                 async callAI(prompt, type = 'sys', customSys = null) {
                     const key = localStorage.getItem(`xp_${type}_key`) || localStorage.getItem('xp_sys_key');
                     const url = (localStorage.getItem(`xp_${type}_url`) || localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
                     const model = localStorage.getItem(`xp_${type}_model`) || localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
                     if(!key) { Swal.fire('Error', 'Missing API Key in Portal', 'warning'); return null; }
-                    let sysMsg = customSys || 'You are an elite Socratic educator. NEVER give answers.';
                     try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: sysMsg }, { role: 'user', content: prompt }] }) });
+                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: customSys || 'You are an elite Socratic educator. NEVER give answers.' }, { role: 'user', content: prompt }] }) });
                         if(!res.ok) throw new Error();
                         const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { Swal.fire('请求失败', '网络或 API 接口存在异常', 'error'); return null; }
+                    } catch(e) { Swal.fire('Error', 'API connection failed', 'error'); return null; }
                 },
-
-                // 伴读对话逻辑
-                async sendReadText() {
-                    const t = this.readInput.trim(); if(!t || this.readLoading) return;
-                    this.readInput = ''; this.activeBook.chatLog.push({ role: 'user', text: t }); this.readLoading = true;
-                    this.$nextTick(() => { const b = document.getElementById('read-chat-box'); b.scrollTop = b.scrollHeight; });
-
-                    const isEn = this.activeBook.lang === 'en';
-                    const sysMsg = isEn ? "You are a Socratic English Tutor. Use the provided text to guide the student. 1. NEVER give direct answers. 2. End with an open-ended question. 3. STRICTLY English." : "你是一位苏格拉底大语文导师。1. 绝不直给答案。 2. 结尾必须抛出一个深刻的问题引导思考。 3. 必须全部使用中文。";
-                    
-                    const prompt = `Text Material:\n${this.activeBook.content.substring(0, 1500)}\n\nStudent says: ${t}`;
-                    const res = await this.callAI(prompt, 'nova', sysMsg);
-                    if(res) { this.activeBook.chatLog.push({ role: 'nova', text: res.replace(/\n/g, '<br>') }); this.sync(); }
-                    this.readLoading = false;
-                    this.$nextTick(() => { const b = document.getElementById('read-chat-box'); b.scrollTop = b.scrollHeight; });
-                },
-
-                startReading(book) { this.activeBook = book; if(this.activeBook.chatLog.length === 0) { this.activeBook.chatLog.push({ role: 'nova', text: this.lang === 'en' ? "Welcome, Commander. I've analyzed this piece. What intrigues you the most?" : "欢迎指挥官。我已经解析了这份卷宗，你对文中的哪个细节最感兴趣？" }); } },
 
                 // 🚀 全局宏观建图 (创造一个星系)
                 async generateSemesterMap() {
@@ -504,11 +435,7 @@
                     const context = this.planMode === 'standard' ? `【${this.planConfig.curriculum}】在【${this.planConfig.grade}】` : `自定义探索领域：【${this.customTheme}】`;
                     
                     const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
-作为全球顶尖教育大纲专家，请严格遵循${context}的官方最新课程标准（或逻辑结构）。
-要求：
-1. 输出该学期官方规定的所有核心标准学科（Subjects）。
-2. 学科数量由该国真实大纲决定，不要自行增减或生搬硬套（例如中国课标必须有“语文”“道德与法治”等，决不能有机翻的“社会课”；美国课标必须包含 Language Arts 等原生术语）。
-必须返回严格JSON格式: [{"title": "学科官方原生名称", "icon": "单字符emoji"}]`;
+                    输出该学期官方规定的所有核心标准学科（Subjects）。学科数量由该国真实大纲决定。必须返回严格JSON格式: [{"title": "学科官方原生名称", "icon": "单字符emoji"}]`;
 
                     const res = await this.callAI(prompt);
                     if (res) {
@@ -518,43 +445,30 @@
                                 id: `gal_${Date.now()}`,
                                 title: this.planMode === 'standard' ? `${this.planConfig.grade} ${this.planConfig.curriculum.split(' ')[0]}` : this.customTheme,
                                 region: isIntl ? 'INTL' : 'CN',
-                                bgX: 10 + Math.random() * 80, // 星系深空散布
-                                bgY: 10 + Math.random() * 80,
+                                bgX: 10 + Math.random() * 80, bgY: 10 + Math.random() * 80,
                                 subjects: parsed.map((s,i) => {
-                                    // 🪐 紧凑型轨道分布算法
-                                    let orbitIndex = Math.floor(i / 6); // 每轨道最多6颗星
-                                    let r = 240 + orbitIndex * 140; // 半径：240, 380, 520...
-                                    let angle = (i % 6) * (Math.PI * 2 / 6) + (orbitIndex * 0.5);
+                                    let orbitIndex = Math.floor(i / 5); 
+                                    let r = 240 + orbitIndex * 140; 
+                                    let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
                                     return { ...s, id: `sub_${Date.now()}_${i}`, radius: r, angle: angle, units:[] };
                                 })
                             };
-                            
-                            this.galaxies.push(newGalaxy);
-                            this.activeGalaxyId = newGalaxy.id;
-                            this.galaxyPan = { x: 0, y: 0 }; // 重置视角
+                            this.galaxies.push(newGalaxy); this.activeGalaxyId = newGalaxy.id; this.panX = 0; this.panY = 0;
                             await this.sync(); this.modals.planner = false;
-                        } catch(e) { Swal.fire('Error', '格式解析失败，大模型返回异常', 'error'); }
+                        } catch(e) { Swal.fire('Error', 'AI format error', 'error'); }
                     }
                     this.loading = false;
                 },
 
-                // 星系重命名
                 editGalaxy(g) {
-                    Swal.fire({
-                        title: this.lang === 'zh' ? '重新命名此大纲星系' : 'Rename Curriculum Galaxy',
-                        input: 'text', inputValue: g.title, background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '确定保存', cancelButtonText: '取消'
-                    }).then(res => { if(res.isConfirmed && res.value.trim()) { g.title = res.value.trim(); this.sync(); } });
+                    Swal.fire({ title: 'Rename Galaxy', input: 'text', inputValue: g.title, background: '#0f172a', color: '#fff', showCancelButton: true }).then(res => { if(res.isConfirmed && res.value.trim()) { g.title = res.value.trim(); this.sync(); } });
                 },
-
-                // 星系摧毁
                 deleteGalaxy(gid) {
-                    Swal.fire({
-                        title: '摧毁星系指令确认', text: '警告：此操作将永久摧毁该星系及其包含的所有课程、单元与教案数据，且不可逆转！是否继续？', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: '确认摧毁', cancelButtonText: '取消终止'
-                    }).then(res => {
+                    Swal.fire({ title: 'Destroy Galaxy?', text: 'Irreversible action!', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
                         if(res.isConfirmed) {
                             this.galaxies = this.galaxies.filter(x => x.id !== gid);
-                            if(this.activeGalaxyId === gid) { this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null; this.galaxyPan = { x: 0, y: 0 }; }
-                            this.sync(); Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系已成功清除', showConfirmButton:false, timer:2000});
+                            if(this.activeGalaxyId === gid) { this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null; this.panX = 0; this.panY = 0; }
+                            this.sync();
                         }
                     });
                 },
@@ -562,27 +476,19 @@
                 openSubject(g, s) { this.editingSubject = { ...s, region: g.region }; this.curLesson = null; window.quillEditor = null; },
                 closeSubject() { if(this.curLesson) this.savePlan(); this.editingSubject = null; },
 
-                // 中微观拆解
                 async generateUnits() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
-作为该地区的教育大纲编制专家，请严格根据该地区的官方最新教学大纲，为《${this.editingSubject.title}》科目规划完整的学期教学计划。
-要求：1. 单元(Units)和课时(Lessons)的数量必须严格符合该地区该学期的实际教学周数和标准课时量。2. 内容必须系统、完整，不要遗漏官方大纲要求的核心知识点。
-必须返回严格JSON格式: [{"title": "单元或周次名称: 主题", "lessons": [{"title": "课时具体名称"}]}]`;
-
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n为《${this.editingSubject.title}》科目规划完整的学期教学计划。必须返回严格JSON格式: [{"title": "单元或周次名称", "lessons": [{"title": "课时名称"}]}]`;
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
                             this.editingSubject.units = parsed.map((u, i) => ({ ...u, id: `unit_${i}_${Date.now()}`, lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) }));
                             const gIdx = this.galaxies.findIndex(g => g.id === this.activeGalaxyId);
-                            if(gIdx !== -1) {
-                                const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id);
-                                if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; await this.sync(); }
-                            }
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang==='zh'?'真实大纲已下载并入库':'Curriculum synced', showConfirmButton: false, timer: 2000 });
-                        } catch(e) { Swal.fire('Error', this.lang==='zh'?'由于真实大纲数据过于庞大，大模型生成可能截断。请换个更强力的节点或重试。':'Failed to parse full curriculum. Try again.', 'error'); }
+                            if(gIdx !== -1) { const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id); if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; await this.sync(); } }
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Curriculum synced', showConfirmButton: false, timer: 2000 });
+                        } catch(e) { Swal.fire('Error', 'Failed to parse full curriculum.', 'error'); }
                     }
                     this.loading = false;
                 },
@@ -595,50 +501,166 @@
                         window.quillEditor.root.innerHTML = lesson.content || '';
                     });
                 },
-
                 async generatePlan() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}".\nHTML only (h3, ul, li, p). No markdown wrapper. Never give direct answers, use 3 questions to end.`;
-                    const res = await this.callAI(prompt);
+                    const res = await this.callAI(`[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}". HTML only.`);
                     if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
                     this.loading = false;
                 },
-
                 savePlan() {
                     if (window.quillEditor) this.curLesson.content = window.quillEditor.root.innerHTML;
                     const gIdx = this.galaxies.findIndex(g => g.id === this.activeGalaxyId);
-                    if(gIdx !== -1) {
-                        const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id);
-                        if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; this.sync(); }
-                    }
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved to Database', showConfirmButton: false, timer: 1500 });
-                },
-
-                // NOVA 拖拽
-                startNovaDrag(e) {
-                    if(e.type==='mousedown') e.preventDefault();
-                    this.isDragging = false;
-                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX, cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.start = {x:cx, y:cy}; this.offset = {x: cx - this.novaPos.x, y: cy - this.novaPos.y};
-                    const move = (ev) => {
-                        const mx = ev.type.includes('touch') ? ev.touches[0].clientX : ev.clientX, my = ev.type.includes('touch') ? ev.touches[0].clientY : ev.clientY;
-                        if (Math.hypot(mx - this.start.x, my - this.start.y) > 5) { this.isDragging = true; this.novaPos.x = mx - this.offset.x; this.novaPos.y = my - this.offset.y; }
-                    };
-                    const stop = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', stop); window.removeEventListener('touchmove', move); window.removeEventListener('touchend', stop); };
-                    window.addEventListener('mousemove', move, {passive:false}); window.addEventListener('mouseup', stop); window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', stop);
-                },
-                toggleNovaChat() { if(!this.isDragging) this.novaOpen = !this.novaOpen; this.isDragging = false; },
-                async novaAsk() {
-                    const q = this.novaInput.trim(); if(!q) return;
-                    this.novaInput = ''; this.novaMsgs.push({role:'user', content: q}); this.loading = true;
-                    const res = await this.callAI(q, 'nova', "You are NOVA, a Socratic Navigator. Guide thinking, never give answers.");
-                    if(res) { this.novaMsgs.push({role:'assistant', content: res}); this.$nextTick(() => { const b = document.getElementById('nova-chat-box'); b.scrollTop = b.scrollHeight; }); }
-                    this.loading = false;
+                    if(gIdx !== -1) { const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id); if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; this.sync(); } }
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved', showConfirmButton: false, timer: 1500 });
                 }
             }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- 🚀 纯粹的 3D 星空与拓扑网络 Canvas 渲染引擎 -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- 1. 3D 飞星宇宙背景 (Warp Starfield) ---
+            const bgCanvas = document.getElementById('bg-starfield');
+            const bgCtx = bgCanvas.getContext('2d');
+            let stars = [];
+            const numStars = 800;
+
+            function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', resizeBg); resizeBg();
+
+            for (let i = 0; i < numStars; i++) {
+                stars.push({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000 });
+            }
+
+            function animateBg() {
+                bgCtx.fillStyle = '#02040a';
+                bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+                const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2;
+
+                stars.forEach(star => {
+                    star.z -= 2; // 星星迎面飞来的速度
+                    if (star.z <= 0) { star.z = 2000; star.x = Math.random() * 2000 - 1000; star.y = Math.random() * 2000 - 1000; }
+                    const k = 128.0 / star.z;
+                    const px = star.x * k + cx; const py = star.y * k + cy;
+                    const size = (1 - star.z / 2000) * 2;
+                    if (px >= 0 && px <= bgCanvas.width && py >= 0 && py <= bgCanvas.height) {
+                        bgCtx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/2000})`;
+                        bgCtx.beginPath(); bgCtx.arc(px, py, size, 0, Math.PI * 2); bgCtx.fill();
+                    }
+                });
+                requestAnimationFrame(animateBg);
+            }
+            animateBg();
+
+            // --- 2. 灵动拓扑神经网 (Dynamic Mesh Network) ---
+            const netCanvas = document.getElementById('network-canvas');
+            const netCtx = netCanvas.getContext('2d');
+            let dustNodes = [];
+            const numDust = 40; // 伴生暗物质节点数量
+            let mouse = { x: -1000, y: -1000 };
+
+            function resizeNet() { netCanvas.width = window.innerWidth; netCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', resizeNet); resizeNet();
+
+            window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+            // 初始化随机游走的伴生节点
+            for (let i = 0; i < numDust; i++) {
+                dustNodes.push({
+                    baseAngle: Math.random() * Math.PI * 2,
+                    baseRadius: 100 + Math.random() * 600,
+                    speed: (Math.random() - 0.5) * 0.002,
+                    x: 0, y: 0,
+                    size: Math.random() * 2 + 1
+                });
+            }
+
+            function animateNet() {
+                netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
+                
+                const appState = window.galaxyState;
+                // 只有在银河系视图下才渲染连线
+                if (appState && appState.view === 'galaxy' && appState.activeGalaxyId) {
+                    const cx = window.innerWidth / 2 + appState.panX;
+                    const cy = window.innerHeight / 2 + appState.panY;
+                    
+                    // 获取当前星系的主课星球
+                    const planets = appState.subjects.map(s => ({
+                        x: cx + Math.cos(s.angle) * s.radius,
+                        y: cy + Math.sin(s.angle) * s.radius,
+                        isPlanet: true
+                    }));
+                    
+                    // 中心核心节点
+                    const core = { x: cx, y: cy, isPlanet: true };
+                    
+                    // 更新并计算伴生节点位置
+                    dustNodes.forEach(node => {
+                        node.baseAngle += node.speed;
+                        let targetX = cx + Math.cos(node.baseAngle) * node.baseRadius;
+                        let targetY = cy + Math.sin(node.baseAngle) * node.baseRadius;
+                        
+                        // 鼠标引力排斥算法
+                        const dx = mouse.x - targetX; const dy = mouse.y - targetY;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < 150) {
+                            const force = (150 - dist) / 150;
+                            targetX -= (dx / dist) * force * 50;
+                            targetY -= (dy / dist) * force * 50;
+                        }
+                        
+                        node.x += (targetX - node.x) * 0.1; // 平滑移动
+                        node.y += (targetY - node.y) * 0.1;
+                        
+                        // 绘制伴生节点发光点
+                        netCtx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+                        netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
+                    });
+
+                    // 将所有节点放入一个池子中连线
+                    const allNodes = [core, ...planets, ...dustNodes];
+                    
+                    for (let i = 0; i < allNodes.length; i++) {
+                        for (let j = i + 1; j < allNodes.length; j++) {
+                            const n1 = allNodes[i]; const n2 = allNodes[j];
+                            const dx = n1.x - n2.x; const dy = n1.y - n2.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            // 连线距离阈值：主节点连线长一些，暗物质节点连线短一些
+                            const threshold = (n1.isPlanet || n2.isPlanet) ? 350 : 180;
+                            
+                            if (dist < threshold) {
+                                // 距离越近，线越亮
+                                const opacity = (1 - dist / threshold) * (n1.isPlanet || n2.isPlanet ? 0.6 : 0.2);
+                                netCtx.beginPath();
+                                netCtx.moveTo(n1.x, n1.y);
+                                
+                                // 鼠标划过丝线时的波动算法 (二次贝塞尔曲线)
+                                const midX = (n1.x + n2.x)/2; const midY = (n1.y + n2.y)/2;
+                                const mdx = mouse.x - midX; const mdy = mouse.y - midY;
+                                const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+                                
+                                if (mdist < 100) {
+                                    const bend = (100 - mdist) * 0.5;
+                                    netCtx.quadraticCurveTo(midX - (mdx/mdist)*bend, midY - (mdy/mdist)*bend, n2.x, n2.y);
+                                } else {
+                                    netCtx.lineTo(n2.x, n2.y);
+                                }
+                                
+                                netCtx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
+                                netCtx.lineWidth = n1.isPlanet && n2.isPlanet ? 1.5 : 0.8;
+                                netCtx.stroke();
+                            }
+                        }
+                    }
+                }
+                requestAnimationFrame(animateNet);
+            }
+            animateNet();
+        });
+    </script>
 </body>
 </html>

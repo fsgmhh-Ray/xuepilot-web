@@ -79,7 +79,7 @@
         <!-- 动态网格背景 -->
         <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-        <!-- ================= 视图 A：教研锻造厂 (Curriculum Forge) 改为 课程规划中心 ================= -->
+        <!-- ================= 视图 A：课程规划中心 ================= -->
         <div x-show="view === 'forge'" x-transition class="flex-1 flex flex-col p-8 z-10 overflow-hidden fade-in">
             <div class="flex justify-between items-end mb-8 shrink-0">
                 <div>
@@ -118,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- 星系详情编辑器 (管理该星系下的学科) -->
+            <!-- 星系详情编辑器 -->
             <div x-show="editingGalaxy && !editingSubject" class="flex-1 flex flex-col min-h-0 fade-in bg-slate-900/50 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 shrink-0">
                     <div class="flex items-center gap-4">
@@ -141,35 +141,81 @@
                     <div class="h-px bg-slate-800 w-full"></div>
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest">🪐 学科设置与官方大纲绑定</label>
-                            <button @click="addSubject()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 transition">+ 新增学科</button>
+                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest">🪐 学科大纲控制锚点</label>
+                            <button @click="addSubject()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 transition text-slate-300 hover:text-white">+ 新增学科</button>
                         </div>
-                        <div class="space-y-4">
+                        
+                        <div class="space-y-5">
                             <template x-for="(subj, idx) in editingGalaxy?.subjects" :key="subj.id">
                                 <div class="bg-black/40 p-5 rounded-2xl border border-slate-800 relative group">
                                     <button @click="removeSubject(idx)" class="absolute top-3 right-3 text-rose-500 hover:text-rose-400 text-lg opacity-0 group-hover:opacity-100 transition">✖</button>
+                                    
+                                    <!-- 顶部基本信息与核心逻辑按钮 -->
                                     <div class="flex items-center gap-4 mb-4 pr-8">
-                                        <input type="text" x-model="subj.icon" class="w-14 input-dark p-3 rounded-xl text-center text-2xl shadow-inner" title="Emoji">
-                                        <input type="text" x-model="subj.title" class="flex-1 input-dark p-3 rounded-xl text-sm font-bold shadow-inner" placeholder="学科名称 (如: 四年级数学)">
-                                        <button @click="openSubjectPlanner(subj)" class="px-6 py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-xl text-xs font-bold transition shadow-sm">
-                                            进入该科排课室 ➔
-                                        </button>
+                                        <input type="text" x-model="subj.icon" @input="sync()" class="w-14 input-dark p-3 rounded-xl text-center text-2xl shadow-inner" title="Emoji">
+                                        <input type="text" x-model="subj.title" @input="sync()" class="flex-1 input-dark p-3 rounded-xl text-sm font-bold shadow-inner text-blue-100" placeholder="学科名称 (如: 四年级数学)">
+                                        
+                                        <!-- 逻辑1：如果没有大纲基准，禁用排课按钮 -->
+                                        <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
+                                            <button class="px-6 py-3 bg-slate-800 text-slate-500 border border-slate-700 rounded-xl text-xs font-bold cursor-not-allowed shadow-sm" title="需先获取大纲锚点才可进入排课">
+                                                🔒 需先获取大纲
+                                            </button>
+                                        </template>
+                                        <!-- 逻辑2：有大纲基准，点亮排课按钮 -->
+                                        <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
+                                            <button @click="openSubjectPlanner(subj)" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white border border-blue-500/50 rounded-xl text-xs font-bold transition shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                                进入排课室 ➔
+                                            </button>
+                                        </template>
                                     </div>
-                                    <div x-data="{ exp: false }">
-                                        <button @click="exp = !exp" class="w-full text-left text-[10px] font-mono text-slate-500 hover:text-emerald-400 transition bg-slate-900 px-4 py-2.5 rounded-lg border border-slate-800 flex justify-between">
-                                            <span>📄 注入 / 智能获取官方教学大纲</span><span x-text="exp ? '▲' : '▼'"></span>
-                                        </button>
-                                        <div x-show="exp" class="mt-2 relative">
-                                            <!-- 🤖 智能抓取/匹配大纲回退按钮 -->
-                                            <div class="flex justify-end mb-2 mt-2">
-                                                <button @click="fetchSyllabusText(subj)" class="text-xs bg-indigo-600/60 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 shadow-md border border-indigo-400/50" :disabled="subj.isFetching">
-                                                    <span x-show="subj.isFetching" class="animate-spin text-lg">↻</span>
-                                                    <span x-text="subj.isFetching ? '正在检索全球大纲库...' : '🤖 AI 智能抓取/参照匹配大纲'"></span>
+
+                                    <!-- 大纲操作栏与状态区 -->
+                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
+                                                    <span class="text-xs font-bold text-emerald-400 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 大纲已锚定就绪</span>
+                                                </template>
+                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
+                                                    <span class="text-xs font-bold text-amber-500 flex items-center gap-2"><span class="text-lg leading-none">⚠️</span> 缺乏大纲基准参数</span>
+                                                </template>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <!-- 若未就绪，显示智能获取按钮 -->
+                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
+                                                    <button @click="fetchSyllabusText(subj)" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-md border border-indigo-500/50" :disabled="subj.isFetching">
+                                                        <span x-show="subj.isFetching" class="animate-spin">↻</span>
+                                                        <span x-text="subj.isFetching ? '检索全球智库...' : '🤖 获取官方大纲'"></span>
+                                                    </button>
+                                                </template>
+                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
+                                                    <button @click="subj.showEditor = !subj.showEditor; sync();" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition border border-slate-600">
+                                                        手动输入
+                                                    </button>
+                                                </template>
+                                                <!-- 若已就绪，仅显示查看编辑按钮 -->
+                                                <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
+                                                    <button @click="subj.showEditor = !subj.showEditor; sync();" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition border border-slate-600">
+                                                        <span x-text="subj.showEditor ? '收起大纲面板' : '查看/编辑底层大纲'"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <!-- 编辑器下拉面板 (含 AI 泛化兜底按钮) -->
+                                        <div x-show="subj.showEditor" x-transition class="mt-4 pt-4 border-t border-slate-800">
+                                            <textarea x-model="subj.referenceText" @input="sync()" class="w-full input-dark p-4 rounded-xl text-xs h-40 resize-none font-mono text-slate-300 leading-relaxed mb-4 shadow-inner" placeholder="在此处粘贴该科目的官方教学大纲全文、进度表或教案。"></textarea>
+                                            
+                                            <!-- 兜底：如果文本为空，提供纯 AI 泛化生成 -->
+                                            <div class="flex justify-end" x-show="!subj.referenceText || subj.referenceText.trim() === ''">
+                                                <button @click="generateFallbackSyllabus(subj)" class="text-xs bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white px-4 py-2 rounded-lg transition border border-purple-500/50 flex items-center gap-2" :disabled="subj.isGenerating">
+                                                    <span x-show="subj.isGenerating" class="animate-spin">↻</span>
+                                                    <span x-text="subj.isGenerating ? '跨维测算生成中...' : '✨ AI 泛化大纲 (无官方标准时备用)'"></span>
                                                 </button>
                                             </div>
-                                            <textarea x-model="subj.referenceText" class="w-full input-dark p-4 rounded-xl text-xs h-32 resize-none font-mono text-slate-400" placeholder="您可以手动在此粘贴该科目的官方教学大纲全文。若留空或点击上方按钮，AI 将优先为您抓取官方大纲；若找不到，则会自动为您匹配教育水平相似的国家标准作为排课基准。"></textarea>
                                         </div>
                                     </div>
+                                    
                                 </div>
                             </template>
                         </div>
@@ -234,7 +280,7 @@
             </div>
         </div>
 
-        <!-- ================= 视图 B：学情分析雷达 (Insight Radar) ================= -->
+        <!-- ================= 视图 B：学情分析雷达 ================= -->
         <div x-show="view === 'radar'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
             <div class="mb-8 shrink-0">
                 <h2 class="text-3xl font-black text-white mb-2 flex items-center gap-3">📡 全息学情雷达</h2>
@@ -242,38 +288,27 @@
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 雷达图面板 -->
                 <div class="glass-panel p-6 rounded-3xl border border-emerald-500/20 flex flex-col items-center justify-center shadow-lg relative overflow-hidden">
                     <div class="absolute inset-0 bg-emerald-900/10 blur-2xl"></div>
                     <h3 class="font-bold text-emerald-400 mb-6 relative z-10">六维素养成长模型</h3>
-                    <!-- 使用 CSS 模拟雷达图视觉 -->
                     <div class="relative w-48 h-48 border-2 border-slate-700 rounded-full flex items-center justify-center z-10">
                         <div class="absolute w-32 h-32 border border-slate-600 rounded-full"></div>
                         <div class="absolute w-16 h-16 border border-slate-500 rounded-full"></div>
-                        <!-- 连接线 -->
                         <div class="absolute w-full h-px bg-slate-700 transform rotate-0"></div>
                         <div class="absolute w-full h-px bg-slate-700 transform rotate-60"></div>
                         <div class="absolute w-full h-px bg-slate-700 transform rotate-120"></div>
-                        <!-- 属性圈 -->
                         <svg class="absolute inset-0 w-full h-full overflow-visible">
                             <polygon points="50%,10% 90%,30% 80%,80% 20%,90% 10%,40%" fill="rgba(16, 185, 129, 0.4)" stroke="#10b981" stroke-width="2"/>
-                            <!-- 数据点 -->
-                            <circle cx="50%" cy="10%" r="4" fill="#34d399"/>
-                            <circle cx="90%" cy="30%" r="4" fill="#34d399"/>
-                            <circle cx="80%" cy="80%" r="4" fill="#34d399"/>
-                            <circle cx="20%" cy="90%" r="4" fill="#34d399"/>
+                            <circle cx="50%" cy="10%" r="4" fill="#34d399"/><circle cx="90%" cy="30%" r="4" fill="#34d399"/>
+                            <circle cx="80%" cy="80%" r="4" fill="#34d399"/><circle cx="20%" cy="90%" r="4" fill="#34d399"/>
                             <circle cx="10%" cy="40%" r="4" fill="#34d399"/>
                         </svg>
-                        <span class="absolute -top-6 text-xs text-slate-300 font-bold">逻辑推演力</span>
-                        <span class="absolute -right-12 top-1/4 text-xs text-slate-300 font-bold">提问质量</span>
-                        <span class="absolute -right-8 bottom-1/4 text-xs text-slate-300 font-bold">知识整合</span>
-                        <span class="absolute -bottom-6 text-xs text-slate-300 font-bold">跨域发散</span>
-                        <span class="absolute -left-12 bottom-1/4 text-xs text-slate-300 font-bold">情感共鸣</span>
-                        <span class="absolute -left-10 top-1/4 text-xs text-slate-300 font-bold">批判思维</span>
+                        <span class="absolute -top-6 text-xs text-slate-300 font-bold">逻辑推演力</span><span class="absolute -right-12 top-1/4 text-xs text-slate-300 font-bold">提问质量</span>
+                        <span class="absolute -right-8 bottom-1/4 text-xs text-slate-300 font-bold">知识整合</span><span class="absolute -bottom-6 text-xs text-slate-300 font-bold">跨域发散</span>
+                        <span class="absolute -left-12 bottom-1/4 text-xs text-slate-300 font-bold">情感共鸣</span><span class="absolute -left-10 top-1/4 text-xs text-slate-300 font-bold">批判思维</span>
                     </div>
                 </div>
 
-                <!-- 预警与建议 -->
                 <div class="lg:col-span-2 flex flex-col gap-6">
                     <div class="glass-panel p-6 rounded-3xl border border-rose-500/20 shadow-lg relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚠️</div>
@@ -298,7 +333,7 @@
             </div>
         </div>
 
-        <!-- ================= 视图 C：系统全局配置 (Config) ================= -->
+        <!-- ================= 视图 C：系统全局配置 ================= -->
         <div x-show="view === 'config'" x-cloak x-transition class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.15)] relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl">⚙️</div>
@@ -306,7 +341,6 @@
                 <p class="text-slate-400 text-sm mb-8 relative z-10">设置大模型 API 密钥与数据库同步节点。此类核心设定与学生探索舱完全物理隔离。</p>
                 
                 <div class="space-y-6 relative z-10">
-                    <!-- 排课大模型 -->
                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
                         <h3 class="font-bold text-blue-400 text-sm tracking-widest uppercase mb-4">🌌 排课规划模型 (SYS Core)</h3>
                         <div class="space-y-3">
@@ -317,7 +351,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 伴读大模型 -->
                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
                         <h3 class="font-bold text-indigo-400 text-sm tracking-widest uppercase mb-4">🤖 伴读导师模型 (NOVA Core)</h3>
                         <div class="space-y-3">
@@ -328,7 +361,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 数据库 -->
                     <div class="bg-emerald-900/10 p-6 rounded-2xl border border-emerald-500/20">
                         <h3 class="font-bold text-emerald-400 text-sm tracking-widest uppercase mb-4">🗄️ Supabase 云端数据库</h3>
                         <div class="grid grid-cols-2 gap-3">
@@ -422,9 +454,32 @@
                         const { data: assetRes, error: err2 } = await this.supaClient.from('user_data').select('data').eq('id', 'standard_assets').single();
                         if (!err2 && assetRes?.data) { this.standardAssets = Object.assign(this.standardAssets, assetRes.data); window.safeStorage.set('xp_standard_assets', JSON.stringify(this.standardAssets)); }
                     } catch (e) { this.fallbackLoad(); }
+                    this.applyLoadedData({ galaxies: this.galaxies });
                 },
-                fallbackLoad() { const s = window.safeStorage.get('xp_galaxies'); if(s) { const p = JSON.parse(s); if(Array.isArray(p) && p.length>0 && p[0].subjects) this.galaxies = p; } },
+                fallbackLoad() { 
+                    const s = window.safeStorage.get('xp_galaxies'); 
+                    if(s) { 
+                        const p = JSON.parse(s); 
+                        if(Array.isArray(p) && p.length>0 && p[0].subjects) this.galaxies = p; 
+                    } 
+                    this.applyLoadedData({ galaxies: this.galaxies });
+                },
                 
+                applyLoadedData(data) {
+                    if (data.galaxies) this.galaxies = data.galaxies;
+                    
+                    this.galaxies.forEach(g => {
+                        g.subjects.forEach(s => {
+                            if (s.description === undefined) s.description = '';
+                            if (s.objectives === undefined) s.objectives = [];
+                            if (s.referenceText === undefined) s.referenceText = '';
+                            if (s.isFetching === undefined) s.isFetching = false;
+                            if (s.isGenerating === undefined) s.isGenerating = false;
+                            if (s.showEditor === undefined) s.showEditor = false;
+                        });
+                    });
+                },
+
                 async sync() { 
                     if (this.supaClient) await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { galaxies: this.galaxies } });
                     window.safeStorage.set('xp_galaxies', JSON.stringify(this.galaxies));
@@ -490,7 +545,7 @@
                             bgX: 10 + (Math.random() * 80), bgY: 10 + (Math.random() * 80),
                             subjects: (parsed.subjects || []).map((s,i) => {
                                 let orbitIndex = Math.floor(i / 5); let r = 240 + orbitIndex * 140; let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
-                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false };
+                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false, isGenerating: false, showEditor: false };
                             })
                         };
                         this.galaxies.push(newGalaxy); await this.sync(); this.modals.planner = false;
@@ -505,11 +560,18 @@
                     });
                 },
 
-                openGalaxyEditor(g) { this.editingGalaxy = g; },
+                openGalaxyEditor(g) { 
+                    g.subjects.forEach(s => {
+                        if(s.isFetching === undefined) s.isFetching = false;
+                        if(s.isGenerating === undefined) s.isGenerating = false;
+                        if(s.showEditor === undefined) s.showEditor = false;
+                    });
+                    this.editingGalaxy = g; 
+                },
                 saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已保存', showConfirmButton: false, timer: 1500 }); },
                 
-                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false }); },
-                removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); },
+                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false, isGenerating: false, showEditor: false }); },
+                removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); this.sync(); },
 
                 // 🤖 智能抓取/匹配大纲回退机制
                 async fetchSyllabusText(subj) {
@@ -528,16 +590,39 @@
                     if (res) {
                         const text = res.trim();
                         if (text.includes('NO_DATA') || text.length < 20) {
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: '未获取到标准大纲，请手动粘贴', showConfirmButton: false, timer: 2500 });
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: '未找到标准大纲，请手动输入或让 AI 泛化生成', showConfirmButton: false, timer: 3000 });
+                            subj.showEditor = true; // 自动展开编辑器提供备用生成按钮
                         } else {
                             subj.referenceText = text;
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '智能抓取/匹配成功！', showConfirmButton: false, timer: 2000 });
+                            subj.showEditor = false; // 成功则收起
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '大纲锚定成功！排课功能已解锁', showConfirmButton: false, timer: 2000 });
                             this.sync(); 
                         }
                     } else {
                         Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '获取超时或出错', showConfirmButton: false, timer: 2000 });
                     }
                     subj.isFetching = false;
+                    this.galaxies = [...this.galaxies];
+                },
+
+                // ✨ 备用方案：AI 泛化生成大纲
+                async generateFallbackSyllabus(subj) {
+                    subj.isGenerating = true;
+                    this.galaxies = [...this.galaxies];
+                    
+                    const targetStandard = this.editingGalaxy.title;
+                    const prompt = `作为资深学科专家，针对【${targetStandard}】阶段的《${subj.title}》科目，由于缺乏特定地区的官方标准文件，请你运用全球通用的高质量教育认知，为其编写一份详尽的、可用于排课参考的“学科教学大纲 (Syllabus)”。
+要求：内容翔实，包含教学目标、核心知识点分布、能力培养要求等。直接输出文本，不要寒暄。`;
+                    
+                    const res = await this.callAI(prompt, 'sys');
+                    if (res) {
+                        subj.referenceText = res.trim();
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '泛化大纲已生成！', showConfirmButton: false, timer: 2000 });
+                        this.sync();
+                    } else {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '生成失败', showConfirmButton: false, timer: 2000 });
+                    }
+                    subj.isGenerating = false;
                     this.galaxies = [...this.galaxies];
                 },
 

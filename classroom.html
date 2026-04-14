@@ -45,18 +45,18 @@
 
     <canvas id="bg-starfield"></canvas>
 
-    <!-- 极简学生信息栏 (悬浮左上角) -->
-    <div class="absolute top-6 left-6 z-40 flex items-center gap-4 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-slate-700 shadow-xl">
-        <button @click="goHome()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition border border-slate-600 shadow-inner">⬅</button>
+    <!-- 🚀 极简返回主页按钮 (防误解版) -->
+    <div @click="goHome()" class="absolute top-6 left-6 z-40 flex items-center gap-4 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-slate-700 shadow-xl cursor-pointer hover:bg-slate-800 transition group">
+        <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition border border-slate-600 shadow-inner">⬅</button>
         <div>
-            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Explorer</div>
-            <div class="font-bold text-sm tracking-wide flex items-center gap-2"><span>👨‍🚀</span> 探索者视角</div>
+            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Deck</div>
+            <div class="font-bold text-sm tracking-wide flex items-center gap-2"><span>🏠</span> 返回主页面</div>
         </div>
     </div>
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full">
         
-        <!-- ================= 视图：3D 宇宙航线漫游 (净化版) ================= -->
+        <!-- ================= 视图：3D 宇宙航线漫游 ================= -->
         <div class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
              @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
             
@@ -249,10 +249,24 @@
                 async loadFromCloud() {
                     try { 
                         const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
-                        if (!error && data?.data?.galaxies) this.galaxies = data.data.galaxies;
+                        if (!error && data?.data?.galaxies) this.applyLoadedData({ galaxies: data.data.galaxies });
                     } catch (e) { this.fallbackLoad(); }
                 },
-                fallbackLoad() { const s = window.safeStorage.get('xp_galaxies'); if(s) { const p = JSON.parse(s); if(Array.isArray(p) && p.length>0 && p[0].subjects) this.galaxies = p; } },
+                fallbackLoad() { 
+                    const s = window.safeStorage.get('xp_galaxies'); 
+                    if(s) { 
+                        const p = JSON.parse(s); 
+                        if(Array.isArray(p) && p.length>0 && p[0].subjects) this.applyLoadedData({ galaxies: p }); 
+                    } 
+                },
+
+                // 🚀 核心更新：数据加载完毕后，自动激活第一个星系！
+                applyLoadedData(data) {
+                    if (data.galaxies) this.galaxies = data.galaxies;
+                    if (this.galaxies.length > 0 && !this.activeGalaxyId) {
+                        this.activateGalaxy(this.galaxies[0].id);
+                    }
+                },
                 
                 async sync() { 
                     if (this.supaClient) await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { galaxies: this.galaxies } });

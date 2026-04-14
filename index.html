@@ -28,7 +28,6 @@
         .flip-card-back { background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(79, 70, 229, 0.9)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; border: 1px solid rgba(96, 165, 250, 0.5); }
     </style>
     
-    <!-- 🚀 核心防御：虚拟存储层 (彻底解决 iframe 中 Tracking Prevention 导致的门户崩溃与密钥丢失) -->
     <script>
         window.safeStorage = {
             memory: {},
@@ -58,19 +57,12 @@
             <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
         </div>
         
-        <div class="flex-1 py-8 px-4 space-y-3 overflow-y-auto">
+        <div class="flex-1 py-8 px-4 space-y-4 overflow-y-auto">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2" x-text="dict.coreMod"></div>
             
-            <!-- 🚀 B端：家长主控中枢路由 -->
-            <a @click.prevent="goTo('dashboard.html', true)" class="nav-item flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-900/40 border border-slate-800 cursor-pointer">
-                <div class="flex items-center"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">🎛️</span> <span class="font-bold text-sm text-blue-100" x-text="dict.commander"></span></div>
-                <span x-show="!isPro" class="text-[9px] font-black border border-amber-500/50 text-amber-500 px-1.5 py-0.5 rounded shadow-sm">PRO</span>
-            </a>
-
-            <!-- 🚀 C端：学生探索舱路由 -->
-            <a @click.prevent="goTo('classroom.html', true)" class="nav-item flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-900/40 border border-slate-800 cursor-pointer mt-2">
-                <div class="flex items-center"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]">👨‍🚀</span> <span class="font-bold text-sm text-emerald-100" x-text="dict.explorer"></span></div>
-                <span x-show="!isPro" class="text-[9px] font-black border border-amber-500/50 text-amber-500 px-1.5 py-0.5 rounded shadow-sm">PRO</span>
+            <!-- 🚀 C端：学生探索舱 (高亮显示，占据 C 位) -->
+            <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-4 py-5 rounded-2xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/50 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform">
+                <div class="flex items-center"><span class="text-3xl mr-4 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">👨‍🚀</span> <span class="font-black text-lg text-emerald-50" x-text="dict.explorer"></span></div>
             </a>
             
             <div class="h-px bg-slate-800/50 my-6 mx-2"></div>
@@ -84,8 +76,14 @@
             </a>
         </div>
 
-        <div class="p-4 border-t border-slate-800/50 bg-slate-900/20">
-            <button @click="modals.settings = true" class="w-full py-3.5 bg-slate-800/60 hover:bg-blue-900/40 rounded-xl text-[10px] font-bold text-slate-400 hover:text-blue-300 transition shadow-sm border border-slate-700 hover:border-blue-500/50" x-text="dict.settingsBtn"></button>
+        <!-- 🚀 B端：低调的家长与系统入口 -->
+        <div class="p-4 border-t border-slate-800/50 bg-slate-900/20 flex flex-col gap-2">
+            <!-- 家长主控中枢路由 (低调隐藏) -->
+            <button @click.prevent="goTo('dashboard.html', true)" class="w-full py-2.5 hover:bg-slate-800/60 rounded-xl text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-2 border border-transparent hover:border-slate-700">
+                <span>🎛️</span> <span x-text="dict.commander"></span>
+                <span x-show="!isPro" class="text-[8px] font-black border border-amber-500/50 text-amber-500 px-1 rounded opacity-50">PRO</span>
+            </button>
+            <button @click="modals.settings = true" class="w-full py-3.5 bg-slate-800/40 hover:bg-blue-900/40 rounded-xl text-[10px] font-bold text-slate-400 hover:text-blue-300 transition shadow-sm border border-slate-800 hover:border-blue-500/50" x-text="dict.settingsBtn"></button>
         </div>
     </aside>
 
@@ -125,7 +123,7 @@
             </div>
         </div>
 
-        <!-- 🎛️ 引擎配置面板 (结合虚拟存储层，确保秘钥不丢失) -->
+        <!-- 🎛️ 引擎配置面板 -->
         <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
              <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
                  <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
@@ -190,10 +188,9 @@
         function portalApp() {
             return {
                 lang: window.safeStorage.get('xp_lang') || 'zh',
-                isPro: window.safeStorage.get('xp_is_pro') !== 'false', // 默认放通预览环境
+                isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
                 view: 'welcome', modals: { upgrade: false, settings: false },
                 
-                // 🚀 配置均走 safeStorage
                 config: {
                     sys: { key: window.safeStorage.get('xp_sys_key')||'', url: window.safeStorage.get('xp_sys_url')||'/proxy/groq', model: window.safeStorage.get('xp_sys_model')||'llama-3.3-70b-versatile' },
                     nova: { key: window.safeStorage.get('xp_nova_key')||'', url: window.safeStorage.get('xp_nova_url')||'/proxy/nvidia', model: window.safeStorage.get('xp_nova_model')||'google/gemma-4-31b-it' },
@@ -206,17 +203,17 @@
                 ],
                 i18n: {
                     zh: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.0', coreMod: '核心教育矩阵', freeMod: '开放探索域', 
-                        commander: '家长主控中枢', explorer: '学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
-                        welcome: '欢迎登舰，指挥官', welcomeDesc: '请选择进入您的管理后台，或让孩子开启星际探索。',
+                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
+                        commander: '家长/教师主控后台', explorer: '进入学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
+                        welcome: '欢迎登舰', welcomeDesc: '准备好开启全新的知识宇宙探索之旅。',
                         tools: '全球教育资源矩阵', toolsDesc: '精选全球顶尖免费教育资源网站。',
-                        settingsBtn: '🎛️ 全局算力引擎与云端配置', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
+                        settingsBtn: '🎛️ 引擎与云端配置 (设置)', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
                         upgTitle: '获取领航员通行证', upgDesc: '解锁双端物理隔离舱室、云端教研资产同步与学情分析雷达。', upgBtn: '获取 PRO 权限', upgHint: '请先升级以解锁核心教育引擎。'
                     },
                     en: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.0', coreMod: 'Core Matrix', freeMod: 'Open Domain', 
-                        commander: 'Command Center', explorer: 'Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
-                        welcome: 'Welcome Aboard', welcomeDesc: 'Enter the command center or launch the explorer deck for students.',
+                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
+                        commander: 'Parent / Teacher Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
+                        welcome: 'Welcome Aboard', welcomeDesc: 'Get ready to explore the new knowledge universe.',
                         tools: 'Global Matrix', toolsDesc: 'Curated world-class free educational resources.',
                         settingsBtn: '🎛️ Global Engine & Cloud Config', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
                         upgTitle: 'Get Commander Access', upgDesc: 'Unlock dual-deck architecture, cloud asset sync, and insight radar.', upgBtn: 'Unlock Pro', upgHint: 'Core engines are locked.'

@@ -2,858 +2,252 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XuePilot - Command Center (Parent)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XuePilot COMMAND OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .btn-nav-class { display: flex; width: 100%; align-items: center; padding: 1rem; margin-bottom: 0.5rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: left; }
-        .btn-nav-class:hover { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { transition: all 0.3s ease; cursor: pointer; }
+        .nav-item:hover { background: rgba(30, 41, 59, 0.6); }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Quill Editor Styling for Dashboard */
-        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; }
-        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; font-size: 0.875rem; }
-        .ql-editor { min-height: 400px; }
+
+        /* 3D 翻牌特效 */
+        .flip-card { background-color: transparent; perspective: 1000px; height: 180px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 1rem; }
+        .flip-card-front { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; justify-content: center; padding: 1.5rem; }
+        .flip-card-back { background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(79, 70, 229, 0.9)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; border: 1px solid rgba(96, 165, 250, 0.5); }
     </style>
+    
     <script>
         window.safeStorage = {
             memory: {},
-            get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } },
-            set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
+            get(key) {
+                try { return window.localStorage.getItem(key) || this.memory[key] || null; } 
+                catch(e) { return this.memory[key] || null; }
+            },
+            set(key, value) {
+                this.memory[key] = value;
+                try { window.localStorage.setItem(key, value); } catch(e) {}
+            }
         };
     </script>
 </head>
-<body x-data="dashboardApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+<body x-data="portalApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+    <div class="space-bg"></div><div class="grid-bg"></div>
 
-    <!-- 侧边导航栏 -->
-    <aside class="w-[18rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative">
+    <aside class="flex flex-col glass-panel border-r border-slate-800/50 w-[19rem] z-30 shrink-0 shadow-2xl relative">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🎛️</span>
+            <div class="flex items-center">
+                <span class="text-3xl mr-3 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
-                    <h1 class="text-lg font-black text-white">家长主控中枢</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">Command Center</div>
+                    <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="dict.brand"></h1>
+                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest uppercase" x-text="dict.ver"></div>
                 </div>
             </div>
+            <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
+        </div>
+        
+        <div class="flex-1 py-8 px-4 space-y-4 overflow-y-auto">
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2" x-text="dict.coreMod"></div>
+            
+            <!-- 🚀 C端：学生探索舱 (高亮显示，占据 C 位) -->
+            <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-4 py-5 rounded-2xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/50 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform">
+                <div class="flex items-center"><span class="text-3xl mr-4 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">👨‍🚀</span> <span class="font-black text-lg text-emerald-50" x-text="dict.explorer"></span></div>
+            </a>
+            
+            <div class="h-px bg-slate-800/50 my-6 mx-2"></div>
+            
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.freeMod"></div>
+            <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40">
+                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🎮</span> <span class="text-sm font-bold text-slate-300" x-text="dict.game"></span></div>
+            </a>
+            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40" :class="view === 'tools' ? 'bg-slate-800/60 shadow-inner' : ''">
+                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🌍</span> <span class="text-sm font-bold text-slate-300" x-text="dict.tools"></span></div>
+            </a>
         </div>
 
-        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心管理 (Core)</div>
-            <button @click="view = 'forge'" class="btn-nav-class" :class="view==='forge'?'bg-blue-600/20 text-blue-400 border-blue-500/30':'text-slate-400'">
-                <span class="mr-3 text-xl">🪐</span> 课程规划中心
+        <!-- 🚀 B端：低调的家长与系统入口 -->
+        <div class="p-4 border-t border-slate-800/50 bg-slate-900/20 flex flex-col gap-2">
+            <!-- 家长主控中枢路由 (低调隐藏) -->
+            <button @click.prevent="goTo('dashboard.html', true)" class="w-full py-2.5 hover:bg-slate-800/60 rounded-xl text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-2 border border-transparent hover:border-slate-700">
+                <span>🎛️</span> <span x-text="dict.commander"></span>
+                <span x-show="!isPro" class="text-[8px] font-black border border-amber-500/50 text-amber-500 px-1 rounded opacity-50">PRO</span>
             </button>
-            <button @click="view = 'radar'" class="btn-nav-class" :class="view==='radar'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-400'">
-                <span class="mr-3 text-xl">📡</span> 学情分析雷达
-            </button>
-            
-            <div class="h-px bg-slate-800/50 my-4 mx-2"></div>
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2">系统 (System)</div>
-            <button @click="view = 'config'" class="btn-nav-class" :class="view==='config'?'bg-purple-600/20 text-purple-400 border-purple-500/30':'text-slate-400'">
-                <span class="mr-3 text-xl">⚙️</span> 引擎算力与云存储
-            </button>
-            <button @click="goHome()" class="btn-nav-class text-slate-400 hover:text-white mt-4 bg-slate-800/50 border-slate-700">
-                <span class="mr-3 text-xl">⬅</span> 返回入口大厅
-            </button>
-        </nav>
-        
-        <div class="p-4 border-t border-slate-800/50 text-[10px] font-mono text-center flex items-center justify-center gap-2">
-            <div class="w-2 h-2 rounded-full" :class="dbConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-rose-500'"></div>
-            <span x-text="dbConnected ? 'SUPABASE 云端同步中' : '离线本地模式'" :class="dbConnected ? 'text-emerald-500' : 'text-rose-500'"></span>
+            <button @click="modals.settings = true" class="w-full py-3.5 bg-slate-800/40 hover:bg-blue-900/40 rounded-xl text-[10px] font-bold text-slate-400 hover:text-blue-300 transition shadow-sm border border-slate-800 hover:border-blue-500/50" x-text="dict.settingsBtn"></button>
         </div>
     </aside>
 
-    <!-- 主内容区 -->
-    <main class="flex-1 relative bg-[#02040a] overflow-hidden flex flex-col">
-        <!-- 动态网格背景 -->
-        <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
-
-        <!-- ================= 视图 A：课程规划中心 ================= -->
-        <div x-show="view === 'forge'" x-transition class="flex-1 flex flex-col p-8 z-10 overflow-hidden fade-in">
-            <div class="flex justify-between items-end mb-8 shrink-0">
-                <div>
-                    <h2 class="text-3xl font-black text-white mb-2">课程规划中心</h2>
-                    <p class="text-slate-400 text-sm">为孩子定制专属的知识星系与学习路径。配置上线后，孩子即可在探索舱中开启学习任务。</p>
-                </div>
-                <button @click="modals.planner = true" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition flex items-center gap-2">
-                    <span class="text-lg">✨</span> 规划新课程体系
-                </button>
-            </div>
-
-            <!-- 星系列表 -->
-            <div x-show="!editingGalaxy && !editingSubject" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-8">
-                <template x-for="g in galaxies" :key="g.id">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group shadow-lg">
-                        <button @click="deleteGalaxy(g.id)" class="absolute top-4 right-4 text-rose-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition p-2">🗑️</button>
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div>
-                            <div>
-                                <h3 class="font-bold text-lg text-white" x-text="g.title"></h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-800/50" x-text="g.baseStandard || 'Custom'"></span>
+    <main class="flex-1 relative bg-transparent overflow-hidden flex items-start justify-center p-8 overflow-y-auto">
+        <div class="text-center glass-panel p-10 md:p-12 rounded-[2.5rem] shadow-2xl border border-blue-500/20 fade-in transition-all duration-500 my-auto"
+             :class="view === 'tools' ? 'max-w-5xl w-full' : 'max-w-2xl w-full'">
+            
+            <div class="text-7xl mb-6 drop-shadow-lg animate-bounce" x-text="view === 'tools' ? '🌍' : '🛸'"></div>
+            <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
+            <p class="text-slate-400 text-sm leading-relaxed mb-10" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
+            
+            <!-- 3D 翻牌矩阵：全球教育资源 -->
+            <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left mb-4 fade-in">
+                <template x-for="tool in toolsList" :key="tool.id">
+                    <div class="flip-card cursor-pointer group" @click="window.open(tool.link, '_blank')">
+                        <div class="flip-card-inner shadow-lg">
+                            <div class="flip-card-front group-hover:border-emerald-400 transition-colors">
+                                <div class="text-4xl mb-3 drop-shadow-md" x-text="tool.icon"></div>
+                                <h3 class="font-bold text-emerald-300 text-lg mb-1 tracking-wide" x-text="tool.name"></h3>
+                                <p class="text-xs text-slate-400" x-text="lang === 'zh' ? tool.descZh : tool.descEn"></p>
+                            </div>
+                            <div class="flip-card-back !bg-gradient-to-br !from-emerald-700 !to-blue-800">
+                                <p class="text-xs text-emerald-50 leading-relaxed flex-1" x-text="lang === 'zh' ? tool.detailZh : tool.detailEn"></p>
+                                <div class="mt-4 flex items-center justify-between border-t border-emerald-400/30 pt-3">
+                                    <span class="text-[10px] font-mono tracking-widest opacity-80" x-text="tool.id"></span>
+                                    <span class="text-[10px] font-bold bg-white text-emerald-700 px-3 py-1.5 rounded-lg shadow-md">前往官网 ↗</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-400 line-clamp-2 mb-4 flex-1" x-text="g.overview || '暂无全局目标概述'"></p>
-                        <div class="flex gap-2 mb-6">
-                            <span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded" x-text="`包含 ${g.subjects ? g.subjects.length : 0} 个核心学科`"></span>
-                        </div>
-                        <button @click="openGalaxyEditor(g)" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition border border-slate-700 hover:border-blue-500 shadow-md">
-                            ⚙️ 配置课程大纲与排课
-                        </button>
                     </div>
                 </template>
-                <div x-show="galaxies.length === 0" class="col-span-full py-20 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-3xl">
-                    <div class="text-6xl mb-4 opacity-50">🌌</div>
-                    <p>尚未建立任何学习体系，点击右上角为孩子规划第一个知识宇宙。</p>
-                </div>
             </div>
 
-            <!-- 星系详情编辑器 -->
-            <div x-show="editingGalaxy && !editingSubject" class="flex-1 flex flex-col min-h-0 fade-in bg-slate-900/50 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
-                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button @click="editingGalaxy = null" class="text-slate-400 hover:text-white text-2xl transition">⬅</button>
-                        <h3 class="text-xl font-bold text-blue-300" x-text="`管理体系：${editingGalaxy?.title}`"></h3>
-                    </div>
-                    <button @click="saveGalaxyMetadata()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-md transition">💾 保存体系设置</button>
-                </div>
-                <div class="p-6 flex-1 overflow-y-auto space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">课程总目标 (Overview)</label>
-                            <textarea x-model="editingGalaxy?.overview" class="w-full input-dark p-4 rounded-xl text-sm h-24 resize-none"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">核心培养能力 (Competencies，以逗号分隔)</label>
-                            <input type="text" :value="editingGalaxy?.competencies?.join(', ')" @input="editingGalaxy.competencies = $event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" class="w-full input-dark p-4 rounded-xl text-sm text-emerald-400 font-bold">
-                        </div>
-                    </div>
-                    <div class="h-px bg-slate-800 w-full"></div>
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest">🪐 学科大纲控制锚点</label>
-                            <button @click="addSubject()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 transition text-slate-300 hover:text-white">+ 新增学科</button>
-                        </div>
-                        
-                        <div class="space-y-5">
-                            <template x-for="(subj, idx) in editingGalaxy?.subjects" :key="subj.id">
-                                <div class="bg-black/40 p-5 rounded-2xl border border-slate-800 relative group">
-                                    <button @click="removeSubject(idx)" class="absolute top-3 right-3 text-rose-500 hover:text-rose-400 text-lg opacity-0 group-hover:opacity-100 transition">✖</button>
-                                    
-                                    <!-- 顶部基本信息与核心逻辑按钮 -->
-                                    <div class="flex items-center gap-4 mb-4 pr-8">
-                                        <input type="text" x-model="subj.icon" @input="sync()" class="w-14 input-dark p-3 rounded-xl text-center text-2xl shadow-inner" title="Emoji">
-                                        <input type="text" x-model="subj.title" @input="sync()" class="flex-1 input-dark p-3 rounded-xl text-sm font-bold shadow-inner text-blue-100" placeholder="学科名称 (如: 四年级数学)">
-                                        
-                                        <!-- 逻辑1：如果没有大纲基准，禁用排课按钮 -->
-                                        <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
-                                            <button class="px-6 py-3 bg-slate-800 text-slate-500 border border-slate-700 rounded-xl text-xs font-bold cursor-not-allowed shadow-sm" title="需先获取大纲锚点才可进入排课">
-                                                🔒 需先获取大纲
-                                            </button>
-                                        </template>
-                                        <!-- 逻辑2：有大纲基准，点亮排课按钮 -->
-                                        <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
-                                            <button @click="openSubjectPlanner(subj)" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white border border-blue-500/50 rounded-xl text-xs font-bold transition shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                                                进入排课室 ➔
-                                            </button>
-                                        </template>
-                                    </div>
-
-                                    <!-- 大纲操作栏与状态区 -->
-                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-3">
-                                                <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
-                                                    <span class="text-xs font-bold text-emerald-400 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 大纲已锚定就绪</span>
-                                                </template>
-                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
-                                                    <span class="text-xs font-bold text-amber-500 flex items-center gap-2"><span class="text-lg leading-none">⚠️</span> 缺乏大纲基准参数</span>
-                                                </template>
-                                            </div>
-                                            <div class="flex gap-3">
-                                                <!-- 若未就绪，显示智能获取按钮 -->
-                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
-                                                    <button @click="fetchSyllabusText(subj)" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-md border border-indigo-500/50" :disabled="subj.isFetching">
-                                                        <span x-show="subj.isFetching" class="animate-spin">↻</span>
-                                                        <span x-text="subj.isFetching ? '检索全球智库...' : '🤖 获取官方大纲'"></span>
-                                                    </button>
-                                                </template>
-                                                <template x-if="!subj.referenceText || subj.referenceText.trim() === ''">
-                                                    <button @click="subj.showEditor = !subj.showEditor; sync();" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition border border-slate-600">
-                                                        手动输入
-                                                    </button>
-                                                </template>
-                                                <!-- 若已就绪，仅显示查看编辑按钮 -->
-                                                <template x-if="subj.referenceText && subj.referenceText.trim() !== ''">
-                                                    <button @click="subj.showEditor = !subj.showEditor; sync();" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition border border-slate-600">
-                                                        <span x-text="subj.showEditor ? '收起大纲面板' : '查看/编辑底层大纲'"></span>
-                                                    </button>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        <!-- 编辑器下拉面板 (含 AI 泛化兜底按钮) -->
-                                        <div x-show="subj.showEditor" x-transition class="mt-4 pt-4 border-t border-slate-800">
-                                            <textarea x-model="subj.referenceText" @input="sync()" class="w-full input-dark p-4 rounded-xl text-xs h-40 resize-none font-mono text-slate-300 leading-relaxed mb-4 shadow-inner" placeholder="在此处粘贴该科目的官方教学大纲全文、进度表或教案。"></textarea>
-                                            
-                                            <!-- 兜底：如果文本为空，提供纯 AI 泛化生成 -->
-                                            <div class="flex justify-end" x-show="!subj.referenceText || subj.referenceText.trim() === ''">
-                                                <button @click="generateFallbackSyllabus(subj)" class="text-xs bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white px-4 py-2 rounded-lg transition border border-purple-500/50 flex items-center gap-2" :disabled="subj.isGenerating">
-                                                    <span x-show="subj.isGenerating" class="animate-spin">↻</span>
-                                                    <span x-text="subj.isGenerating ? '跨维测算生成中...' : '✨ AI 泛化大纲 (无官方标准时备用)'"></span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 学科级排课与教案编辑器 -->
-            <div x-show="editingSubject" class="flex-1 flex flex-col min-h-0 fade-in bg-slate-900/50 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
-                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 shrink-0">
-                    <div class="flex items-center gap-4">
-                        <button @click="closeSubjectPlanner()" class="text-slate-400 hover:text-white text-2xl transition">⬅</button>
-                        <h3 class="text-xl font-bold text-white flex items-center gap-2"><span x-text="editingSubject?.icon"></span> <span x-text="`${editingGalaxy?.title} - ${editingSubject?.title}`"></span></h3>
-                    </div>
-                </div>
-                <div class="flex-1 flex min-h-0">
-                    <!-- 左侧：单元与课时树 -->
-                    <div class="w-80 border-r border-slate-800 p-4 flex flex-col bg-black/20 shrink-0">
-                        
-                        <!-- 🚀 核心优化：获取官方排课 VS AI泛化排课 -->
-                        <button @click="fetchOfficialSchedule()" class="w-full mb-3 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-2" :disabled="editingSubject?.isFetchingSchedule">
-                            <span x-show="editingSubject?.isFetchingSchedule" class="animate-spin">↻</span> 
-                            <span x-text="editingSubject?.isFetchingSchedule ? '检索全球教研进度库...' : '🤖 抓取官方学期进度表'"></span>
-                        </button>
-                        
-                        <!-- 只有在没有获取到进度时，才显示备用泛化按钮 -->
-                        <button x-show="!editingSubject?.units || editingSubject?.units.length === 0" @click="generateFallbackSchedule()" class="w-full mb-4 py-3 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-500/50 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2" :disabled="editingSubject?.isGeneratingSchedule">
-                            <span x-show="editingSubject?.isGeneratingSchedule" class="animate-spin">↻</span> 
-                            <span x-text="editingSubject?.isGeneratingSchedule ? '跨维推演排课中...' : '✨ AI 泛化生成排课 (备用)'"></span>
-                        </button>
-
-                        <div class="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-hide mt-2">
-                            <div x-show="!editingSubject?.units || editingSubject?.units.length === 0" class="text-center text-slate-600 text-xs mt-10 px-4">
-                                点击上方按钮抓取现成课表，为您节省大量算力。
-                            </div>
-                            <template x-for="unit in editingSubject?.units" :key="unit.id">
-                                <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 shadow-sm">
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase mb-2 border-b border-slate-800 pb-2" x-text="unit.title"></div>
-                                    <div class="space-y-1">
-                                        <template x-for="lesson in unit.lessons" :key="lesson.id">
-                                            <div @click="selectLesson(lesson)" class="p-2.5 rounded-lg border border-slate-800 bg-slate-800/40 hover:border-blue-500/50 transition cursor-pointer flex justify-between items-center" :class="curLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/30' : ''">
-                                                <span class="text-xs font-bold text-slate-200 truncate pr-2" x-text="lesson.title"></span>
-                                                <span x-show="lesson.content" class="text-[10px] opacity-60 shrink-0">📝</span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                    <!-- 右侧：苏格拉底教案编辑器 -->
-                    <div class="flex-1 p-6 flex flex-col bg-slate-900/30 relative">
-                        <template x-if="!curLesson">
-                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50"><div class="text-6xl mb-4">✍️</div><p class="text-sm font-bold tracking-widest">请在左侧选择具体课时以编写教案</p></div>
-                        </template>
-                        <template x-if="curLesson">
-                            <div class="flex flex-col h-full fade-in">
-                                <div class="flex justify-between items-center mb-4 shrink-0 bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/20">
-                                    <input x-model="curLesson.title" class="bg-transparent text-xl font-black border-none outline-none text-white flex-1 mr-4 transition">
-                                    <button @click="generatePlan()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-md transition flex items-center gap-2" :disabled="loading">
-                                        <span x-show="loading" class="animate-spin text-sm">↻</span> ✨ AI 生成启发式教案
-                                    </button>
-                                </div>
-                                <div id="toolbar-container" class="shrink-0 mb-2 flex flex-wrap gap-2">
-                                    <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
-                                    <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                                    <span class="ql-formats"><button class="ql-image"></button><button class="ql-video"></button></span>
-                                </div>
-                                <div id="editor-container" class="flex-1 bg-black/40 rounded-xl border border-slate-800"></div>
-                                <div class="mt-4 flex justify-end shrink-0"><button @click="savePlan()" class="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg transition text-sm">💾 确认保存该课教案</button></div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
+            <div x-show="!isPro && view !== 'tools'" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-4">
+                <p class="text-amber-400 text-xs font-bold mb-3" x-text="dict.upgHint"></p>
+                <button @click="modals.upgrade = true" class="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl text-white text-sm font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
             </div>
         </div>
 
-        <!-- ================= 视图 B：学情分析雷达 ================= -->
-        <div x-show="view === 'radar'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
-            <div class="mb-8 shrink-0">
-                <h2 class="text-3xl font-black text-white mb-2 flex items-center gap-3">📡 全息学情雷达</h2>
-                <p class="text-slate-400 text-sm">实时监控孩子在探索舱中与 AI 导师交互产生的能力评估数据。（演示面板）</p>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-3xl border border-emerald-500/20 flex flex-col items-center justify-center shadow-lg relative overflow-hidden">
-                    <div class="absolute inset-0 bg-emerald-900/10 blur-2xl"></div>
-                    <h3 class="font-bold text-emerald-400 mb-6 relative z-10">六维素养成长模型</h3>
-                    <div class="relative w-48 h-48 border-2 border-slate-700 rounded-full flex items-center justify-center z-10">
-                        <div class="absolute w-32 h-32 border border-slate-600 rounded-full"></div>
-                        <div class="absolute w-16 h-16 border border-slate-500 rounded-full"></div>
-                        <div class="absolute w-full h-px bg-slate-700 transform rotate-0"></div>
-                        <div class="absolute w-full h-px bg-slate-700 transform rotate-60"></div>
-                        <div class="absolute w-full h-px bg-slate-700 transform rotate-120"></div>
-                        <svg class="absolute inset-0 w-full h-full overflow-visible">
-                            <polygon points="50%,10% 90%,30% 80%,80% 20%,90% 10%,40%" fill="rgba(16, 185, 129, 0.4)" stroke="#10b981" stroke-width="2"/>
-                            <circle cx="50%" cy="10%" r="4" fill="#34d399"/><circle cx="90%" cy="30%" r="4" fill="#34d399"/>
-                            <circle cx="80%" cy="80%" r="4" fill="#34d399"/><circle cx="20%" cy="90%" r="4" fill="#34d399"/>
-                            <circle cx="10%" cy="40%" r="4" fill="#34d399"/>
-                        </svg>
-                        <span class="absolute -top-6 text-xs text-slate-300 font-bold">逻辑推演力</span><span class="absolute -right-12 top-1/4 text-xs text-slate-300 font-bold">提问质量</span>
-                        <span class="absolute -right-8 bottom-1/4 text-xs text-slate-300 font-bold">知识整合</span><span class="absolute -bottom-6 text-xs text-slate-300 font-bold">跨域发散</span>
-                        <span class="absolute -left-12 bottom-1/4 text-xs text-slate-300 font-bold">情感共鸣</span><span class="absolute -left-10 top-1/4 text-xs text-slate-300 font-bold">批判思维</span>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2 flex flex-col gap-6">
-                    <div class="glass-panel p-6 rounded-3xl border border-rose-500/20 shadow-lg relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚠️</div>
-                        <h3 class="font-bold text-rose-400 mb-4 flex items-center gap-2"><span>⚠️</span> 思维断层智能预警</h3>
-                        <div class="bg-rose-900/20 border border-rose-800/50 p-4 rounded-xl text-sm text-rose-200">
-                            <p class="font-bold mb-1">《四年级科学：浮力与密度》 - 课时 2.1</p>
-                            <p class="opacity-80 leading-relaxed">系统检测到孩子在此环节连续 3 次未能回答出导师关于“体积变化”的启发提问。AI 判断其缺乏直观的“密度”概念。建议本周末在家进行“盐水浮鸡蛋”的家庭实验进行干预。</p>
-                        </div>
-                    </div>
-                    
-                    <div class="glass-panel p-6 rounded-3xl border border-blue-500/20 shadow-lg flex-1">
-                        <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2"><span>✨</span> 高光时刻抓取</h3>
-                        <div class="space-y-4">
-                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-sm">
-                                <div class="text-[10px] text-slate-500 mb-2 font-mono">在《历史：工业革命》中，孩子向 AI 提出：</div>
-                                <blockquote class="text-blue-200 font-serif italic">“如果当时发明蒸汽机的人是个想要保护环境的动物学家，现在的世界会是什么颜色？”</blockquote>
-                                <div class="mt-2 text-right"><span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-1 rounded border border-emerald-800">极具批判性视角 +15</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- 🎛️ 引擎配置面板 -->
+        <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
+             <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
+                 <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
+                 <div class="space-y-5">
+                     <!-- 引擎 A -->
+                     <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20 relative">
+                         <div class="flex justify-between items-center mb-3">
+                             <div class="font-bold text-blue-400 text-sm tracking-widest uppercase">🌌 Main Planning Core (排课引擎)</div>
+                             <button @click="testNode('sys')" class="text-[10px] font-bold bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded-md transition shadow-md text-white">Test Connection</button>
+                         </div>
+                         <div class="space-y-3">
+                             <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             <div class="grid grid-cols-2 gap-3">
+                                 <input type="text" x-model="config.sys.url" placeholder="Base URL (/proxy/groq)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                                 <input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             </div>
+                         </div>
+                     </div>
+                     <!-- 引擎 B -->
+                     <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
+                         <div class="flex justify-between items-center mb-3">
+                             <div class="font-bold text-indigo-400 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (伴读导师)</div>
+                             <button @click="testNode('nova')" class="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded-md transition shadow-md text-white">Test Connection</button>
+                         </div>
+                         <div class="space-y-3">
+                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             <div class="grid grid-cols-2 gap-3">
+                                 <input type="text" x-model="config.nova.url" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                                 <input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             </div>
+                         </div>
+                     </div>
+                     <!-- Supabase 云端数据库 -->
+                     <div class="bg-emerald-900/10 p-5 rounded-2xl border border-emerald-500/20">
+                         <div class="font-bold text-emerald-400 mb-3 text-sm tracking-widest uppercase">🗄️ Supabase Cloud Storage</div>
+                         <div class="grid grid-cols-2 gap-3">
+                             <input type="text" x-model="config.supa.url" placeholder="Project URL (https://...)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             <input type="password" x-model="config.supa.key" placeholder="Anon Key (eyJ...)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                         </div>
+                     </div>
+                 </div>
+                 <div class="mt-8 flex gap-4">
+                     <button @click="saveConfig()" class="flex-1 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-white transition shadow-lg text-sm tracking-widest uppercase" x-text="dict.setSave"></button>
+                     <button @click="modals.settings = false" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-white transition font-bold text-sm" x-text="dict.setCancel"></button>
+                 </div>
+             </div>
         </div>
 
-        <!-- ================= 视图 C：系统全局配置 ================= -->
-        <div x-show="view === 'config'" x-cloak x-transition class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.15)] relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl">⚙️</div>
-                <h2 class="text-3xl font-black text-white mb-2 relative z-10">引擎算力与云端存储</h2>
-                <p class="text-slate-400 text-sm mb-8 relative z-10">设置大模型 API 密钥与数据库同步节点。此类核心设定与学生探索舱完全物理隔离。</p>
-                
-                <div class="space-y-6 relative z-10">
-                    <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
-                        <h3 class="font-bold text-blue-400 text-sm tracking-widest uppercase mb-4">🌌 排课规划模型 (SYS Core)</h3>
-                        <div class="space-y-3">
-                            <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="text" x-model="config.sys.url" placeholder="Base URL (/proxy/groq)" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                                <input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
-                        <h3 class="font-bold text-indigo-400 text-sm tracking-widest uppercase mb-4">🤖 伴读导师模型 (NOVA Core)</h3>
-                        <div class="space-y-3">
-                            <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="text" x-model="config.nova.url" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                                <input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-emerald-900/10 p-6 rounded-2xl border border-emerald-500/20">
-                        <h3 class="font-bold text-emerald-400 text-sm tracking-widest uppercase mb-4">🗄️ Supabase 云端数据库</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" x-model="config.supa.url" placeholder="Project URL (https://...)" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                            <input type="password" x-model="config.supa.key" placeholder="Anon Key (eyJ...)" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end relative z-10">
-                    <button @click="saveConfig()" class="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] transition tracking-widest uppercase">
-                        💾 烧录全局设定
-                    </button>
-                </div>
-            </div>
+        <!-- 弹窗：PRO 升级 -->
+        <div x-show="modals.upgrade" x-cloak class="absolute inset-0 bg-black/90 z-[70] flex items-center justify-center p-8 backdrop-blur-xl">
+             <div class="w-full max-w-md bg-slate-900 border border-amber-500/30 p-8 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] fade-in relative">
+                 <button @click="modals.upgrade = false" class="absolute top-5 right-5 text-slate-500 hover:text-white transition text-2xl">✖</button>
+                 <div class="text-6xl mb-4 text-center drop-shadow-lg">✨</div>
+                 <h2 class="text-2xl font-black mb-3 text-amber-400 text-center tracking-tight" x-text="dict.upgTitle"></h2>
+                 <p class="text-slate-400 text-xs mb-6 text-center leading-relaxed" x-text="dict.upgDesc"></p>
+                 <button @click="executeUpgrade()" class="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] text-base transition tracking-widest uppercase" x-text="dict.upgBtn"></button>
+             </div>
         </div>
-
-        <!-- 🚀 弹窗：缔造新体系 (Planner) -->
-        <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-xl">
-            <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
-                <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
-                <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">🔮</div>
-                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest">智能教育课程规划引擎</h2>
-                </div>
-                
-                <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
-                    <button @click="planMode = 'standard'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'standard' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">官方标准大纲体系</button>
-                    <button @click="planMode = 'custom'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'custom' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">自由拓展主题</button>
-                </div>
-
-                <div class="space-y-6">
-                    <template x-if="planMode === 'standard'">
-                        <div class="space-y-4 fade-in">
-                            <select x-model="planConfig.curriculum" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-purple-500 transition">
-                                <option>中国义务教育课标 (2022版)</option><option>US Common Core State Standards</option><option>UK National Curriculum</option><option>Singapore MOE Syllabus</option>
-                            </select>
-                            <div class="grid grid-cols-2 gap-4">
-                                <select x-model="planConfig.grade" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-blue-500 transition">
-                                    <option>一年级</option><option>二年级</option><option>三年级</option><option>四年级</option><option>五年级</option><option>六年级</option>
-                                </select>
-                                <select x-model="planConfig.term" class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm outline-none text-slate-200 focus:border-blue-500 transition">
-                                    <option>上学期</option><option>下学期</option>
-                                </select>
-                            </div>
-                        </div>
-                    </template>
-                    <template x-if="planMode === 'custom'">
-                        <div class="fade-in">
-                            <input type="text" x-model="customTheme" placeholder="例如：少儿AI启蒙、机器人学、达芬奇艺术..." class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm text-slate-200 outline-none focus:border-purple-500 transition shadow-inner">
-                        </div>
-                    </template>
-
-                    <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-3 transition text-white text-base tracking-widest" :disabled="loading">
-                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在链接云端大纲数据库...' : '🚀 开始规划学习路径'"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
     </main>
 
     <script>
-        function dashboardApp() {
+        function portalApp() {
             return {
-                view: 'forge', modals: { planner: false }, loading: false,
-                dbConnected: false, supaClient: null,
-                galaxies: [], standardAssets: JSON.parse(window.safeStorage.get('xp_standard_assets') || '{}'),
+                lang: window.safeStorage.get('xp_lang') || 'zh',
+                isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
+                view: 'welcome', modals: { upgrade: false, settings: false },
                 
-                planMode: 'standard', planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '三年级', term: '上学期' }, customTheme: '',
-                
-                editingGalaxy: null, editingSubject: null, curLesson: null,
-
                 config: {
                     sys: { key: window.safeStorage.get('xp_sys_key')||'', url: window.safeStorage.get('xp_sys_url')||'/proxy/groq', model: window.safeStorage.get('xp_sys_model')||'llama-3.3-70b-versatile' },
                     nova: { key: window.safeStorage.get('xp_nova_key')||'', url: window.safeStorage.get('xp_nova_url')||'/proxy/nvidia', model: window.safeStorage.get('xp_nova_model')||'google/gemma-4-31b-it' },
                     supa: { key: window.safeStorage.get('xp_supa_key')||'', url: window.safeStorage.get('xp_supa_url')||'' }
                 },
-
-                async init() {
-                    const url = this.config.supa.url; const key = this.config.supa.key;
-                    if (url && key && window.supabase) {
-                        try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
-                    } else { this.fallbackLoad(); }
+                toolsList: [
+                    { id: 'anton', name: 'ANTON', icon: '🦉', descZh: '无广告全学科学习应用', descEn: 'Ad-free K-12 learning', detailZh: '极高质量的互动练习，适合低幼至初中阶段，完全免费且无广告。', detailEn: 'Interactive exercises for school. Ad-free and completely free.', link: 'https://anton.app/' },
+                    { id: 'khan', name: 'Khan Academy', icon: '🏛️', descZh: '免费教育基石', descEn: 'Foundation of free learning', detailZh: '涵盖数学、科学、编程等几乎所有学科。是构建知识地基的首选推荐库。', detailEn: 'World-class free education for anyone, anywhere.', link: 'https://www.khanacademy.org/' },
+                    { id: 'phet', name: 'PhET Simulations', icon: '🔬', descZh: '诺奖仿真实验室', descEn: 'Nobel-level Sims', detailZh: '极其生动的理科互动实验，让抽象的科学概念触手可及。', detailEn: 'Interactive simulations for physics, chemistry, and biology.', link: 'https://phet.colorado.edu/' }
+                ],
+                i18n: {
+                    zh: {
+                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
+                        commander: '家长/教师主控后台', explorer: '进入学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
+                        welcome: '欢迎登舰', welcomeDesc: '准备好开启全新的知识宇宙探索之旅。',
+                        tools: '全球教育资源矩阵', toolsDesc: '精选全球顶尖免费教育资源网站。',
+                        settingsBtn: '🎛️ 引擎与云端配置 (设置)', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
+                        upgTitle: '获取领航员通行证', upgDesc: '解锁双端物理隔离舱室、云端教研资产同步与学情分析雷达。', upgBtn: '获取 PRO 权限', upgHint: '请先升级以解锁核心教育引擎。'
+                    },
+                    en: {
+                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
+                        commander: 'Parent / Teacher Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
+                        welcome: 'Welcome Aboard', welcomeDesc: 'Get ready to explore the new knowledge universe.',
+                        tools: 'Global Matrix', toolsDesc: 'Curated world-class free educational resources.',
+                        settingsBtn: '🎛️ Global Engine & Cloud Config', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
+                        upgTitle: 'Get Commander Access', upgDesc: 'Unlock dual-deck architecture, cloud asset sync, and insight radar.', upgBtn: 'Unlock Pro', upgHint: 'Core engines are locked.'
+                    }
                 },
-
-                async loadFromCloud() {
-                    try { 
-                        const { data: userRes, error: err1 } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
-                        if (!err1 && userRes?.data?.galaxies) this.galaxies = userRes.data.galaxies;
-                        
-                        const { data: assetRes, error: err2 } = await this.supaClient.from('user_data').select('data').eq('id', 'standard_assets').single();
-                        if (!err2 && assetRes?.data) { this.standardAssets = Object.assign(this.standardAssets, assetRes.data); window.safeStorage.set('xp_standard_assets', JSON.stringify(this.standardAssets)); }
-                    } catch (e) { this.fallbackLoad(); }
-                    this.applyLoadedData({ galaxies: this.galaxies });
-                },
+                get dict() { return this.i18n[this.lang]; },
                 
-                fallbackLoad() { 
-                    const s = window.safeStorage.get('xp_galaxies'); 
-                    if(s) { 
-                        const p = JSON.parse(s); 
-                        // 兼容老版本存储逻辑
-                        if(Array.isArray(p) && p.length > 0) {
-                            if (p[0].subjects) {
-                                this.galaxies = p; 
-                            } else if (p[0].title && !p[0].subjects) { 
-                                // 处理远古旧版没有外层 galaxy 的情况
-                                this.galaxies = [{ id: 'gal_legacy', title: '旧版兼容宇宙', region: 'CN', baseStandard: 'custom', overview: '', competencies: [], subjects: p }];
-                            }
-                        }
-                    } 
-                    this.applyLoadedData({ galaxies: this.galaxies });
-                },
+                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; window.safeStorage.set('xp_lang', this.lang); },
+                goTo(url, requiresPro) { if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; } window.location.href = url; },
+                executeUpgrade() { this.isPro = true; window.safeStorage.set('xp_is_pro', 'true'); this.modals.upgrade = false; },
                 
-                // 🛡️ 核心防御：绝对补全一切缺失的现代数据结构字段，彻底杜绝 TypeError 引起的死锁
-                applyLoadedData(data) {
-                    if (data.galaxies) this.galaxies = data.galaxies;
-                    
-                    (this.galaxies || []).forEach(g => {
-                        if (!g.subjects) g.subjects = [];
-                        g.subjects.forEach(s => {
-                            if (s.description === undefined) s.description = '';
-                            if (s.objectives === undefined) s.objectives = [];
-                            if (s.referenceText === undefined) s.referenceText = '';
-                            if (s.isFetching === undefined) s.isFetching = false;
-                            if (s.isGenerating === undefined) s.isGenerating = false;
-                            if (s.showEditor === undefined) s.showEditor = false;
-                            if (s.isFetchingSchedule === undefined) s.isFetchingSchedule = false;
-                            if (s.isGeneratingSchedule === undefined) s.isGeneratingSchedule = false;
+                async testNode(type) {
+                    const conf = this.config[type];
+                    if(!conf.key || !conf.url) { Swal.fire('Error', 'Missing Key or URL', 'warning'); return; }
+                    Swal.fire({ title: 'Testing...', text: `Connecting to ${type} core`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    try {
+                        const res = await fetch(`${conf.url}/chat/completions`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${conf.key}` },
+                            body: JSON.stringify({ model: conf.model, messages: [{ role: 'user', content: 'say ping' }] })
                         });
-                    });
+                        if (res.ok) { Swal.fire('Success', `${type} node is online!`, 'success'); }
+                        else { throw new Error(res.status); }
+                    } catch (e) { Swal.fire('Failed', `Connection refused: ${e.message}`, 'error'); }
                 },
-
-                async sync() { 
-                    if (this.supaClient) await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { galaxies: this.galaxies } });
-                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.galaxies));
-                },
-                async saveAssets() {
-                    window.safeStorage.set('xp_standard_assets', JSON.stringify(this.standardAssets));
-                    if (this.supaClient) { try { await this.supaClient.from('user_data').upsert({ id: 'standard_assets', data: this.standardAssets }); } catch(e) {} }
-                },
-
-                goHome() { window.location.href = 'index.html'; },
 
                 saveConfig() { 
-                    Object.keys(this.config).forEach(k => { Object.keys(this.config[k]).forEach(sub => { window.safeStorage.set(`xp_${k}_${sub}`, this.config[k][sub]); }); });
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已烧录，请刷新页面生效', showConfirmButton: false, timer: 2000 });
-                },
-
-                extractJSONObject(str) { const s = str.indexOf('{'); const e = str.lastIndexOf('}'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '{}'; },
-                extractJSONArray(str) { const s = str.indexOf('['), e = str.lastIndexOf(']'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '[]'; },
-                
-                async callAI(prompt, type = 'sys') {
-                    const key = this.config[type].key || this.config.sys.key;
-                    const url = (this.config[type].url || this.config.sys.url) + '/chat/completions';
-                    const model = this.config[type].model || this.config.sys.model;
-                    if(!key) { Swal.fire('Error', '请先在系统配置中录入 API Key', 'warning'); return null; }
-                    try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are an elite educator.' }, { role: 'user', content: prompt }] }) });
-                        if(!res.ok) throw new Error(); const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { Swal.fire('Error', 'API 调用失败', 'error'); return null; }
-                },
-
-                // 宏观建图
-                async generateSemesterMap() {
-                    this.loading = true;
-                    const isIntl = !this.planConfig.curriculum.includes('中国');
-                    const targetLang = isIntl ? 'English' : 'Chinese';
-                    const context = this.planMode === 'standard' ? `【${this.planConfig.curriculum}】在【${this.planConfig.grade}】阶段` : `自定义探索领域：【${this.customTheme}】`;
-                    const cacheKey = `map_${this.planConfig.curriculum}_${this.planConfig.grade}`;
-                    
-                    let parsed = null; let isFromCache = false;
-
-                    if (this.planMode === 'standard' && this.standardAssets[cacheKey]) {
-                        parsed = this.standardAssets[cacheKey]; isFromCache = true; await new Promise(r => setTimeout(r, 600)); 
-                    } else {
-                        const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}. 作为顶尖教育大纲专家，查阅${context}的最新标准。返回严格JSON Object: {"overview": "总体概述...","competencies": ["素养1", "素养2"],"subjects": [{"title": "原生学科名", "icon": "单字符emoji"}]}`;
-                        const res = await this.callAI(prompt);
-                        if (res) {
-                            try { parsed = JSON.parse(this.extractJSONObject(res)); if (this.planMode === 'standard') { this.standardAssets[cacheKey] = parsed; this.saveAssets(); } } catch(e) { Swal.fire('Error', '格式异常', 'error'); this.loading = false; return; }
-                        }
-                    }
-
-                    if (parsed) {
-                        let gradeStr = this.planConfig.grade;
-                        const toEnMap = {'一年级':'Grade 1', '二年级':'Grade 2', '三年级':'Grade 3', '四年级':'Grade 4', '五年级':'Grade 5', '六年级':'Grade 6'};
-                        if (isIntl) gradeStr = toEnMap[gradeStr] || gradeStr;
-                        let currPrefix = this.planConfig.curriculum.split(' ')[0]; if (currPrefix === 'UK') currPrefix = 'GB'; else if (!isIntl) currPrefix = '中国课标';
-
-                        const newGalaxy = {
-                            id: `gal_${Date.now()}`,
-                            title: this.planMode === 'standard' ? `${gradeStr} ${currPrefix}` : this.customTheme,
-                            region: isIntl ? 'INTL' : 'CN',
-                            baseStandard: this.planMode === 'standard' ? `${this.planConfig.curriculum}_${this.planConfig.grade}` : 'custom',
-                            overview: parsed.overview || '', competencies: parsed.competencies || [],
-                            bgX: 10 + (Math.random() * 80), bgY: 10 + (Math.random() * 80),
-                            subjects: (parsed.subjects || []).map((s,i) => {
-                                let orbitIndex = Math.floor(i / 5); let r = 240 + orbitIndex * 140; let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
-                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false, isGenerating: false, showEditor: false, isFetchingSchedule: false, isGeneratingSchedule: false };
-                            })
-                        };
-                        this.galaxies.push(newGalaxy); await this.sync(); this.modals.planner = false;
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已从云端教研库极速读取' : '大纲已智能解析并保存', showConfirmButton: false, timer: 3000 });
-                    }
-                    this.loading = false;
-                },
-
-                deleteGalaxy(gid) {
-                    Swal.fire({ title: '确认删除该课程体系？', text: '删除后，孩子将无法看到对应的知识星球', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
-                        if(res.isConfirmed) { this.galaxies = this.galaxies.filter(x => x.id !== gid); this.sync(); }
+                    Object.keys(this.config).forEach(k => { 
+                        Object.keys(this.config[k]).forEach(sub => { 
+                            window.safeStorage.set(`xp_${k}_${sub}`, this.config[k][sub]); 
+                        }); 
                     });
-                },
-
-                // 🛡️ 核心防御：打开编辑器时，二次确立字段安全补全
-                openGalaxyEditor(g) { 
-                    if (!g.subjects) g.subjects = [];
-                    g.subjects.forEach(s => {
-                        if(s.isFetching === undefined) s.isFetching = false;
-                        if(s.isGenerating === undefined) s.isGenerating = false;
-                        if(s.showEditor === undefined) s.showEditor = false;
-                        if(s.isFetchingSchedule === undefined) s.isFetchingSchedule = false;
-                        if(s.isGeneratingSchedule === undefined) s.isGeneratingSchedule = false;
-                    });
-                    this.editingGalaxy = g; 
-                },
-                saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已保存', showConfirmButton: false, timer: 1500 }); },
-                
-                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false, isGenerating: false, showEditor: false, isFetchingSchedule: false, isGeneratingSchedule: false }); },
-                removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); this.sync(); },
-
-                // 🤖 智能抓取/匹配大纲文本 (Syllabus) 引入 4 段式回退
-                async fetchSyllabusText(subj) {
-                    subj.isFetching = true;
-                    this.galaxies = [...this.galaxies]; 
-                    
-                    const targetStandard = this.editingGalaxy.title;
-                    const cacheKey = `syllabus_${this.editingGalaxy.baseStandard}_${subj.title}`;
-
-                    // 1. 优先从云端教研资产库秒读
-                    if (this.standardAssets[cacheKey]) {
-                        subj.referenceText = this.standardAssets[cacheKey];
-                        subj.showEditor = false;
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '✨ 已从云端资产库极速读取大纲！', showConfirmButton: false, timer: 2000 });
-                        subj.isFetching = false;
-                        this.galaxies = [...this.galaxies];
-                        return;
-                    }
-
-                    // 2 & 3 & 4. 资产库没有，呼叫 AI 走严格回退逻辑
-                    const prompt = `作为教育大纲搜索专家，请检索【${targetStandard}】体系下《${subj.title}》的官方详细教学大纲原文。
-【强制执行顺序】：
-1. 优先尝试精准获取该体系原版官方大纲全文。
-2. 若无法获取该地区此科目的大纲，自动参照教育水平最相近的国家标准（如无澳洲则参照英国，无加拿大则参照美国，其他参照新加坡或中国课标）并提取输出。
-3. 若连相似国家的高质量大纲都完全无法获取，请仅输出大写英文字符串 'NO_DATA'，绝不准自行胡编乱造！
-请直接输出大纲文本内容，禁止任何解释、寒暄或对话。`;
-
-                    const res = await this.callAI(prompt, 'sys');
-                    if (res) {
-                        const text = res.trim();
-                        if (text.includes('NO_DATA') || text.length < 20) {
-                            // 触发第 4 步：彻底兜底
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: '未找到官方大纲，请手动输入或让 AI 泛化', showConfirmButton: false, timer: 3000 });
-                            subj.showEditor = true; 
-                        } else {
-                            subj.referenceText = text;
-                            subj.showEditor = false; 
-                            
-                            // 💡 沉淀入库：将 AI 辛苦找来的纯正大纲存入全球资产库！
-                            if (this.editingGalaxy.baseStandard !== 'custom') {
-                                this.standardAssets[cacheKey] = text;
-                                this.saveAssets();
-                            }
-                            
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '大纲抓取并入库成功！排课已解锁', showConfirmButton: false, timer: 2000 });
-                            this.sync(); 
-                        }
-                    } else {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '获取超时或出错', showConfirmButton: false, timer: 2000 });
-                    }
-                    subj.isFetching = false;
-                    this.galaxies = [...this.galaxies];
-                },
-
-                // ✨ 备用方案：AI 泛化生成大纲文本
-                async generateFallbackSyllabus(subj) {
-                    subj.isGenerating = true;
-                    this.galaxies = [...this.galaxies];
-                    
-                    const targetStandard = this.editingGalaxy.title;
-                    const prompt = `作为资深学科专家，针对【${targetStandard}】阶段的《${subj.title}》科目，由于缺乏特定地区的官方标准文件，请你运用全球通用的高质量教育认知，为其编写一份详尽的、可用于排课参考的“学科教学大纲 (Syllabus)”。
-要求：内容翔实，包含教学目标、核心知识点分布、能力培养要求等。直接输出文本，不要寒暄。`;
-                    
-                    const res = await this.callAI(prompt, 'sys');
-                    if (res) {
-                        subj.referenceText = res.trim();
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '泛化大纲已生成！', showConfirmButton: false, timer: 2000 });
-                        this.sync();
-                    } else {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '生成失败', showConfirmButton: false, timer: 2000 });
-                    }
-                    subj.isGenerating = false;
-                    this.galaxies = [...this.galaxies];
-                },
-
-                openSubjectPlanner(subj) { this.editingSubject = subj; this.curLesson = null; window.quillEditor = null; },
-                closeSubjectPlanner() { if(this.curLesson) this.savePlan(); this.editingSubject = null; this.sync(); },
-
-                // 🚀 核心飞轮：智能抓取官方排课进度 (Scope & Sequence / Pacing Guide)
-                async fetchOfficialSchedule() {
-                    this.editingSubject.isFetchingSchedule = true;
-                    this.galaxies = [...this.galaxies];
-
-                    // 💡 修复语种判断：读取父级星系 region，同时兼容学科名为"英语"的情况
-                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
-                    const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
-                    let ragPrompt = hasCustomRag ? `\n【RAG 锚定验证】：仅在确认找到官方进度后，结合此大纲原文调整格式：\n"""\n${this.editingSubject.referenceText.substring(0,500)}...\n"""\n` : '';
-                    
-                    // 飞轮缓存 Key
-                    const cacheKey = `schedule_official_${this.editingGalaxy.baseStandard}_${this.editingSubject.title}`;
-                    let parsedUnits = null; let isFromCache = false;
-
-                    // 1. 优先从云端教研资产库秒读 (且没有被私有 RAG 污染时)
-                    if (!hasCustomRag && this.standardAssets[cacheKey]) {
-                        parsedUnits = this.standardAssets[cacheKey]; 
-                        isFromCache = true; 
-                        await new Promise(r => setTimeout(r, 600)); 
-                    } else {
-                        // 2 & 3 & 4. 严格回退逻辑抓取排课
-                        const prompt = targetLang === 'English'
-                            ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
-As a global education data retrieval expert, search for the official "Scope and Sequence / Pacing Guide" for "${this.editingSubject.title}" under the [${this.editingGalaxy.title}] framework.
-[Mandatory Order]:
-1. Fetch the exact official school/district pacing guide.
-2. If unavailable, use the closest equivalent national standard pacing guide.
-3. If completely unavailable, output ONLY an empty array []. DO NOT hallucinate or invent!
-[Minimal JSON Format to prevent timeout]:
-[{"title": "Unit Name", "lessons": ["Lesson 1 Name", "Lesson 2 Name"]}]
-${hasCustomRag ? '\n[RAG Grounding Validation]: Format based on this syllabus text:\n"""\n' + this.editingSubject.referenceText.substring(0,500) + '...\n"""\n' : ''}`
-                            : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
-作为全球教育数据检索专家，请搜索【${this.editingGalaxy.title}】体系下《${this.editingSubject.title}》的真实【学期教学进度表 (Scope and Sequence / Pacing Guide)】。
-【强制执行顺序】：
-1. 优先精准获取该体系真实的学校/教育局公开排课进度。
-2. 若找不到，自动平替为教育水平最相近国家的标准排课进度并输出。
-3. 若连相似国家的排课都完全找不到，请直接返回空数组 []，严禁自行泛化编造！
-【防熔断极简JSON格式】：
-[{"title": "单元名", "lessons": ["课时1名称", "课时2名称"]}]
-${ragPrompt}`;
-
-                        const res = await this.callAI(prompt);
-                        if (res) {
-                            try { 
-                                const jsonStr = this.extractJSONArray(res);
-                                parsedUnits = JSON.parse(jsonStr); 
-                                // 判断是否未找到 (空数组)
-                                if (parsedUnits.length === 0) {
-                                    parsedUnits = null;
-                                } else if (!hasCustomRag && this.editingGalaxy.baseStandard !== 'custom') { 
-                                    // 💡 沉淀入库：将真实排课存入全球资产库！
-                                    this.standardAssets[cacheKey] = parsedUnits; 
-                                    this.saveAssets(); 
-                                } 
-                            } catch(e) { console.error('JSON Error', e); parsedUnits = null; }
-                        }
-                    }
-
-                    if (parsedUnits) {
-                        this.applyParsedSchedule(parsedUnits);
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '✨ 已从云端真实排课库秒读' : '成功抓取真实排课并入库', showConfirmButton: false, timer: 3000 });
-                    } else {
-                        Swal.fire({ title: '未找到现成进度表', text: '该科目可能缺乏公开的官方进度（或已平替失败）。请点击“AI 泛化生成排课”进行系统推演。', icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#3b82f6' });
-                    }
-                    
-                    this.editingSubject.isFetchingSchedule = false;
-                    this.galaxies = [...this.galaxies];
-                },
-
-                // ✨ 备用方案：AI 泛化推演排课
-                async generateFallbackSchedule() {
-                    this.editingSubject.isGeneratingSchedule = true;
-                    this.galaxies = [...this.galaxies];
-
-                    // 💡 修复语种判断
-                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
-                    const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
-                    let ragPrompt = hasCustomRag ? `\n【RAG 锚定投喂】：仅依据以下大纲原文进行拆解，严禁偏离：\n"""\n${this.editingSubject.referenceText}\n"""\n` : '';
-                    
-                    // 泛化缓存 Key
-                    const cacheKey = `schedule_generated_${this.editingGalaxy.baseStandard}_${this.editingSubject.title}`;
-                    let parsedUnits = null; let isFromCache = false;
-
-                    if (!hasCustomRag && this.standardAssets[cacheKey]) {
-                        parsedUnits = this.standardAssets[cacheKey]; 
-                        isFromCache = true; 
-                        await new Promise(r => setTimeout(r, 600)); 
-                    } else {
-                        const prompt = targetLang === 'English'
-                            ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
-Due to lack of specific regional data, act as a top curriculum expert and strictly plan a professional semester schedule for "${this.editingSubject.title}".
-[Dynamic Lesson Density]: Generate 40-60 core lessons for major subjects, or 15-30 for comprehensive/elective subjects.
-[Anti-Timeout Compression]: To prevent truncation, the JSON structure MUST be extremely minimal! The "lessons" array MUST contain ONLY strings, NOT nested objects! Limit lesson names to 10 words.
-${hasCustomRag ? '\n[RAG Grounding]: Break down strictly based on this syllabus text:\n"""\n' + this.editingSubject.referenceText + '\n"""\n' : ''}
-Required JSON format:
-[
-  {"title": "Unit 1 Name", "lessons": ["Lesson 1 Name", "Lesson 2 Name"]},
-  {"title": "Unit 2 Name", "lessons": ["Lesson 3 Name", "Lesson 4 Name"]}
-]`
-                            : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
-由于缺乏特定地区的官方现成排课数据，请你作为顶尖教育专家，严格为《${this.editingSubject.title}》规划一份极其专业的学期计划。
-【动态课时密度】：主课生成 40-60 节核心课时，综合课生成 15-30 节。
-【极致压缩Token防熔断】：为极大提升生成速度并防止输出被截断，JSON结构必须极简！lessons 数组中只需包含纯字符串，绝对不要嵌套对象！课时名称限10字内。${ragPrompt}
-必须返回严格JSON数组格式范例:
-[
-  {"title": "第一单元名", "lessons": ["课时1名称", "课时2名称"]},
-  {"title": "第二单元名", "lessons": ["课时3名称", "课时4名称"]}
-]`;
-
-                        const res = await this.callAI(prompt);
-                        if (res) {
-                            try { 
-                                parsedUnits = JSON.parse(this.extractJSONArray(res)); 
-                                if (!hasCustomRag && this.editingGalaxy.baseStandard !== 'custom') { 
-                                    this.standardAssets[cacheKey] = parsedUnits; 
-                                    this.saveAssets(); 
-                                } 
-                            } catch(e) { Swal.fire('Error', '模型输出截断', 'error'); }
-                        }
-                    }
-
-                    if (parsedUnits) {
-                        this.applyParsedSchedule(parsedUnits);
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已调用云端泛化排课库' : 'AI 泛化推演排课完毕并入库', showConfirmButton: false, timer: 3000 });
-                    }
-                    
-                    this.editingSubject.isGeneratingSchedule = false;
-                    this.galaxies = [...this.galaxies];
-                },
-
-                // 提取出共通的结构映射方法
-                async applyParsedSchedule(parsedUnits) {
-                    this.editingSubject.units = parsedUnits.map((u, i) => ({
-                        ...u,
-                        id: `unit_${i}_${Date.now()}`,
-                        lessons: u.lessons.map((l, j) => ({
-                            title: typeof l === 'string' ? l : (l.title || '未命名课时'),
-                            id: `les_${i}_${j}_${Date.now()}`,
-                            content: ''
-                        }))
-                    }));
-                    await this.sync();
-                },
-
-                selectLesson(lesson) {
-                    if (this.curLesson && window.quillEditor) this.curLesson.content = window.quillEditor.root.innerHTML;
-                    this.curLesson = lesson;
-                    this.$nextTick(() => {
-                        if (!window.quillEditor) window.quillEditor = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: '#toolbar-container' } });
-                        window.quillEditor.root.innerHTML = lesson.content || '';
-                    });
-                },
-                
-                async generatePlan() {
-                    this.loading = true;
-                    // 💡 修复语种判断
-                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
-                    let ragPrompt = (this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '') ? `\n【RAG 锚定】：参考大纲要求：\n"""\n${this.editingSubject.referenceText.substring(0, 1000)}\n"""\n` : '';
-                    
-                    // 💡 动态 Prompt 引擎：纯外语指令防干扰
-                    const prompt = targetLang === 'English'
-                        ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
-Create an interactive Socratic lesson plan for the topic: "${this.curLesson.title}".
-Format Requirement: Output ONLY raw HTML tags (h3, ul, p) without any markdown wrappers. 
-Content Requirement: End the lesson plan with 3 thought-provoking Socratic questions to guide student thinking.
-${this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '' ? '[RAG Grounding]: Please refer to the syllabus requirements:\n"""\n' + this.editingSubject.referenceText.substring(0, 1000) + '\n"""\n' : ''}`
-                        : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
-为"${this.curLesson.title}"创建互动式教案。仅输出纯 HTML (h3, ul, p)。结尾用3个引导反问句。${ragPrompt}`;
-                    
-                    const res = await this.callAI(prompt);
-                    if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
-                    this.loading = false;
-                },
-                savePlan() { if (window.quillEditor) this.curLesson.content = window.quillEditor.root.innerHTML; this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '教案已保存', showConfirmButton: false, timer: 1500 }); }
+                    this.modals.settings = false; 
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang === 'zh' ? '配置已烧录' : 'Config Saved', showConfirmButton: false, timer: 1500 });
+                }
             }
         }
     </script>

@@ -100,12 +100,12 @@
                             <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div>
                             <div>
                                 <h3 class="font-bold text-lg text-white" x-text="g.title"></h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-800/50" x-text="g.baseStandard"></span>
+                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-800/50" x-text="g.baseStandard || 'Custom'"></span>
                             </div>
                         </div>
                         <p class="text-xs text-slate-400 line-clamp-2 mb-4 flex-1" x-text="g.overview || '暂无全局目标概述'"></p>
                         <div class="flex gap-2 mb-6">
-                            <span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded" x-text="`包含 ${g.subjects.length} 个核心学科`"></span>
+                            <span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded" x-text="`包含 ${g.subjects ? g.subjects.length : 0} 个核心学科`"></span>
                         </div>
                         <button @click="openGalaxyEditor(g)" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition border border-slate-700 hover:border-blue-500 shadow-md">
                             ⚙️ 配置课程大纲与排课
@@ -469,19 +469,30 @@
                     } catch (e) { this.fallbackLoad(); }
                     this.applyLoadedData({ galaxies: this.galaxies });
                 },
+                
                 fallbackLoad() { 
                     const s = window.safeStorage.get('xp_galaxies'); 
                     if(s) { 
                         const p = JSON.parse(s); 
-                        if(Array.isArray(p) && p.length>0 && p[0].subjects) this.galaxies = p; 
+                        // 兼容老版本存储逻辑
+                        if(Array.isArray(p) && p.length > 0) {
+                            if (p[0].subjects) {
+                                this.galaxies = p; 
+                            } else if (p[0].title && !p[0].subjects) { 
+                                // 处理远古旧版没有外层 galaxy 的情况
+                                this.galaxies = [{ id: 'gal_legacy', title: '旧版兼容宇宙', region: 'CN', baseStandard: 'custom', overview: '', competencies: [], subjects: p }];
+                            }
+                        }
                     } 
                     this.applyLoadedData({ galaxies: this.galaxies });
                 },
                 
+                // 🛡️ 核心防御：绝对补全一切缺失的现代数据结构字段，彻底杜绝 TypeError 引起的死锁
                 applyLoadedData(data) {
                     if (data.galaxies) this.galaxies = data.galaxies;
                     
-                    this.galaxies.forEach(g => {
+                    (this.galaxies || []).forEach(g => {
+                        if (!g.subjects) g.subjects = [];
                         g.subjects.forEach(s => {
                             if (s.description === undefined) s.description = '';
                             if (s.objectives === undefined) s.objectives = [];
@@ -568,6 +579,29 @@
                     }
                     this.loading = false;
                 },
+
+                deleteGalaxy(gid) {
+                    Swal.fire({ title: '确认删除该课程体系？', text: '删除后，孩子将无法看到对应的知识星球', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
+                        if(res.isConfirmed) { this.galaxies = this.galaxies.filter(x => x.id !== gid); this.sync(); }
+                    });
+                },
+
+                // 🛡️ 核心防御：打开编辑器时，二次确立字段安全补全
+                openGalaxyEditor(g) { 
+                    if (!g.subjects) g.subjects = [];
+                    g.subjects.forEach(s => {
+                        if(s.isFetching === undefined) s.isFetching = false;
+                        if(s.isGenerating === undefined) s.isGenerating = false;
+                        if(s.showEditor === undefined) s.showEditor = false;
+                        if(s.isFetchingSchedule === undefined) s.isFetchingSchedule = false;
+                        if(s.isGeneratingSchedule === undefined) s.isGeneratingSchedule = false;
+                    });
+                    this.editingGalaxy = g; 
+                },
+                saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已保存', showConfirmButton: false, timer: 1500 }); },
+                
+                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false, isGenerating: false, showEditor: false, isFetchingSchedule: false, isGeneratingSchedule: false }); },
+                removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); this.sync(); },
 
                 // 🤖 智能抓取/匹配大纲文本 (Syllabus) 引入 4 段式回退
                 async fetchSyllabusText(subj) {

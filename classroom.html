@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XuePilot - Interstellar Classroom</title>
+    <!-- Tailwind & SweetAlert -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Quill Rich Text Editor -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <!-- 🚀 引入 Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
@@ -22,7 +27,7 @@
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
         
-        /* 🚀 真正的原生 NOVA，拖拽与点击防误触分离 */
+        /* 🚀 原生 NOVA */
         .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
         .nova-float:active { cursor: grabbing; }
         .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); animation: novaBreath 3s infinite alternate; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; }
@@ -47,7 +52,7 @@
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
     </style>
 </head>
-<body x-data="classroomApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+<body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
     <div class="space-bg"></div><div class="grid-bg"></div>
 
     <aside class="w-[18rem] border-r border-slate-800 flex flex-col py-6 px-4 glass-panel z-20 shrink-0 shadow-2xl relative">
@@ -61,7 +66,7 @@
             <div class="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-2xl tracking-tighter" x-text="dict.brand"></div>
         </div>
 
-        <nav class="flex-1 space-y-2 overflow-y-auto mt-2 px-1 scrollbar-hide">
+        <nav class="flex-1 space-y-5 overflow-y-auto mt-2 px-1 scrollbar-hide">
             <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]':'text-slate-400'">
                 <span class="text-xl w-6 text-center">🌌</span> <span x-text="dict.navMap"></span>
             </button>
@@ -75,13 +80,22 @@
                 <span class="text-xl w-6 text-center">✍️</span> <span class="flex-1" x-text="dict.navWrite"></span>
             </button>
             
-            <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400'">
-                <span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span>
+            <!-- 🚀 保证阅读菜单独立一行 -->
+            <button @click="openReading('en')" class="btn-nav-class block w-full" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400'">
+                <div class="flex items-center gap-4"><span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span></div>
             </button>
-            <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]':'text-slate-400'">
-                <span class="text-xl w-6 text-center">📙</span> <span x-text="dict.navReadZh"></span>
+            <button @click="openReading('zh')" class="btn-nav-class block w-full" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]':'text-slate-400'">
+                <div class="flex items-center gap-4"><span class="text-xl w-6 text-center">📙</span> <span x-text="dict.navReadZh"></span></div>
             </button>
         </nav>
+        
+        <!-- 🚀 云端连接状态展示 -->
+        <div class="p-4 border-t border-slate-800/50 text-center">
+            <div class="text-[10px] font-mono tracking-widest uppercase flex items-center justify-center gap-2" :class="dbConnected ? 'text-emerald-400' : 'text-slate-500'">
+                <div class="w-2 h-2 rounded-full" :class="dbConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-slate-500'"></div>
+                <span x-text="dbConnected ? 'Supabase Connected' : 'Local Storage Fallback'"></span>
+            </div>
+        </div>
     </aside>
 
     <main class="flex-1 relative overflow-hidden bg-transparent">
@@ -185,7 +199,7 @@
                     <div class="lg:col-span-4 flex flex-col space-y-4 min-h-0 overflow-y-auto pr-2 scrollbar-hide">
                         <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest shrink-0 mb-2" x-text="dict.satTitle"></h3>
                         <div class="space-y-3 flex-1">
-                            <template x-for="lesson in lessons" :key="lesson.id">
+                            <template x-for="lesson in editSubject?.lessons" :key="lesson.id">
                                 <div class="p-5 rounded-2xl border border-slate-800 bg-slate-900/50 hover:border-blue-500 transition cursor-pointer flex justify-between items-center shadow-md" :class="curLesson?.id === lesson.id ? 'border-blue-500 bg-blue-900/30 shadow-[0_0_20px_rgba(59,130,246,0.2)]' : ''" @click="selectLesson(lesson)">
                                     <div class="font-bold text-sm text-slate-200" x-text="lesson.title"></div><span class="text-xs opacity-50" x-show="lesson.content">📝</span>
                                 </div>
@@ -285,7 +299,7 @@
                 view: 'galaxy', subjects: [], loading: false, lessonLoad: false, contentLoad: false,
                 modals: { planner: false },
                 planConfig: { curriculum: '美国 Common Core State Standards', grade: 'Grade 4', term: 'Term 1' },
-                editSubject: null, lessons: [], curLesson: null,
+                editSubject: null, curLesson: null,
                 writeDraft: '', writeFeedback: '', writeLoading: false, cmdIntensity: 10,
                 
                 books: [ 
@@ -296,45 +310,106 @@
                 
                 novaState: { open: false, input: '', msgs: [], loading: false, pos: {x: window.innerWidth - 100, y: window.innerHeight - 100}, isDragging: false, start: {x:0,y:0}, offset: {x:0,y:0} },
                 
+                // 🚀 Supabase 配置挂载
+                supaClient: null,
+                dbConnected: false,
+
                 i18n: {
                     zh: {
                         brand: 'XuePilot PRO', back: '返回主控舱', 
-                        navMap: '学期科目星系', navEngine: '智能大纲引擎', navWrite: 'AI 启发写作舱', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
-                        emptyMap: '请启动智能引擎，构建知识星图',
-                        planTitle: '智能大纲规划器', planDesc: '系统将结合选定地区的教育标准，通过大模型智能构建知识星图。', planBtn: '🚀 构建星图', planLoad: '正在深度解析...',
+                        navMap: '云端知识星系', navEngine: '全球智能排课系统', navWrite: 'AI 启发写作舱', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
+                        emptyMap: '请启动智能排课系统，构建知识星图',
+                        planTitle: '全球智能排课系统', planDesc: '系统将结合选定地区的教育标准，通过大模型智能构建知识星图，并同步至 Supabase 云端。', planBtn: '🚀 映射知识星图', planLoad: '正在深度解析...',
                         curries: ['中国义务教育课标 (2022版)', '美国 Common Core State Standards', '英国 National Curriculum (KS2/KS3)'], grades: ['三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
-                        backMap: '返回星图', satTitle: '知识节点拆解', genSatBtn: '✨ 智能提取节点', genSatLoad: '解析架构中...',
-                        selLesMsg: '选择左侧节点，进入教案编辑器', genConBtn: '✨ 智能生成教案', genConLoad: '结构化生成中...', saveBtn: '💾 保存教案',
+                        backMap: '返回星图概览', satTitle: '知识节点拆解', genSatBtn: '✨ 智能提取教学节点', genSatLoad: '挖掘知识架构中...',
+                        selLesMsg: '选择左侧节点，进入教案编辑器', genConBtn: '✨ 智能生成教案', genConLoad: '结构化生成中...', saveBtn: '💾 存档至云端',
                         writeTitle: '指挥官起草区', writeInten: '发散强度', writePlace: '在此记录思维构架...', writeBtn: '🧠 提交导师批阅', writeLoad: '逻辑解析中...', writeWall: '思维碰撞墙', writeEmpty: '等待提交...',
                         shelfTitle: '私享书架 (LIBRARY)', importBtn: '导入专属档案', readTitleEn: '英文智能伴读', readTitleZh: '大语文传承', acc: '掌握度', startRead: '开启深度阅读', exitRead: '← 退出阅读',
                         cmd: '指挥官', readPlace: '探讨核心思想...',
                         novaTitle: 'Nova 随舰导师', novaGreeting: '指挥官，我是 NOVA。可以在教室里随时呼叫我。', novaPlace: '输入疑惑...', novaLoad: '解析逻辑中...',
-                        quillPlace: '手动编写教案，或点击顶部 ✨ 按钮一键生成...', swalSucc: '成功', swalSaved: '已保存', swalErr: '错误', swalNoKey: '请配置 API 密钥', swalNetErr: '网络或代理配置错误', swalParsed: '解析完成'
+                        quillPlace: '手动编写教案，或点击顶部 ✨ 按钮智能生成...', swalSucc: '成功', swalSaved: '数据已安全同步至云端', swalErr: '错误', swalNoKey: '请在主控舱配置 API 密钥', swalNetErr: '网络或代理配置错误', swalParsed: '全网解析排课完成'
                     },
                     en: {
-                        brand: 'XuePilot PRO', back: 'Return to Command', 
-                        navMap: 'Semester Galaxy', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Tutor',
-                        emptyMap: 'Run the Engine to build your knowledge map.',
-                        planTitle: 'Strategic Planner', planDesc: 'Maps authentic knowledge galaxies based on regional standards.', planBtn: '🚀 Map Galaxy', planLoad: 'Parsing standards...',
+                        brand: 'XuePilot PRO', back: 'Return to Portal', 
+                        navMap: 'Cloud Galaxy Map', navEngine: 'Global Smart Scheduling', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Tutor',
+                        emptyMap: 'Run the Scheduling System to build your map.',
+                        planTitle: 'Global Smart Scheduling', planDesc: 'Maps authentic knowledge galaxies based on regional standards and syncs with Supabase.', planBtn: '🚀 Map Galaxy', planLoad: 'Parsing standards...',
                         curries: ['Chinese Education Standard (2022)', 'US Common Core State Standards', 'UK National Curriculum (KS2/KS3)'], grades: ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
-                        backMap: 'Back to Map', satTitle: 'Learning Satellites', genSatBtn: '✨ Extract Nodes', genSatLoad: 'Mining...',
-                        selLesMsg: 'Select a node to open editor', genConBtn: '✨ Auto-Gen Lesson', genConLoad: 'Structuring...', saveBtn: '💾 Save Lesson',
+                        backMap: 'Back to Map', satTitle: 'Learning Satellites', genSatBtn: '✨ Extract Core Nodes', genSatLoad: 'Mining...',
+                        selLesMsg: 'Select a node to open editor', genConBtn: '✨ Auto-Gen Lesson', genConLoad: 'Structuring...', saveBtn: '💾 Save to Cloud',
                         writeTitle: 'Commander Draft', writeInten: 'Intensity', writePlace: 'Record your thoughts...', writeBtn: '🧠 Get Feedback', writeLoad: 'Analyzing logic...', writeWall: 'Feedback Wall', writeEmpty: 'Waiting for input...',
                         shelfTitle: 'Commander Library', importBtn: 'Import Docs', readTitleEn: 'English Tutor', readTitleZh: 'Chinese Tutor', acc: 'Acc', startRead: 'Deep Reading', exitRead: '← Exit',
                         cmd: 'Cmdr.', readPlace: 'Explore ideas...',
                         novaTitle: 'Nova Advisor', novaGreeting: 'Greetings, Commander. Drag me anywhere. Need guidance?', novaPlace: 'Ask advisor...', novaLoad: 'Analyzing...',
-                        quillPlace: 'Edit manually, or click ✨ to auto-generate...', swalSucc: 'Success', swalSaved: 'Saved', swalErr: 'Error', swalNoKey: 'Please configure API Keys', swalNetErr: 'Network or proxy error', swalParsed: 'Parsed Successfully'
+                        quillPlace: 'Edit manually, or click ✨ to auto-generate...', swalSucc: 'Success', swalSaved: 'Synced to Cloud Successfully', swalErr: 'Error', swalNoKey: 'Please configure API Keys in Portal', swalNetErr: 'Network or proxy error', swalParsed: 'Scheduling Complete'
                     }
                 },
                 get dict() { return this.i18n[this.lang]; },
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
                 
-                init() { 
-                    if(!this.isPro) {
-                        try { window.location.replace('index.html'); } catch(e) { window.location.href = 'index.html'; }
-                    }
+                async init() { 
+                    if(!this.isPro) { try { window.location.replace('index.html'); } catch(e) { window.location.href = 'index.html'; } }
                     this.planConfig.curriculum = this.dict.curries[1]; this.planConfig.grade = this.dict.grades[1]; this.planConfig.term = this.dict.terms[0];
+                    
+                    // 🚀 初始化 Supabase
+                    const supaUrl = localStorage.getItem('xp_supa_url');
+                    const supaKey = localStorage.getItem('xp_supa_key');
+                    
+                    if (supaUrl && supaKey && window.supabase) {
+                        try {
+                            this.supaClient = window.supabase.createClient(supaUrl, supaKey);
+                            this.dbConnected = true;
+                            await this.loadFromCloud();
+                        } catch (e) {
+                            console.error("Supabase Init Error:", e);
+                            this.fallbackLoad();
+                        }
+                    } else {
+                        this.fallbackLoad();
+                    }
                 },
+
+                // 从 Supabase 恢复状态
+                async loadFromCloud() {
+                    if (!this.supaClient) return;
+                    try {
+                        const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
+                        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is not found
+                        
+                        if (data && data.data) {
+                            if (data.data.subjects) this.subjects = data.data.subjects;
+                            if (data.data.books) this.books = data.data.books;
+                        }
+                    } catch (e) {
+                        console.error("Supabase Load Error:", e);
+                        this.fallbackLoad();
+                    }
+                },
+
+                // 降级使用 LocalStorage
+                fallbackLoad() {
+                    this.dbConnected = false;
+                    const savedSubjects = localStorage.getItem('xp_subjects');
+                    if (savedSubjects) { try { this.subjects = JSON.parse(savedSubjects); } catch(e) {} }
+                },
+
+                // 同步数据至云端
+                async syncToCloud() {
+                    if (this.supaClient) {
+                        try {
+                            const payload = { id: 'commander_1', data: { subjects: this.subjects, books: this.books } };
+                            const { error } = await this.supaClient.from('user_data').upsert(payload);
+                            if (error) throw error;
+                        } catch (e) {
+                            console.error("Supabase Sync Error:", e);
+                            // Fallback
+                            localStorage.setItem('xp_subjects', JSON.stringify(this.subjects));
+                        }
+                    } else {
+                        localStorage.setItem('xp_subjects', JSON.stringify(this.subjects));
+                    }
+                },
+
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 goHome() { try { window.location.assign('index.html'); } catch(e) { window.location.href = 'index.html'; } },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
@@ -363,7 +438,10 @@
                     if(res) { 
                         try { 
                             const parsed = JSON.parse(this.cleanCodeBlock(res));
-                            this.subjects = parsed.map((s,i)=>({...s, id:Date.now()+i, radius: 200+(Math.floor(i/3)*150), angle:(i*1.2)+Math.random()*0.5})); 
+                            this.subjects = parsed.map((s,i)=>({...s, id:Date.now()+i, radius: 200+(Math.floor(i/3)*150), angle:(i*1.2)+Math.random()*0.5, lessons: []})); 
+                            
+                            await this.syncToCloud(); // 🚀 云端同步
+
                             this.modals.planner=false; 
                             Swal.fire({title: this.dict.swalSucc, text: this.dict.swalParsed, icon:'success', background:'#0f172a', color:'#fff'});
                         } catch(e){} 
@@ -371,7 +449,7 @@
                     this.loading = false;
                 },
 
-                openSubjectDetail(s) { this.editSubject = s; this.lessons = []; this.curLesson = null; window.quillEditor = null; },
+                openSubjectDetail(s) { this.editSubject = s; this.curLesson = null; window.quillEditor = null; },
                 closeSubjectDetail() { if(this.curLesson) this.saveLessonContent(); this.editSubject = null; },
 
                 async generateLessons() {
@@ -382,7 +460,11 @@
                     if(res) { 
                         try { 
                             const parsed = JSON.parse(this.cleanCodeBlock(res));
-                            this.lessons = parsed.map((l,i)=>({id:Date.now()+i, title:l.title, content:''})); 
+                            this.editSubject.lessons = parsed.map((l,i)=>({id:Date.now()+i, title:l.title, content:''})); 
+                            
+                            // 更新主体数组并同步
+                            const idx = this.subjects.findIndex(s => s.id === this.editSubject.id);
+                            if(idx !== -1) { this.subjects[idx] = this.editSubject; await this.syncToCloud(); }
                         } catch(e){} 
                     }
                     this.lessonLoad = false;
@@ -417,7 +499,23 @@
                     this.contentLoad = false;
                 },
 
-                saveLessonContent() { if(this.curLesson&&window.quillEditor){ this.curLesson.content = window.quillEditor.root.innerHTML; Swal.fire({toast:true, position:'top-end', icon:'success', title:this.dict.swalSaved, showConfirmButton:false, timer:1500}); } },
+                async saveLessonContent() { 
+                    if(this.curLesson && window.quillEditor){ 
+                        this.curLesson.content = window.quillEditor.root.innerHTML; 
+                        
+                        // 查找并更新
+                        const lessonIdx = this.editSubject.lessons.findIndex(l => l.id === this.curLesson.id);
+                        if (lessonIdx !== -1) this.editSubject.lessons[lessonIdx] = this.curLesson;
+
+                        const subIdx = this.subjects.findIndex(s => s.id === this.editSubject.id);
+                        if (subIdx !== -1) { 
+                            this.subjects[subIdx] = this.editSubject; 
+                            await this.syncToCloud(); // 🚀 云端同步
+                        }
+
+                        Swal.fire({toast:true, position:'top-end', icon:'success', title:this.dict.swalSaved, showConfirmButton:false, timer:1500}); 
+                    } 
+                },
 
                 updateIntensity() {
                     const text = this.writeDraft; let score = 10;
@@ -444,7 +542,6 @@
                     this.readLoading=false;
                 },
 
-                // 🚀 NOVA 完美防误触拖拽拦截
                 startNovaDrag(e) {
                     if(e.type==='mousedown') e.preventDefault();
                     this.novaState.isDragging = false;

@@ -18,6 +18,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body x-data="portalApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
@@ -29,7 +30,7 @@
                 <span class="text-3xl mr-3 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="dict.brand"></h1>
-                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest">MULTI-PAGE OS v3.0</div>
+                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest">MULTI-PAGE OS v4.0</div>
                 </div>
             </div>
             <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition hover:bg-slate-700 shadow-sm" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
@@ -37,7 +38,7 @@
         
         <div class="flex-1 py-8 px-4 space-y-3">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.coreMod"></div>
-            <a @click.prevent="goTo('classroom.html', true)" class="nav-item flex items-center justify-between px-4 py-3.5 rounded-xl border border-slate-800">
+            <a @click.prevent="goTo('classroom.html', true)" class="nav-item flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800 cursor-pointer transition">
                 <div class="flex items-center"><span class="text-xl mr-3 filter drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">🌌</span> <span class="font-bold text-sm text-blue-100" x-text="dict.pro"></span></div>
                 <span x-show="!isPro" class="text-[9px] font-black border border-amber-500/50 text-amber-500 px-1.5 py-0.5 rounded shadow-sm">PRO</span>
             </a>
@@ -45,10 +46,10 @@
             <div class="h-px bg-slate-800/50 my-4 mx-2"></div>
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.freeMod"></div>
             
-            <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl">
+            <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40 cursor-pointer transition">
                 <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🎮</span> <span class="text-sm font-bold text-slate-300" x-text="dict.game"></span></div>
             </a>
-            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl" :class="view === 'tools' ? 'bg-slate-800/60' : ''">
+            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40 cursor-pointer transition" :class="view === 'tools' ? 'bg-slate-800/60' : ''">
                 <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🌍</span> <span class="text-sm font-bold text-slate-300" x-text="dict.tools"></span></div>
             </a>
         </div>
@@ -58,42 +59,63 @@
     </aside>
 
     <main class="flex-1 relative bg-transparent overflow-hidden flex items-center justify-center p-8">
-        <div class="text-center glass-panel p-12 rounded-[2.5rem] max-w-2xl shadow-2xl border border-blue-500/20 fade-in">
+        <!-- 默认欢迎区或工具区 -->
+        <div class="text-center glass-panel p-12 rounded-[2.5rem] shadow-2xl border border-blue-500/20 fade-in transition-all duration-500 my-auto"
+             :class="view === 'tools' ? 'max-w-4xl w-full' : 'max-w-2xl w-full'">
             <div class="text-7xl mb-6 drop-shadow-lg animate-bounce" x-text="view === 'tools' ? '🌍' : '🛸'"></div>
             <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
             <p class="text-slate-400 text-sm leading-relaxed mb-8" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
-            <div x-show="!isPro" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-8">
+            
+            <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mb-8 fade-in">
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">🧠</div><h3 class="font-bold text-blue-300 text-sm mb-2">DeepSeek / OpenAI</h3><p class="text-xs text-slate-500 leading-relaxed">提供核心大纲解析与逻辑推演算力节点。</p></div>
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">⚡</div><h3 class="font-bold text-emerald-300 text-sm mb-2">Groq LPU</h3><p class="text-xs text-slate-500 leading-relaxed">超低延迟流式响应，NOVA 伴读导师核心驱动。</p></div>
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-700 shadow-lg"><div class="text-3xl mb-3">🗄️</div><h3 class="font-bold text-purple-300 text-sm mb-2">Supabase Cloud</h3><p class="text-xs text-slate-500 leading-relaxed">已无缝接入，提供企业级数据持久化与跨平台同步。</p></div>
+            </div>
+
+            <div x-show="!isPro && view !== 'tools'" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-8">
                 <p class="text-amber-400 text-xs font-bold mb-3" x-text="dict.upgHint"></p>
                 <button @click="modals.upgrade = true" class="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-500 rounded-lg text-white text-xs font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
             </div>
         </div>
 
-        <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
+        <!-- 🎛️ 终极版算力配置弹窗 (含 Supabase) -->
+        <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto scrollbar-hide">
              <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
-                 <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
-                 <div class="space-y-6">
-                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
-                         <div class="font-bold text-blue-400 mb-4 text-sm tracking-widest uppercase">🌌 Main Planning Core (Groq / OpenAI)</div>
-                         <div class="space-y-4">
-                             <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono shadow-inner">
-                             <div class="grid grid-cols-2 gap-4"><input type="text" x-model="config.sys.url" placeholder="Base URL" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"></div>
+                 <h2 class="text-xl font-black mb-6 text-white tracking-wide flex items-center gap-2" x-text="dict.setMenu"></h2>
+                 <div class="space-y-4">
+                     <!-- 算力引擎 -->
+                     <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20">
+                         <div class="font-bold text-blue-400 mb-3 text-sm tracking-widest uppercase">🌌 Main Planning Core (OpenAI/Groq)</div>
+                         <div class="space-y-3">
+                             <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
+                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.sys.url" placeholder="Base URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
                          </div>
                      </div>
-                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
-                         <div class="font-bold text-indigo-400 mb-4 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (Nvidia / Groq)</div>
-                         <div class="space-y-4">
-                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono shadow-inner">
-                             <div class="grid grid-cols-2 gap-4"><input type="text" x-model="config.nova.url" placeholder="Base URL" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3.5 rounded-xl text-sm font-mono"></div>
+                     <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
+                         <div class="font-bold text-indigo-400 mb-3 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (Groq/Nvidia)</div>
+                         <div class="space-y-3">
+                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
+                             <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.nova.url" placeholder="Base URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono"></div>
                          </div>
+                     </div>
+                     <!-- 🚀 恢复 Supabase 配置 -->
+                     <div class="bg-emerald-900/10 p-5 rounded-2xl border border-emerald-500/20">
+                         <div class="font-bold text-emerald-400 mb-3 text-sm tracking-widest uppercase">🗄️ Supabase Cloud Storage</div>
+                         <div class="grid grid-cols-2 gap-3">
+                             <input type="text" x-model="config.supa.url" placeholder="Supabase Project URL" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
+                             <input type="password" x-model="config.supa.key" placeholder="Supabase Anon Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono">
+                         </div>
+                         <p class="text-[10px] text-emerald-500/60 mt-2">提示：配置后系统将自动将排课及教案数据同步至您的云数据库 (表名: user_data)。</p>
                      </div>
                  </div>
-                 <div class="mt-8 flex gap-4">
+                 <div class="mt-6 flex gap-4">
                      <button @click="saveConfig()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-white transition shadow-lg text-sm tracking-widest" x-text="dict.setSave"></button>
                      <button @click="modals.settings = false" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-white transition font-bold text-sm" x-text="dict.setCancel"></button>
                  </div>
              </div>
         </div>
 
+        <!-- 弹窗：PRO 升级 -->
         <div x-show="modals.upgrade" x-cloak class="absolute inset-0 bg-black/90 z-[70] flex items-center justify-center p-8 backdrop-blur-xl">
              <div class="w-full max-w-md bg-slate-900 border border-amber-500/30 p-8 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] fade-in">
                  <button @click="modals.upgrade = false" class="absolute top-5 right-5 text-slate-500 hover:text-white transition text-2xl">✖</button>
@@ -117,23 +139,24 @@
                 view: 'welcome', modals: { upgrade: false, settings: false },
                 config: {
                     sys: { key: localStorage.getItem('xp_sys_key')||'', url: localStorage.getItem('xp_sys_url')||'/proxy/groq', model: localStorage.getItem('xp_sys_model')||'llama-3.3-70b-versatile' },
-                    nova: { key: localStorage.getItem('xp_nova_key')||'', url: localStorage.getItem('xp_nova_url')||'/proxy/nvidia', model: localStorage.getItem('xp_nova_model')||'google/gemma-4-31b-it' }
+                    nova: { key: localStorage.getItem('xp_nova_key')||'', url: localStorage.getItem('xp_nova_url')||'/proxy/nvidia', model: localStorage.getItem('xp_nova_model')||'google/gemma-4-31b-it' },
+                    supa: { key: localStorage.getItem('xp_supa_key')||'', url: localStorage.getItem('xp_supa_url')||'' }
                 },
                 i18n: {
                     zh: {
                         brand: 'XuePilot', coreMod: '核心中枢', freeMod: '开放体验', pro: '星际教室 (Pro)', game: '指挥官模拟舱', tools: '全球资源探索',
                         welcome: '欢迎登舰，指挥官', welcomeDesc: '请在左侧选择您要进入的模块。所有模块均已链接您的全局算力节点。',
-                        toolsDesc: '全球顶尖的教育 AI 工具集与外接算力正在对接中，敬请期待。',
+                        toolsDesc: '全球顶尖的 AI 工具集与 Supabase 云数据库已成功集成接入！',
                         upgHint: '您尚未获得领航员最高权限，星际教室的部分高级功能已被锁定。', upgBtn: '获取权限 (演示)',
-                        settingsBtn: '🎛️ 引擎节点配置', setMenu: '🎛️ 双通道算力节点配置', setSave: '💾 保存全局配置', setCancel: '取消',
+                        settingsBtn: '🎛️ 全局架构引擎配置', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 保存并重启节点', setCancel: '取消',
                         upgTitle: '获取领航员通行证', upgDesc: '解锁 XuePilot 专属教育套件。', upg1: '苏格拉底富文本备课', upg2: '私有文档导入伴读'
                     },
                     en: {
                         brand: 'XuePilot', coreMod: 'Core Modules', freeMod: 'Free Access', pro: 'Interstellar Class', game: 'Simulator Deck', tools: 'Global AI Tools',
                         welcome: 'Welcome Aboard', welcomeDesc: 'Select a module on the left. All modules share your global AI config.',
-                        toolsDesc: 'Integration with top global AI tools is currently underway.',
+                        toolsDesc: 'Global AI tools and Supabase Cloud DB are successfully integrated.',
                         upgHint: 'You do not have Commander Pro access yet. Some classroom features are locked.', upgBtn: 'Unlock Pro (Mock)',
-                        settingsBtn: '🎛️ Engine Config', setMenu: '🎛️ Dual Node Config', setSave: '💾 Save Config', setCancel: 'Cancel',
+                        settingsBtn: '🎛️ Engine Config', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
                         upgTitle: 'Get Commander Access', upgDesc: 'Unlock the full educational suite.', upg1: 'Socratic Rich Text Editor', upg2: 'Private Doc Reading Tutor'
                     }
                 },
@@ -152,7 +175,9 @@
                 saveConfig() { 
                     localStorage.setItem('xp_sys_key', this.config.sys.key); localStorage.setItem('xp_sys_url', this.config.sys.url); localStorage.setItem('xp_sys_model', this.config.sys.model);
                     localStorage.setItem('xp_nova_key', this.config.nova.key); localStorage.setItem('xp_nova_url', this.config.nova.url); localStorage.setItem('xp_nova_model', this.config.nova.model);
-                    this.modals.settings = false; Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Config Saved', showConfirmButton: false, timer: 1500 });
+                    localStorage.setItem('xp_supa_key', this.config.supa.key); localStorage.setItem('xp_supa_url', this.config.supa.url);
+                    this.modals.settings = false; 
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Config Saved', showConfirmButton: false, timer: 1500 });
                 }
             }
         }

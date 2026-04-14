@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XuePilot - AI Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .hidden-step { display: none !important; }
+        body { background-color: #030712; color: #f8fafc; font-family: -apple-system, sans-serif; overflow-x: hidden; margin: 0; }
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff; outline: none; transition: border-color 0.3s; }
+        .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        button, select { cursor: pointer !important; }
+        .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-primary:hover { box-shadow: 0 0 20px rgba(79, 70, 229, 0.6); transform: translateY(-2px); }
+        .btn-disabled { opacity: 0.5; cursor: not-allowed !important; pointer-events: none; filter: grayscale(100%); }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body x-data="gameApp()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="min-h-screen text-slate-200">
+
+    <div class="space-bg"></div><div class="grid-bg"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-blue-900/50">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl filter drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">🚀</span>
+            <div>
+                <h1 class="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">XuePilot COMMANDER</h1>
+                <div class="text-[10px] text-blue-500 font-mono tracking-widest mt-0.5" x-text="i18n[lang].ver"></div>
+            </div>
+        </div>
+        <div class="text-right hidden md:block">
+            <div class="text-xs font-bold text-slate-400 italic" x-text="i18n[lang].quote"></div>
+            <div id="header-age-badge" class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded mt-1 inline-block hidden-step"></div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-6 mt-4 relative">
+
+        <!-- Step 0 -->
+        <div id="step-0" class="glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div class="mb-10"><h2 class="text-4xl font-black text-white mb-4" x-text="i18n[lang].s0Title"></h2><p class="text-slate-400" x-text="i18n[lang].s0Desc"></p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="startCampaign('young')" class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-8 hover:bg-emerald-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">🍭</div><h3 class="text-xl font-bold text-emerald-400 mb-2" x-text="i18n[lang].a1Title"></h3><p class="text-xs text-slate-500" x-text="i18n[lang].a1Desc"></p>
+                </div>
+                <div onclick="startCampaign('mid')" class="bg-slate-900 border border-blue-500/30 rounded-2xl p-8 hover:bg-blue-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">🦖</div><h3 class="text-xl font-bold text-blue-400 mb-2" x-text="i18n[lang].a2Title"></h3><p class="text-xs text-slate-500" x-text="i18n[lang].a2Desc"></p>
+                </div>
+                <div onclick="startCampaign('old')" class="bg-slate-900 border border-purple-500/30 rounded-2xl p-8 hover:bg-purple-900/20 hover:scale-105 transition cursor-pointer">
+                    <div class="text-6xl mb-4">⚛️</div><h3 class="text-xl font-bold text-purple-400 mb-2" x-text="i18n[lang].a3Title"></h3><p class="text-xs text-slate-500" x-text="i18n[lang].a3Desc"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div id="step-1" class="hidden-step glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div id="mission-icon" class="text-7xl mb-6 drop-shadow-2xl">🪐</div>
+            <div class="text-xs font-mono text-blue-400 mb-2" id="mission-progress"></div>
+            <h2 id="mission-title" class="text-3xl font-black text-white mb-4"></h2>
+            <p id="mission-desc" class="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed mb-8 bg-slate-900/50 p-6 rounded-xl border border-slate-700"></p>
+            <button onclick="goToStep(2)" class="btn-primary px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg tracking-wider animate-pulse" x-text="i18n[lang].enterBtn"></button>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="step-2" class="hidden-step glass-panel rounded-3xl p-8 fade-in">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4"><h2 class="text-2xl font-black text-blue-400 flex items-center gap-3"><span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-[0_0_10px_rgba(37,99,235,0.5)]">1</span> <span x-text="i18n[lang].s1Title"></span></h2></div>
+            <div id="prompt-hint" class="mb-6 bg-blue-900/20 border border-blue-800/50 p-4 rounded-xl text-sm text-blue-200"></div>
+            <textarea id="prompt-input" class="w-full input-dark p-6 rounded-xl text-lg leading-relaxed resize-none h-48 mb-4" :placeholder="i18n[lang].s1Placeholder"></textarea>
+            <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="w-full md:w-1/2 bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                    <div class="text-xs font-bold text-slate-400 mb-2 font-mono flex justify-between"><span x-text="i18n[lang].s1Radar"></span><span id="prompt-score-text" class="text-blue-400 font-black text-sm">0%</span></div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 mb-3 overflow-hidden shadow-inner"><div id="prompt-score-bar" class="bg-gradient-to-r from-blue-600 to-cyan-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    <div id="prompt-tags-container" class="text-[10px] flex gap-2 flex-wrap min-h-[24px]"></div>
+                </div>
+                <button id="prompt-submit-btn" onclick="submitPrompt()" class="btn-primary btn-disabled px-8 py-4 rounded-xl font-bold text-white shadow-lg" x-text="i18n[lang].s1Submit"></button>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="step-3" class="hidden-step glass-panel rounded-3xl p-8 fade-in">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4"><h2 class="text-2xl font-black text-purple-400 flex items-center gap-3"><span class="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> <span x-text="i18n[lang].s2Title"></span></h2></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="flaw-cards-container"></div>
+            <div id="judge-next-container" class="mt-8 text-center hidden-step">
+                <button onclick="goToStep(4)" class="bg-rose-600 hover:bg-rose-500 px-12 py-4 rounded-full font-bold text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse text-lg" x-text="i18n[lang].s2Next"></button>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div id="step-4" class="hidden-step glass-panel rounded-3xl p-8 fade-in relative">
+            <div class="absolute inset-0 bg-rose-600/5 pointer-events-none rounded-3xl animate-pulse"></div>
+            <div class="flex justify-between items-center mb-6 border-b border-rose-800/50 pb-4 relative z-10"><h2 class="text-2xl font-black text-emerald-400 flex items-center gap-3"><span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span> <span x-text="i18n[lang].s3Title"></span></h2></div>
+            <div class="space-y-6 max-w-2xl mx-auto relative z-10" id="integration-container"></div>
+            <div class="mt-10 text-center relative z-10">
+                <button id="integrate-submit-btn" onclick="finishSimulation()" class="btn-primary btn-disabled px-12 py-4 rounded-full font-bold text-white shadow-2xl text-lg" x-text="i18n[lang].s3Submit"></button>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div id="step-5" class="hidden-step glass-panel rounded-3xl p-10 text-center relative overflow-hidden fade-in">
+            <div class="absolute inset-0 bg-emerald-600/10 blur-3xl rounded-full pointer-events-none"></div>
+            <div class="text-7xl mb-4 drop-shadow-lg">🎖️</div>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2" x-text="i18n[lang].s4Success"></h2>
+            
+            <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 max-w-lg mx-auto text-left space-y-5 mt-8 shadow-2xl">
+                <div><div class="flex justify-between text-xs font-bold text-blue-400 mb-1"><span>Prompt</span><span>Max</span></div><div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-prompt" class="bg-blue-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                <div><div class="flex justify-between text-xs font-bold text-purple-400 mb-1"><span>Judge</span><span>Max</span></div><div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-judge" class="bg-purple-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                <div><div class="flex justify-between text-xs font-bold text-emerald-400 mb-1"><span>Integrate</span><span>Max</span></div><div class="w-full bg-slate-950 rounded-full h-2 shadow-inner"><div id="bar-integrate" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+            </div>
+
+            <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-4">
+                <button onclick="location.reload()" class="text-slate-500 hover:text-white underline text-sm px-4 py-3 cursor-pointer transition" x-text="i18n[lang].s4Return"></button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data and Vanilla logic bridge
+        let gameData = { lang: localStorage.getItem('xp_lang') || 'zh' };
+        
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('gameApp', () => ({
+                lang: gameData.lang,
+                i18n: {
+                    zh: { ver: 'EPIC CAMPAIGN v5.0', quote: '"你不是工具，你是思想的源头。"', s0Title: '欢迎登舰，准指挥官', s0Desc: '请选择你的年龄段开启剧情：', a1Title: '星际幼崽 (6-8岁)', a1Desc: '简单的选择意识。', a2Title: '少年先锋 (9-12岁)', a2Desc: '逻辑与方案漏洞。', a3Title: '银河领航员 (13-15岁)', a3Desc: '硬核物理与极限整合。', enterBtn: '开启指挥台 ➔', s1Title: '明确需求 (Prompt)', s1Placeholder: '我是总指挥，要求是...', s1Radar: '指令思考维度雷达', s1Submit: '发送给专家团 🚀', s2Title: '找出漏洞 (Judge)', s2Next: '⚠️ 开始重组架构 ➔', s3Title: '危机整合 (Integrate)', s3Submit: '🚀 部署最终挽救方案', s4Success: '危机解除，方案部署成功', s4Return: '返回大厅' },
+                    en: { ver: 'EPIC CAMPAIGN v5.0', quote: '"You are the source of thought, not a tool."', s0Title: 'Welcome, Commander', s0Desc: 'Select your cohort to begin:', a1Title: 'Cadet (6-8)', a1Desc: 'Basic choices & logic.', a2Title: 'Vanguard (9-12)', a2Desc: 'Identify flaws in AI plans.', a3Title: 'Navigator (13-15)', a3Desc: 'Hardcore integration & physics.', enterBtn: 'Enter Deck ➔', s1Title: 'Define (Prompt)', s1Placeholder: 'I am the commander, I need...', s1Radar: 'Prompt Dimension Radar', s1Submit: 'Deploy to AI Team 🚀', s2Title: 'Find Flaws (Judge)', s2Next: '⚠️ Restructure Architecture ➔', s3Title: 'Integrate Solutions', s3Submit: '🚀 Deploy Final Plan', s4Success: 'Crisis Averted. Plan Deployed.', s4Return: 'Return to Lobby' }
+                },
+                updateLang() { gameData.lang = this.lang; if(typeof loadMissionData === 'function') loadMissionData(); }
+            }));
+        });
+
+        // Simplified Vanilla JS Game Engine
+        const campaigns = {
+            zh: { 'young': [{title:'保卫棉花糖星球', icon:'🍭', desc:'蛀牙怪兽来了！保护星球。', promptHint:'提示：需要什么防御材料？', keywords:{'材料':['石头','铁']}, flaws:[{title:'方案A', desc:'巧克力城墙', opt1:{text:'会化掉', isCorrect:true}, opt2:{text:'不好看', isCorrect:false}}], integrations:[{title:'🧱 防火外墙', wrong:'巧克力', right:'太空石头'}]}] },
+            en: { 'young': [{title:'Save Marshmallow Planet', icon:'🍭', desc:'Monsters are coming!', promptHint:'Hint: What materials?', keywords:{'Material':['stone','iron']}, flaws:[{title:'Plan A', desc:'Chocolate Wall', opt1:{text:'It melts', isCorrect:true}, opt2:{text:'Ugly', isCorrect:false}}], integrations:[{title:'🧱 Wall', wrong:'Chocolate', right:'Space Stone'}]}] }
+        };
+        
+        let currentAgeGroup = null; let activeCampaign = null; const state = { judgments: [false] };
+
+        window.startCampaign = function(ageKey) { currentAgeGroup = 'young'; loadMissionData(); };
+        window.loadMissionData = function() {
+            if(!currentAgeGroup) return;
+            activeCampaign = campaigns[gameData.lang][currentAgeGroup][0];
+            document.getElementById('mission-icon').innerText = activeCampaign.icon; document.getElementById('mission-title').innerText = activeCampaign.title; document.getElementById('mission-desc').innerHTML = activeCampaign.desc; document.getElementById('prompt-hint').innerHTML = activeCampaign.promptHint;
+            document.getElementById('flaw-cards-container').innerHTML = activeCampaign.flaws.map((f, i) => `
+                <div id="card-${i}" class="bg-slate-900/80 border border-slate-700 rounded-2xl p-5 shadow-lg">
+                    <h3 class="font-bold text-lg text-white mb-2">${f.title}</h3><p class="text-sm text-slate-400 mb-6">${f.desc}</p>
+                    <div id="card-${i}-btns" class="space-y-3"><button onclick="checkFlaw(${i}, ${f.opt1.isCorrect})" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600">${f.opt1.text}</button><button onclick="checkFlaw(${i}, ${f.opt2.isCorrect})" class="w-full text-left text-sm p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600">${f.opt2.text}</button></div>
+                    <div id="card-${i}-success" class="hidden-step text-emerald-400 font-bold flex items-center justify-center mt-auto bg-emerald-900/30 p-4 rounded-xl border border-emerald-800/50">✅</div>
+                </div>`).join('');
+            document.getElementById('integration-container').innerHTML = activeCampaign.integrations.map((int, i) => `
+                <div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 shadow-lg"><h4 class="font-bold text-slate-200 mb-4 text-lg">${int.title}</h4>
+                    <select id="select-${i}" class="w-full input-dark p-4 rounded-xl" onchange="checkIntegrateStatus()"><option value="">Select...</option><option value="wrong">🔹 ${int.wrong}</option><option value="right">🔹 ${int.right}</option></select>
+                </div>`).join('');
+            goToStep(1);
+        };
+        window.goToStep = function(stepNum) { for(let i=0; i<=5; i++) { const el = document.getElementById(`step-${i}`); if(el) el.classList.add('hidden-step'); } const target = document.getElementById(`step-${stepNum}`); if(target) target.classList.remove('hidden-step'); };
+        document.getElementById('prompt-input').addEventListener('input', (e) => {
+            const text = e.target.value.length; const score = Math.min(100, text * 5);
+            document.getElementById('prompt-score-text').innerText = `${score}%`; document.getElementById('prompt-score-bar').style.width = `${score}%`;
+            if (score > 10) document.getElementById('prompt-submit-btn').classList.remove('btn-disabled'); else document.getElementById('prompt-submit-btn').classList.add('btn-disabled');
+        });
+        window.submitPrompt = function() { goToStep(3); };
+        window.checkFlaw = function(index, isCorrect) {
+            if (isCorrect) { state.judgments[index] = true; document.getElementById(`card-${index}-btns`).classList.add('hidden-step'); document.getElementById(`card-${index}-success`).classList.remove('hidden-step'); if (state.judgments.every(v => v === true)) document.getElementById('judge-next-container').classList.remove('hidden-step'); } 
+            else { Swal.fire('Error', 'Wrong logic', 'error'); }
+        };
+        window.checkIntegrateStatus = function() { const s0 = document.getElementById('select-0').value; if (s0) document.getElementById('integrate-submit-btn').classList.remove('btn-disabled'); };
+        window.finishSimulation = function() { if (document.getElementById('select-0').value === 'right') { goToStep(5); setTimeout(() => { document.getElementById('bar-prompt').style.width = '92%'; document.getElementById('bar-judge').style.width = '99%'; document.getElementById('bar-integrate').style.width = '99%'; }, 500); } else { Swal.fire('Error', 'Wrong architecture', 'error'); } };
+        goToStep(0);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>

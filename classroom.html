@@ -61,6 +61,9 @@
         .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); }
         .nova-chat-panel { position: fixed; width: 380px; height: 550px; z-index: 99; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
+
+        /* 防止拖拽星系时选中文本 */
+        .no-select { user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
@@ -111,54 +114,58 @@
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10">
         
-        <!-- ================= 视图：星系地图 (多重宇宙核心重构) ================= -->
-        <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms class="absolute inset-0 min-h-full">
+        <!-- ================= 视图：星系地图 (支持全局拖拽 + 物理界限) ================= -->
+        <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms 
+             class="absolute inset-0 min-h-full no-select cursor-move"
+             @mousedown="startGalaxyPan" @mousemove.window="doGalaxyPan" @mouseup.window="endGalaxyPan"
+             @touchstart="startGalaxyPan" @touchmove.window="doGalaxyPan" @touchend.window="endGalaxyPan">
             
             <!-- 空状态 -->
-            <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40">
+            <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
                 <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase" x-text="dict.emptyMap"></p>
-                <button @click="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg">🚀 激活全局引擎</button>
+                <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
             <!-- 多重星系渲染 -->
             <template x-for="g in galaxies" :key="g.id">
                 
-                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考，确保动画无错位 -->
-                <div class="absolute flex items-center justify-center transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)] w-0 h-0"
-                     :style="g.id === activeGalaxyId ? 'left: 50%; top: 50%; transform: scale(1); z-index: 20;' : `left: ${g.bgX}%; top: ${g.bgY}%; transform: scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
+                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考 -->
+                <div class="absolute flex items-center justify-center transition-all duration-300 ease-out w-0 h-0"
+                     :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(calc(-50% + ${galaxyPan.x}px), calc(-50% + ${galaxyPan.y}px)) scale(1); z-index: 20;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
                      @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                     
-                    <!-- 🚀 隐形边界 (引力结界)：区隔各个星系 -->
+                    <!-- 🚀 隐形引力边界：区隔各个星系 -->
                     <div class="absolute rounded-full border-2 border-dashed border-blue-500/20 pointer-events-none transition-opacity duration-1000"
                          :class="g.id === activeGalaxyId ? 'bg-blue-900/10 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]' : 'bg-slate-900/40 opacity-50'"
                          style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);">
                     </div>
 
-                    <!-- 🚀 灵动星际连线 (纯净SVG层，0,0原点发散) -->
-                    <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 1;">
+                    <!-- 🚀 灵动星际连线 (修复 SVG 物理剪裁 Bug，赋予绝对坐标与尺寸) -->
+                    <svg class="absolute pointer-events-none" style="width: 2000px; height: 2000px; left: -1000px; top: -1000px; z-index: 1;">
                         <template x-for="s in g.subjects" :key="s.id">
-                            <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
+                            <!-- 1000, 1000 是此 SVG 画布的绝对圆心 -->
+                            <line x1="1000" y1="1000" :x2="1000 + Math.cos(s.angle) * s.radius" :y2="1000 + Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
                         </template>
                     </svg>
 
                     <!-- 轨道环 (仅激活状态显示) -->
                     <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
-                        <template x-for="r in [220, 370, 520]">
+                        <template x-for="r in [240, 380, 520]">
                             <div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div>
                         </template>
                     </div>
 
                     <!-- 🚀 星系核心 (大纲标识) -->
                     <div class="absolute z-10" style="left: 0; top: 0; transform: translate(-50%, -50%);">
-                        <div class="planet-core core-breath flex flex-col items-center justify-center text-center"
+                        <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
                              :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 200px; height: 200px;'">
                             <div class="text-4xl mb-1 drop-shadow-md">🔮</div>
                             <div class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
                             <div x-show="g.id !== activeGalaxyId" class="mt-4 px-5 py-2 bg-blue-600 rounded-full text-xl text-white font-bold animate-pulse shadow-lg whitespace-nowrap">点击跃迁</div>
                         </div>
                         
-                        <!-- 🚀 新增：编辑与毁灭大纲控制台 -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-4 z-30">
+                        <!-- 编辑与毁灭大纲控制台 -->
+                        <div x-show="g.id === activeGalaxyId" class="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-4 z-30 pointer-events-auto">
                             <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-blue-400/50" title="编辑大纲名称">✏️</button>
                             <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-rose-400/50" title="摧毁大纲星系">🗑️</button>
                         </div>
@@ -166,7 +173,7 @@
 
                     <!-- 🚀 学科行星群 -->
                     <template x-for="s in g.subjects" :key="s.id">
-                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-30 cursor-pointer" 
+                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-30 cursor-pointer pointer-events-auto" 
                              :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
                              @click.stop="g.id === activeGalaxyId ? openSubject(g, s) : activateGalaxy(g.id)">
                             
@@ -356,8 +363,9 @@
                 lang: localStorage.getItem('xp_lang') || 'zh', isPro: localStorage.getItem('xp_is_pro') === 'true',
                 view: 'galaxy', loading: false, modals: { planner: false },
                 
-                // 🚀 多重宇宙状态架构
+                // 🚀 多重宇宙状态架构 & 自由拖拽变量
                 galaxies: [], activeGalaxyId: null,
+                galaxyPan: { x: 0, y: 0 }, isGalaxyPanning: false, panStart: { x: 0, y: 0 },
                 
                 planMode: 'standard', planConfig: { curriculum: '', grade: '', term: '' }, customTheme: '',
                 editingSubject: null, curLesson: null,
@@ -401,7 +409,7 @@
                     } else { this.fallbackLoad(); }
                 },
 
-                // 🚀 数据迁移与读取
+                // 数据迁移与读取
                 async loadFromCloud() {
                     try { const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
                         if (!error && data?.data) this.applyLoadedData(data.data);
@@ -412,7 +420,6 @@
                     if(s) {
                         let parsed = JSON.parse(s);
                         if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].subjects) {
-                            // 旧版数据迁移
                             this.applyLoadedData({ subjects: parsed, books: this.books });
                         } else {
                             this.applyLoadedData({ galaxies: parsed, books: this.books });
@@ -423,11 +430,7 @@
                     if (data.galaxies) {
                         this.galaxies = data.galaxies;
                     } else if (data.subjects && data.subjects.length > 0) {
-                        // 封装遗留数据为一个星系
-                        this.galaxies = [{
-                            id: 'gal_legacy', title: 'Legacy Universe', region: 'CN',
-                            bgX: 50, bgY: 50, subjects: data.subjects
-                        }];
+                        this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, subjects: data.subjects }];
                     }
                     this.books = data.books || this.books;
                     if(this.galaxies.length > 0 && !this.activeGalaxyId) this.activeGalaxyId = this.galaxies[0].id;
@@ -441,7 +444,28 @@
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
                 
-                activateGalaxy(gid) { this.activeGalaxyId = gid; },
+                activateGalaxy(gid) { this.activeGalaxyId = gid; this.galaxyPan = { x: 0, y: 0 }; },
+
+                // 🚀 引力拖拽引擎 (Free Panning)
+                startGalaxyPan(e) {
+                    if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-container') || e.target.closest('.planet-core')) return;
+                    if (e.type === 'mousedown') e.preventDefault();
+                    this.isGalaxyPanning = true;
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.panStart = { x: cx - this.galaxyPan.x, y: cy - this.galaxyPan.y };
+                },
+                doGalaxyPan(e) {
+                    if (!this.isGalaxyPanning) return;
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    let nx = cx - this.panStart.x;
+                    let ny = cy - this.panStart.y;
+                    // 边界限制 [-800, 800] 防止飞丢
+                    this.galaxyPan.x = Math.max(-800, Math.min(800, nx));
+                    this.galaxyPan.y = Math.max(-800, Math.min(800, ny));
+                },
+                endGalaxyPan() { this.isGalaxyPanning = false; },
 
                 extractJSONArray(str) { const s = str.indexOf('['), e = str.lastIndexOf(']'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '[]'; },
 
@@ -498,56 +522,43 @@
                                 id: `gal_${Date.now()}`,
                                 title: this.planMode === 'standard' ? `${this.planConfig.grade} ${this.planConfig.curriculum.split(' ')[0]}` : this.customTheme,
                                 region: isIntl ? 'INTL' : 'CN',
-                                bgX: 10 + Math.random() * 80, // 星系深空散布 X 坐标 (10% - 90%)
-                                bgY: 10 + Math.random() * 80, // 星系深空散布 Y 坐标
-                                subjects: parsed.map((s,i)=>({ ...s, id: `sub_${Date.now()}_${i}`, radius: 220 + (Math.floor(i/3)*150), angle: (i*(Math.PI*2/Math.max(parsed.length, 1))) + Math.random()*0.2, units:[] }))
+                                bgX: 10 + Math.random() * 80, // 星系深空散布
+                                bgY: 10 + Math.random() * 80,
+                                subjects: parsed.map((s,i) => {
+                                    // 🪐 紧凑型轨道分布算法
+                                    let orbitIndex = Math.floor(i / 6); // 每轨道最多6颗星
+                                    let r = 240 + orbitIndex * 140; // 半径：240, 380, 520...
+                                    let angle = (i % 6) * (Math.PI * 2 / 6) + (orbitIndex * 0.5);
+                                    return { ...s, id: `sub_${Date.now()}_${i}`, radius: r, angle: angle, units:[] };
+                                })
                             };
                             
                             this.galaxies.push(newGalaxy);
                             this.activeGalaxyId = newGalaxy.id;
+                            this.galaxyPan = { x: 0, y: 0 }; // 重置视角
                             await this.sync(); this.modals.planner = false;
                         } catch(e) { Swal.fire('Error', '格式解析失败，大模型返回异常', 'error'); }
                     }
                     this.loading = false;
                 },
 
-                // 🚀 星系重命名
+                // 星系重命名
                 editGalaxy(g) {
                     Swal.fire({
                         title: this.lang === 'zh' ? '重新命名此大纲星系' : 'Rename Curriculum Galaxy',
-                        input: 'text',
-                        inputValue: g.title,
-                        background: '#0f172a', color: '#fff',
-                        showCancelButton: true,
-                        confirmButtonText: '确定保存',
-                        cancelButtonText: '取消'
-                    }).then(res => {
-                        if(res.isConfirmed && res.value.trim()) {
-                            g.title = res.value.trim();
-                            this.sync();
-                        }
-                    });
+                        input: 'text', inputValue: g.title, background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '确定保存', cancelButtonText: '取消'
+                    }).then(res => { if(res.isConfirmed && res.value.trim()) { g.title = res.value.trim(); this.sync(); } });
                 },
 
-                // 🚀 星系摧毁
+                // 星系摧毁
                 deleteGalaxy(gid) {
                     Swal.fire({
-                        title: '摧毁星系指令确认',
-                        text: '警告：此操作将永久摧毁该星系及其包含的所有课程、单元与教案数据，且不可逆转！是否继续？',
-                        icon: 'warning',
-                        background: '#0f172a', color: '#fff',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        confirmButtonText: '确认摧毁',
-                        cancelButtonText: '取消终止'
+                        title: '摧毁星系指令确认', text: '警告：此操作将永久摧毁该星系及其包含的所有课程、单元与教案数据，且不可逆转！是否继续？', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: '确认摧毁', cancelButtonText: '取消终止'
                     }).then(res => {
                         if(res.isConfirmed) {
                             this.galaxies = this.galaxies.filter(x => x.id !== gid);
-                            if(this.activeGalaxyId === gid) {
-                                this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null;
-                            }
-                            this.sync();
-                            Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系已成功清除', showConfirmButton:false, timer:2000});
+                            if(this.activeGalaxyId === gid) { this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null; this.galaxyPan = { x: 0, y: 0 }; }
+                            this.sync(); Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系已成功清除', showConfirmButton:false, timer:2000});
                         }
                     });
                 },
@@ -555,41 +566,27 @@
                 openSubject(g, s) { this.editingSubject = { ...s, region: g.region }; this.curLesson = null; window.quillEditor = null; },
                 closeSubject() { if(this.curLesson) this.savePlan(); this.editingSubject = null; },
 
-                // 🚀 中微观拆解
+                // 中微观拆解
                 async generateUnits() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    
                     const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
 作为该地区的教育大纲编制专家，请严格根据该地区的官方最新教学大纲，为《${this.editingSubject.title}》科目规划完整的学期教学计划。
-要求：
-1. 单元(Units)和课时(Lessons)的数量必须严格符合该地区该学期的实际教学周数和标准课时量。
-2. 内容必须系统、完整，不要遗漏官方大纲要求的核心知识点。
+要求：1. 单元(Units)和课时(Lessons)的数量必须严格符合该地区该学期的实际教学周数和标准课时量。2. 内容必须系统、完整，不要遗漏官方大纲要求的核心知识点。
 必须返回严格JSON格式: [{"title": "单元或周次名称: 主题", "lessons": [{"title": "课时具体名称"}]}]`;
 
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
-                            this.editingSubject.units = parsed.map((u, i) => ({ 
-                                ...u, 
-                                id: `unit_${i}_${Date.now()}`, 
-                                lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) 
-                            }));
-                            
-                            // 更新当前活跃星系中的学科
+                            this.editingSubject.units = parsed.map((u, i) => ({ ...u, id: `unit_${i}_${Date.now()}`, lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) }));
                             const gIdx = this.galaxies.findIndex(g => g.id === this.activeGalaxyId);
                             if(gIdx !== -1) {
                                 const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id);
-                                if(sIdx !== -1) {
-                                    this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units;
-                                    await this.sync();
-                                }
+                                if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; await this.sync(); }
                             }
                             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang==='zh'?'真实大纲已下载并入库':'Curriculum synced', showConfirmButton: false, timer: 2000 });
-                        } catch(e) {
-                            Swal.fire('Error', this.lang==='zh'?'由于真实大纲数据过于庞大，大模型生成可能截断。请换个更强力的节点或重试。':'Failed to parse full curriculum. Try again.', 'error');
-                        }
+                        } catch(e) { Swal.fire('Error', this.lang==='zh'?'由于真实大纲数据过于庞大，大模型生成可能截断。请换个更强力的节点或重试。':'Failed to parse full curriculum. Try again.', 'error'); }
                     }
                     this.loading = false;
                 },
@@ -614,14 +611,10 @@
 
                 savePlan() {
                     if (window.quillEditor) this.curLesson.content = window.quillEditor.root.innerHTML;
-                    
                     const gIdx = this.galaxies.findIndex(g => g.id === this.activeGalaxyId);
                     if(gIdx !== -1) {
                         const sIdx = this.galaxies[gIdx].subjects.findIndex(s => s.id === this.editingSubject.id);
-                        if(sIdx !== -1) {
-                            this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units;
-                            this.sync(); 
-                        }
+                        if(sIdx !== -1) { this.galaxies[gIdx].subjects[sIdx].units = this.editingSubject.units; this.sync(); }
                     }
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved to Database', showConfirmButton: false, timer: 1500 });
                 },

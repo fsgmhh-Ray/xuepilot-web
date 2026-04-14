@@ -47,7 +47,7 @@
             <div class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Unified Command Center</div>
         </div>
 
-        <nav class="flex-1 space-y-5 overflow-y-auto mt-2 px-1 scrollbar-hide">
+        <nav class="flex-1 space-y-6 overflow-y-auto mt-2 px-1 scrollbar-hide">
             <button @click="view = 'galaxy'" class="btn-nav-class" :class="view==='galaxy'?'bg-blue-600/20 text-blue-400 border-blue-500/30':'text-slate-400'">
                 <span class="text-xl w-6 text-center">🌌</span> <span x-text="dict.navMap"></span>
             </button>
@@ -55,17 +55,19 @@
                 <span class="text-xl w-6 text-center">✨</span> <span x-text="dict.navEngine"></span>
             </button>
 
-            <div class="h-px bg-slate-800/30 my-6 mx-2"></div>
+            <div class="h-px bg-slate-800/30 my-4 mx-2"></div>
 
-            <!-- AI 伴读菜单：彻底分开排版 -->
-            <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-400'">
-                <span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span>
-            </button>
-            <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-400'">
-                <span class="text-xl w-6 text-center">📙</span> <span x-text="dict.navReadZh"></span>
-            </button>
+            <!-- 🚀 强行分离的中英文伴读菜单 (使用独立的 flex-col 容器保证绝对分行) -->
+            <div class="flex flex-col gap-4 w-full">
+                <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-400'">
+                    <span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span>
+                </button>
+                <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-400'">
+                    <span class="text-xl w-6 text-center">📙</span> <span x-text="dict.navReadZh"></span>
+                </button>
+            </div>
 
-            <div class="h-px bg-slate-800/30 my-6 mx-2"></div>
+            <div class="h-px bg-slate-800/30 my-4 mx-2"></div>
 
             <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-400'">
                 <span class="text-xl w-6 text-center">✍️</span> <span x-text="dict.navWrite"></span>
@@ -91,7 +93,7 @@
             </div>
         </div>
 
-        <!-- 🚀 伴读书架与对话区 (恢复功能) -->
+        <!-- 伴读书架与对话区 -->
         <div x-show="view.startsWith('reading')" x-cloak class="absolute inset-0 flex flex-col p-10 overflow-y-auto fade-in">
             <div x-show="!activeBook">
                 <div class="flex justify-between items-center mb-10">
@@ -130,7 +132,7 @@
                                 <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-lg" :class="m.role==='user'?'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'" x-html="m.text"></div>
                             </div>
                         </template>
-                        <div x-show="loading" class="text-blue-400 animate-pulse text-[10px] font-mono tracking-widest ml-2 uppercase">Analyzing Context...</div>
+                        <div x-show="readLoading" class="text-blue-400 animate-pulse text-[10px] font-mono tracking-widest ml-2 uppercase">Analyzing Context...</div>
                     </div>
                     <div class="p-6 bg-slate-900 border-t border-slate-800 flex gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
                         <input type="text" x-model="readInput" @keydown.enter="sendReadText()" class="flex-1 input-dark px-5 py-4 rounded-2xl text-sm" :placeholder="dict.readPlace">
@@ -168,7 +170,10 @@
                             </div>
                         </div>
                     </template>
-                    <button @click="generateUnits()" class="w-full py-5 border-2 border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 hover:text-blue-400 transition font-bold" :disabled="loading"><span x-show="loading" class="animate-spin inline-block mr-2">↻</span> 智能拆解全学期单元与课时</button>
+                    <!-- 🚀 修复生成逻辑与显示状态 -->
+                    <button @click="generateUnits()" class="w-full py-5 border-2 border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 hover:text-blue-400 transition font-bold" :disabled="loading">
+                        <span x-show="loading" class="animate-spin inline-block mr-2">↻</span> <span x-text="loading ? '正在根据大纲拆解全学期课表...' : '✨ 智能拆解全学期课表'"></span>
+                    </button>
                 </div>
 
                 <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col relative bg-slate-900/40 border border-slate-800">
@@ -194,7 +199,7 @@
             </div>
         </div>
 
-        <!-- 🚀 排课弹窗 -->
+        <!-- 排课弹窗 -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
@@ -212,7 +217,7 @@
             </div>
         </div>
 
-        <!-- 🤖 NOVA 悬浮导师 (原生拖拽算法) -->
+        <!-- 🤖 NOVA 悬浮导师 -->
         <div id="nova-draggable" class="nova-float" :style="`left: ${novaPos.x}px; top: ${novaPos.y}px;`" @mousedown="startNovaDrag($event)" @touchstart="startNovaDrag($event)" @click="toggleNovaChat()">
             <div class="nova-orb-inner shadow-blue-600/40">🤖</div>
         </div>
@@ -319,7 +324,7 @@
 
                 startReading(book) { this.activeBook = book; if(this.activeBook.chatLog.length === 0) { this.activeBook.chatLog.push({ role: 'nova', text: this.lang === 'en' ? "Welcome, Commander. I've analyzed this piece. What intrigues you the most?" : "欢迎指挥官。我已经解析了这份卷宗，你对文中的哪个细节最感兴趣？" }); } },
 
-                // 排课逻辑 (简略版，依照白皮书)
+                // 排课逻辑
                 async generateSemesterMap() {
                     this.loading = true;
                     const isIntl = !this.planConfig.curriculum.includes('中国');
@@ -339,17 +344,27 @@
                 openSubject(s) { this.editingSubject = s; this.curLesson = null; window.quillEditor = null; },
                 closeSubject() { if(this.curLesson) this.savePlan(); this.editingSubject = null; },
 
+                // 🚀 修复全学期拆解：要求严格按官方标准拆解 8-12 个核心单元
                 async generateUnits() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nPlan 16 Weeks/Units for "${this.editingSubject.title}". Each unit has 3 lessons.\nJSON: [{"title": "Week 1", "lessons": [{"title": "1.1..."}]}]`;
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n作为该地区的教育专家，请根据当地官方教学大纲，为《${this.editingSubject.title}》规划整个学期完整的课程计划。请包含全学期约8-12个核心教学单元(Units)，每个单元拆解2-4个具体课时(Lessons)。确保系统性和完整性。\n必须返回严格JSON格式: [{"title": "Unit 1: ...", "lessons": [{"title": "1.1 ..."}]}]`;
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
                             this.editingSubject.units = parsed.map((u, i) => ({ ...u, id: `unit_${i}_${Date.now()}`, lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) }));
-                            this.sync();
-                        } catch(e) {}
+                            
+                            // 更新并强制云端同步
+                            const subIdx = this.subjects.findIndex(s => s.id === this.editingSubject.id);
+                            if (subIdx !== -1) {
+                                this.subjects[subIdx] = this.editingSubject;
+                                await this.sync();
+                            }
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang==='zh'?'全学期课表已生成并存入云端':'Semester planned and synced', showConfirmButton: false, timer: 2000 });
+                        } catch(e) {
+                            Swal.fire('Error', this.lang==='zh'?'大纲解析失败，请重试':'Failed to parse curriculum', 'error');
+                        }
                     }
                     this.loading = false;
                 },
@@ -366,7 +381,7 @@
                 async generatePlan() {
                     this.loading = true;
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
-                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}".\nHTML only (h3, ul, li). No markdown wrapper.`;
+                    const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\nCreate a Socratic lesson plan for "${this.curLesson.title}".\nHTML only (h3, ul, li, p). No markdown wrapper.`;
                     const res = await this.callAI(prompt);
                     if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
                     this.loading = false;

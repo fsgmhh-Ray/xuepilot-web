@@ -28,6 +28,9 @@
         .no-select { user-select: none; -webkit-user-select: none; }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
         
+        /* 🚀 修复：引力丝线样式 */
+        .galaxy-line { stroke: rgba(59, 130, 246, 0.2); stroke-width: 1.5; stroke-dasharray: 4; }
+
         #bg-starfield { position: fixed; inset: 0; z-index: -3; pointer-events: none; background: #02040a; }
         #network-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
@@ -45,22 +48,23 @@
 
     <canvas id="bg-starfield"></canvas>
 
-    <!-- 🚀 极简返回主页按钮 (防误解版) -->
+    <!-- 🚀 返回主页按钮 (防误解版) -->
     <div @click="goHome()" class="absolute top-6 left-6 z-40 flex items-center gap-4 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-slate-700 shadow-xl cursor-pointer hover:bg-slate-800 transition group">
-        <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition border border-slate-600 shadow-inner">⬅</button>
+        <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition border border-slate-600 shadow-inner">🏠</button>
         <div>
-            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Deck</div>
-            <div class="font-bold text-sm tracking-wide flex items-center gap-2"><span>🏠</span> 返回主页面</div>
+            <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase">XuePilot Explorer</div>
+            <div class="font-bold text-sm tracking-wide">返回主页面</div>
         </div>
     </div>
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full">
         
-        <!-- ================= 视图：3D 宇宙航线漫游 ================= -->
+        <!-- ================= 视图：3D 宇宙航线漫游 (遵循白皮书物理法则) ================= -->
         <div class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
-             @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
+             @mousedown="startPan" @touchstart="startPan"
+             @mousemove.window="doPan" @mouseup.window="endPan" 
+             @touchmove.window="doPan" @touchend.window="endPan">
             
-            <div class="absolute inset-0 z-0 bg-[rgba(0,0,0,0.01)]" @mousedown="startPan" @touchstart="startPan"></div>
             <canvas id="network-canvas"></canvas>
 
             <!-- 空状态 -->
@@ -68,38 +72,41 @@
                 <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase">等待指挥官 (家长) 部署星系任务...</p>
             </div>
 
-            <!-- 星系容器 -->
-            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <!-- 星系容器：移除了全局 translate，实现真正的物理隔离 -->
+            <div class="absolute w-full h-full pointer-events-none">
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 独立星系根节点 -->
+                    <!-- 🚀 独立星系根节点：仅对激活的星系应用 panX 和 panY -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(0px, 0px) scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <!-- 雷达名牌 -->
+                        <!-- 🚀 逆向物理缩放名牌：scale(8.333) 抵消 0.12 缩放 -->
                         <div x-show="g.id !== activeGalaxyId" class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); transform-origin: bottom center; bottom: 140px;">
                             <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-xs font-black tracking-widest uppercase flex items-center gap-2 whitespace-nowrap"><span class="text-base animate-pulse">🔥</span> <span x-text="g.title"></span></span>
                             <div class="w-px h-6 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
+                        <!-- 引力背景圆 (仅激活) -->
                         <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]" style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
 
+                        <!-- 轨道 (仅激活) -->
                         <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
                             <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
                         </div>
 
+                        <!-- 🚀 引力丝线 (SVG) -->
                         <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
                             <template x-for="s in g.subjects" :key="s.id">
                                 <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
                             </template>
                         </svg>
 
-                        <!-- 星系核心恒星 (仅做返回收缩用，无编辑按钮) -->
+                        <!-- 星系核心恒星 -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
-                            <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
+                            <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
                                  @click.stop="if(g.id === activeGalaxyId) activateGalaxy(null)">
                                 <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
@@ -114,9 +121,8 @@
                                 <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
                                      :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
                                      @click.stop="openMissionLog(s)">
-                                    
-                                    <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
-                                    <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                                    <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_30px_rgba(0,0,0,0.9)]" x-text="s.icon"></div>
+                                    <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.6)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
                                 </div>
                             </template>
                         </div>
@@ -138,7 +144,7 @@
                 <button @click="activeSubject = null" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition text-slate-400">✖</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-                <div x-show="!activeSubject?.units || activeSubject?.units.length===0" class="text-center text-slate-600 mt-10 text-sm">该星球暂未配置任务，请等待指挥官部署。</div>
+                <div x-show="!activeSubject?.units || activeSubject?.units.length===0" class="text-center text-slate-600 mt-10 text-sm italic">该星球暂未配置任务，请等待指挥官部署。</div>
                 <template x-for="(unit, uIdx) in activeSubject?.units" :key="unit.id">
                     <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-3 shadow-inner">
                         <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><span>📂</span> <span x-text="unit.title"></span></div>
@@ -166,31 +172,29 @@
                         <span>⬅</span> 撤离轨道
                     </button>
                     <div class="flex flex-col items-center">
-                        <div class="text-[10px] text-blue-500 font-mono tracking-widest uppercase">COMM LINK ACTIVE</div>
+                        <div class="text-[10px] text-blue-500 font-mono tracking-widest uppercase font-black">COMM LINK ACTIVE</div>
                         <h3 class="font-black text-blue-300 text-sm tracking-wide" x-text="activeLesson?.title"></h3>
                     </div>
-                    <div class="w-20"></div> <!-- 占位保持居中 -->
+                    <div class="w-20"></div>
                 </div>
 
                 <div class="flex-1 flex min-h-0 relative">
-                    <!-- 左侧：隐藏的教案 (可选：点击按钮展开以查看学习资料) -->
+                    <!-- 资料库面板 -->
                     <div class="w-1/3 border-r border-slate-800 p-6 overflow-y-auto bg-black/40 scrollbar-hide" x-show="showBriefing" x-transition>
                         <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 flex justify-between">
-                            <span>Mission Briefing (资料库)</span>
+                            <span>Mission Briefing (教案背景)</span>
                             <button @click="showBriefing = false" class="text-slate-400 hover:text-white">隐藏</button>
                         </div>
-                        <div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content || '<p class=text-center text-slate-600 mt-10>暂无教案资料支撑。</p>'"></div>
+                        <div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content || '<p class=text-center text-slate-600 mt-10>尚未部署教案资料。</p>'"></div>
                     </div>
 
-                    <!-- 右侧：NOVA 导师纯粹对话区 -->
+                    <!-- NOVA 对话区 -->
                     <div class="flex-1 flex flex-col bg-slate-900/20 relative">
-                        <!-- 展开资料库悬浮按钮 -->
                         <button x-show="!showBriefing" @click="showBriefing = true" class="absolute top-4 left-4 z-10 text-[10px] bg-slate-800/80 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2 backdrop-blur-md">
-                            <span>📖</span> 查看资料卡
+                            <span>📖</span> 查看学习资料
                         </button>
 
                         <div class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6 scrollbar-hide" id="chat-container">
-                            <!-- 对话气泡渲染 -->
                             <template x-for="(msg, idx) in chatLog" :key="idx">
                                 <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
                                     <span class="text-[9px] font-bold text-slate-600 mb-1 tracking-widest uppercase" x-text="msg.role === 'user' ? 'Explorer' : 'NOVA 导师'"></span>
@@ -202,7 +206,7 @@
                             </template>
                             <div x-show="chatLoading" class="flex items-start">
                                 <div class="bg-slate-800/50 p-4 rounded-2xl rounded-tl-none border border-slate-700 text-blue-400 text-xs font-mono animate-pulse flex items-center gap-3">
-                                    <span class="text-lg">🤖</span> NOVA 正在推演物理模型...
+                                    <span class="text-lg">🤖</span> NOVA 正在连接智库节点...
                                 </div>
                             </div>
                         </div>
@@ -210,7 +214,7 @@
                         <!-- 输入区 -->
                         <div class="p-6 bg-slate-950/80 border-t border-slate-800 shrink-0">
                             <div class="flex gap-3 max-w-4xl mx-auto relative">
-                                <input type="text" x-model="chatInput" @keydown.enter="sendChatMessage()" class="flex-1 input-dark px-6 py-4 rounded-2xl text-sm shadow-inner" placeholder="输入你的推断或疑问，探索者..." :disabled="chatLoading">
+                                <input type="text" x-model="chatInput" @keydown.enter="sendChatMessage()" class="flex-1 input-dark px-6 py-4 rounded-2xl text-sm shadow-inner" placeholder="向 NOVA 发送你的思考..." :disabled="chatLoading">
                                 <button @click="sendChatMessage()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transition transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2" :disabled="chatLoading || !chatInput.trim()">
                                     🚀 <span class="hidden md:inline">发送</span>
                                 </button>
@@ -223,7 +227,6 @@
 
     </main>
 
-    <!-- Alpine.js 逻辑 -->
     <script>
         function explorerApp() {
             return {
@@ -244,6 +247,7 @@
                     if (url && key && window.supabase) {
                         try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
                     } else { this.fallbackLoad(); }
+                    window.galaxyState = this;
                 },
 
                 async loadFromCloud() {
@@ -260,7 +264,7 @@
                     } 
                 },
 
-                // 🚀 核心更新：数据加载完毕后，自动激活第一个星系！
+                // 🚀 数据加载完毕后，自动激活第一个星系
                 applyLoadedData(data) {
                     if (data.galaxies) this.galaxies = data.galaxies;
                     if (this.galaxies.length > 0 && !this.activeGalaxyId) {
@@ -279,16 +283,20 @@
                     this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; this.activeSubject = null;
                 },
 
+                // 🚀 核心：真正的独立平移逻辑
                 startPan(e) {
                     if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || e.target.closest('.group-hover-delay') || this.activeSubject || this.activeLesson) return;
                     this.isPanning = true;
-                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; 
+                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
                     this.startX = cx - this.panX; this.startY = cy - this.panY;
                 },
                 doPan(e) {
                     if (!this.isPanning) return;
-                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.panX = Math.max(-1500, Math.min(1500, cx - this.startX)); this.panY = Math.max(-1500, Math.min(1500, cy - this.startY));
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; 
+                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.panX = Math.max(-2000, Math.min(2000, cx - this.startX)); 
+                    this.panY = Math.max(-2000, Math.min(2000, cy - this.startY));
                 },
                 endPan() { this.isPanning = false; },
 
@@ -296,42 +304,40 @@
                     const key = this.config.nova.key || window.safeStorage.get('xp_sys_key');
                     const url = (this.config.nova.url || window.safeStorage.get('xp_sys_url') || '/proxy/groq') + '/chat/completions';
                     const model = this.config.nova.model || window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
-                    if(!key) { Swal.fire('Error', '系统未配置伴读导师 API Key。请联系指挥官在主控舱设定。', 'warning'); return null; }
+                    if(!key) { Swal.fire('Error', '伴读导师引擎未配置。', 'warning'); return null; }
                     try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are NOVA, a Socratic AI tutor. Engage the student based on the hidden lesson context.' }, { role: 'user', content: prompt }] }) });
+                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: 'You are NOVA, a Socratic AI tutor.' }, { role: 'user', content: prompt }] }) });
                         if(!res.ok) throw new Error(); const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { Swal.fire('Error', '连接导师引擎失败', 'error'); return null; }
+                    } catch(e) { Swal.fire('Error', '导师引擎连接失败', 'error'); return null; }
                 },
 
                 openMissionLog(subject) { this.activeSubject = subject; },
                 
                 startLessonChat(lesson) {
                     this.activeLesson = lesson; this.showBriefing = false;
-                    // 初始化该课的聊天记录，若不存在则创建。同时打招呼。
                     if (!lesson.chatLog || lesson.chatLog.length === 0) {
-                        lesson.chatLog = [{ role: 'nova', text: `探索者，准备好开启关于《${lesson.title}》的知识跃迁了吗？我已读取了底层的教案。你觉得我们应该从哪里开始推演？` }];
+                        lesson.chatLog = [{ role: 'nova', text: `欢迎登舰。关于《${lesson.title}》，我已经读取了底层教案。你觉得我们应该从哪个核心切入点开启今日的推演？` }];
                     }
                     this.chatLog = lesson.chatLog;
-                    setTimeout(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                    this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
                 },
 
                 async sendChatMessage() {
                     const t = this.chatInput.trim(); if(!t || this.chatLoading) return;
                     this.chatInput = ''; this.chatLog.push({role: 'user', text: t}); this.chatLoading = true;
-                    setTimeout(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                    this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
                     
                     const isEnglish = /^[A-Za-z\s]+$/.test(this.activeSubject?.title || '');
                     const sysMsg = isEnglish ? `You are a Socratic Tutor. Guide the student based ONLY on the provided lesson plan. NEVER give direct answers. End with a thought-provoking question.` : `你是一位苏格拉底导师。请仅基于提供的教案内容引导学生。绝不直接给出答案，通过比喻和反问引导。每次回复的末尾必须抛出一个能引发深度思考的问题。`;
                     
-                    const prompt = `【系统隐藏指令/教案原文】：\n${this.activeLesson.content || '暂无详细教案，请根据课时标题自由发挥'}\n\n【角色规则】：${sysMsg}\n\n【学生发言】：${t}`;
+                    const prompt = `【教案背景】：\n${this.activeLesson.content || '通用知识库模式'}\n\n【角色准则】：${sysMsg}\n\n【学生发言】：${t}`;
                     
                     const reply = await this.callAI(prompt);
                     if(reply) { 
                         this.chatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); 
-                        // 将对话记录保存回星系数据，以便家长的学情雷达分析
                         this.activeLesson.chatLog = this.chatLog;
                         this.sync(); 
-                        setTimeout(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; }, 100); 
+                        this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; }); 
                     }
                     this.chatLoading = false;
                 }
@@ -340,7 +346,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <!-- 🚀 纯粹的 3D 星空与浪漫拓扑网络 Canvas 渲染引擎 -->
+    <!-- 🚀 3D 星空渲染引擎 -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const bgCanvas = document.getElementById('bg-starfield');
@@ -400,7 +406,7 @@
                 netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
                 
                 const appState = window.galaxyState;
-                if (appState && appState.view === 'galaxy' && appState.activeGalaxyId) {
+                if (appState && appState.activeGalaxyId) {
                     const activeG = appState.galaxies.find(g => g.id === appState.activeGalaxyId);
                     if (!activeG) return requestAnimationFrame(animateNet);
 
@@ -418,54 +424,31 @@
                         node.baseAngle += node.speed;
                         let targetX = cx + Math.cos(node.baseAngle) * node.baseRadius;
                         let targetY = cy + Math.sin(node.baseAngle) * node.baseRadius;
-                        
                         const dx = mouse.x - targetX; const dy = mouse.y - targetY;
                         const dist = Math.sqrt(dx*dx + dy*dy);
-                        
                         if (dist < 250) {
                             const force = (250 - dist) / 250;
                             targetX += (dx / dist) * force * 120; 
-                            targetX += (dy / dist) * force * 60;  
-                            targetY -= (dx / dist) * force * 60;
                         }
-                        
                         node.x += (targetX - node.x) * 0.08;
                         node.y += (targetY - node.y) * 0.08;
-                        
                         netCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
                         netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
                     });
 
                     const allNodes = [core, ...planets, ...dustNodes];
-                    
                     for (let i = 0; i < allNodes.length; i++) {
                         for (let j = i + 1; j < allNodes.length; j++) {
                             const n1 = allNodes[i]; const n2 = allNodes[j];
                             const dx = n1.x - n2.x; const dy = n1.y - n2.y;
                             const dist = Math.sqrt(dx*dx + dy*dy);
-                            
-                            const threshold = (n1.isPlanet && n2.isPlanet) ? 400 : (n1.isPlanet || n2.isPlanet) ? 250 : 150;
-                            
+                            const threshold = (n1.isPlanet && n2.isPlanet) ? 400 : 150;
                             if (dist < threshold) {
-                                const opacity = (1 - dist / threshold) * (n1.isPlanet || n2.isPlanet ? 0.7 : 0.3);
+                                const opacity = (1 - dist / threshold) * 0.3;
                                 netCtx.beginPath();
                                 netCtx.moveTo(n1.x, n1.y);
-                                
-                                const midX = (n1.x + n2.x)/2; const midY = (n1.y + n2.y)/2;
-                                const mdx = mouse.x - midX; const mdy = mouse.y - midY;
-                                const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
-                                
-                                if (mdist < 200) {
-                                    const bend = (200 - mdist) * 0.6;
-                                    const cpX = midX - (mdx/mdist)*bend;
-                                    const cpY = midY - (mdy/mdist)*bend;
-                                    netCtx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
-                                } else {
-                                    netCtx.lineTo(n2.x, n2.y);
-                                }
-                                
+                                netCtx.lineTo(n2.x, n2.y);
                                 netCtx.strokeStyle = `rgba(147, 197, 253, ${opacity})`;
-                                netCtx.lineWidth = n1.isPlanet && n2.isPlanet ? 2 : 1;
                                 netCtx.stroke();
                             }
                         }

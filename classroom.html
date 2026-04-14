@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Classroom</title>
-    <!-- PWA: 使用 Data URI 内联 Manifest 避免预览环境跨域或 404 导致的解析错误 -->
+    <!-- PWA: 使用 Data URI 内联 Manifest -->
     <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22XuePilot%20PRO%22%2C%22short_name%22%3A%22XuePilot%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%7D">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -34,7 +34,7 @@
             to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 40px rgba(59,130,246,0.7); transform: scale(1.05); }
         }
 
-        /* 🚀 核心恒星：加入淡淡的高温火焰光芒 (黄白内核 -> 金橙边 -> 紫色光晕) */
+        /* 🚀 核心恒星：加入淡淡的高温火焰光芒 */
         .planet-core {
             background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 20%, #f59e0b 45%, #9333ea 85%, #020617 100%);
             border: 1px solid rgba(253, 230, 138, 0.5);
@@ -54,7 +54,6 @@
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
         
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
-
         .no-select { user-select: none; -webkit-user-select: none; }
         
         /* 画布层级 */
@@ -64,6 +63,21 @@
         /* 悬停延迟工具类 */
         .group-hover-delay:hover .hover-delay-target { opacity: 1; transform: translateY(0); transition-delay: 400ms; pointer-events: auto; }
     </style>
+    
+    <!-- 🚀 核心防御：虚拟存储层 (彻底解决 iframe 中 Tracking Prevention 导致的系统崩溃) -->
+    <script>
+        window.safeStorage = {
+            memory: {},
+            get(key) {
+                try { return window.localStorage.getItem(key) || this.memory[key] || null; } 
+                catch(e) { return this.memory[key] || null; }
+            },
+            set(key, value) {
+                this.memory[key] = value;
+                try { window.localStorage.setItem(key, value); } catch(e) {}
+            }
+        };
+    </script>
 </head>
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
 
@@ -132,7 +146,7 @@
             </div>
 
             <!-- 🚀 星系容器：利用真实的物理平移响应鼠标拖拽 -->
-            <div class="absolute w-full h-full pointer-events-none" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
                 <template x-for="g in galaxies" :key="g.id">
                     <!-- 🚀 独立星系容器 -->
@@ -360,7 +374,8 @@
     <script>
         function classroomApp() {
             return {
-                lang: localStorage.getItem('xp_lang') || 'zh', isPro: localStorage.getItem('xp_is_pro') === 'true',
+                lang: window.safeStorage.get('xp_lang') || 'zh', 
+                isPro: window.safeStorage.get('xp_is_pro') !== 'false', // 默认放行预览环境
                 view: 'galaxy', loading: false, modals: { planner: false },
                 
                 // 多重宇宙状态架构
@@ -384,9 +399,9 @@
                 get subjects() { return this.galaxies.find(g => g.id === this.activeGalaxyId)?.subjects || []; },
 
                 async init() {
-                    if(!this.isPro) window.location.href = 'index.html';
                     this.planConfig.curriculum = this.dict.curries[0]; this.planConfig.grade = this.dict.grades[2]; this.planConfig.term = this.dict.terms[0];
-                    const url = localStorage.getItem('xp_supa_url'), key = localStorage.getItem('xp_supa_key');
+                    const url = window.safeStorage.get('xp_supa_url');
+                    const key = window.safeStorage.get('xp_supa_key');
                     if (url && key && window.supabase) {
                         try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
                     } else { this.fallbackLoad(); }
@@ -400,7 +415,7 @@
                     } catch (e) { this.fallbackLoad(); }
                 },
                 fallbackLoad() { 
-                    const s = localStorage.getItem('xp_galaxies'); 
+                    const s = window.safeStorage.get('xp_galaxies'); 
                     if(s) {
                         let parsed = JSON.parse(s);
                         if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].subjects) { this.applyLoadedData({ subjects: parsed, books: this.books }); } 
@@ -413,28 +428,22 @@
                     this.books = data.books || this.books;
                     if(this.galaxies.length > 0 && !this.activeGalaxyId) {
                         this.activeGalaxyId = this.galaxies[0].id;
-                        // Center camera on active galaxy
                         this.panX = 50 - this.galaxies[0].bgX * 10;
                         this.panY = 50 - this.galaxies[0].bgY * 10;
                     }
                 },
                 async sync() { 
                     if (this.supaClient) await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { galaxies: this.galaxies, books: this.books } });
-                    localStorage.setItem('xp_galaxies', JSON.stringify(this.galaxies));
+                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.galaxies));
                 },
 
                 goHome() { window.location.href = 'index.html'; },
-                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
+                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; window.safeStorage.set('xp_lang', this.lang); },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
                 
                 activateGalaxy(gid) { 
                     this.activeGalaxyId = gid;
                     const g = this.galaxies.find(x => x.id === gid);
-                    if (g) {
-                        // Optional: Auto pan to center the newly activated galaxy
-                        // this.panX = 50 - g.bgX * 10; 
-                        // this.panY = 50 - g.bgY * 10;
-                    }
                 },
 
                 // 全局引力拖拽引擎
@@ -457,9 +466,9 @@
 
                 extractJSONArray(str) { const s = str.indexOf('['), e = str.lastIndexOf(']'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '[]'; },
                 async callAI(prompt, type = 'sys', customSys = null) {
-                    const key = localStorage.getItem(`xp_${type}_key`) || localStorage.getItem('xp_sys_key');
-                    const url = (localStorage.getItem(`xp_${type}_url`) || localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
-                    const model = localStorage.getItem(`xp_${type}_model`) || localStorage.getItem('xp_sys_model') || 'llama-3.3-70b-versatile';
+                    const key = window.safeStorage.get(`xp_${type}_key`) || window.safeStorage.get('xp_sys_key');
+                    const url = (window.safeStorage.get(`xp_${type}_url`) || window.safeStorage.get('xp_sys_url') || '/proxy/groq') + '/chat/completions';
+                    const model = window.safeStorage.get(`xp_${type}_model`) || window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
                     if(!key) { Swal.fire('Error', 'Missing API Key in Portal', 'warning'); return null; }
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: customSys || 'You are an elite Socratic educator. NEVER give answers.' }, { role: 'user', content: prompt }] }) });
@@ -576,6 +585,146 @@
                 }
             }
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- 🚀 纯粹的 3D 星空与浪漫拓扑网络 Canvas 渲染引擎 -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- 1. 3D 飞星宇宙背景 ---
+            const bgCanvas = document.getElementById('bg-starfield');
+            const bgCtx = bgCanvas.getContext('2d');
+            let stars = [];
+            const numStars = 800;
+
+            function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', resizeBg); resizeBg();
+
+            for (let i = 0; i < numStars; i++) {
+                stars.push({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, z: Math.random() * 2000 });
+            }
+
+            function animateBg() {
+                bgCtx.fillStyle = '#02040a';
+                bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+                const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2;
+
+                stars.forEach(star => {
+                    star.z -= 2; 
+                    if (star.z <= 0) { star.z = 2000; star.x = Math.random() * 2000 - 1000; star.y = Math.random() * 2000 - 1000; }
+                    const k = 128.0 / star.z;
+                    const px = star.x * k + cx; const py = star.y * k + cy;
+                    const size = (1 - star.z / 2000) * 2;
+                    if (px >= 0 && px <= bgCanvas.width && py >= 0 && py <= bgCanvas.height) {
+                        bgCtx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/2000})`;
+                        bgCtx.beginPath(); bgCtx.arc(px, py, size, 0, Math.PI * 2); bgCtx.fill();
+                    }
+                });
+                requestAnimationFrame(animateBg);
+            }
+            animateBg();
+
+            // --- 2. 浪漫拓扑神经网 ---
+            const netCanvas = document.getElementById('network-canvas');
+            const netCtx = netCanvas.getContext('2d');
+            let dustNodes = [];
+            const numDust = 60; 
+            let mouse = { x: -1000, y: -1000 };
+
+            function resizeNet() { netCanvas.width = window.innerWidth; netCanvas.height = window.innerHeight; }
+            window.addEventListener('resize', resizeNet); resizeNet();
+
+            window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+            for (let i = 0; i < numDust; i++) {
+                dustNodes.push({
+                    baseAngle: Math.random() * Math.PI * 2,
+                    baseRadius: 100 + Math.random() * 800,
+                    speed: (Math.random() - 0.5) * 0.002,
+                    x: window.innerWidth / 2, y: window.innerHeight / 2,
+                    size: Math.random() * 2 + 1
+                });
+            }
+
+            function animateNet() {
+                netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
+                
+                const appState = window.galaxyState;
+                if (appState && appState.view === 'galaxy' && appState.activeGalaxyId) {
+                    const activeG = appState.galaxies.find(g => g.id === appState.activeGalaxyId);
+                    if (!activeG) return requestAnimationFrame(animateNet);
+
+                    const cx = netCanvas.width / 2 + appState.panX;
+                    const cy = netCanvas.height / 2 + appState.panY;
+                    
+                    const planets = activeG.subjects.map(s => ({
+                        x: cx + Math.cos(s.angle) * s.radius,
+                        y: cy + Math.sin(s.angle) * s.radius,
+                        isPlanet: true
+                    }));
+                    const core = { x: cx, y: cy, isPlanet: true };
+                    
+                    dustNodes.forEach(node => {
+                        node.baseAngle += node.speed;
+                        let targetX = cx + Math.cos(node.baseAngle) * node.baseRadius;
+                        let targetY = cy + Math.sin(node.baseAngle) * node.baseRadius;
+                        
+                        const dx = mouse.x - targetX; const dy = mouse.y - targetY;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if (dist < 250) {
+                            const force = (250 - dist) / 250;
+                            targetX += (dx / dist) * force * 120; 
+                            targetX += (dy / dist) * force * 60;  
+                            targetY -= (dx / dist) * force * 60;
+                        }
+                        
+                        node.x += (targetX - node.x) * 0.08;
+                        node.y += (targetY - node.y) * 0.08;
+                        
+                        netCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
+                        netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
+                    });
+
+                    const allNodes = [core, ...planets, ...dustNodes];
+                    
+                    for (let i = 0; i < allNodes.length; i++) {
+                        for (let j = i + 1; j < allNodes.length; j++) {
+                            const n1 = allNodes[i]; const n2 = allNodes[j];
+                            const dx = n1.x - n2.x; const dy = n1.y - n2.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            const threshold = (n1.isPlanet && n2.isPlanet) ? 400 : (n1.isPlanet || n2.isPlanet) ? 250 : 150;
+                            
+                            if (dist < threshold) {
+                                const opacity = (1 - dist / threshold) * (n1.isPlanet || n2.isPlanet ? 0.7 : 0.3);
+                                netCtx.beginPath();
+                                netCtx.moveTo(n1.x, n1.y);
+                                
+                                const midX = (n1.x + n2.x)/2; const midY = (n1.y + n2.y)/2;
+                                const mdx = mouse.x - midX; const mdy = mouse.y - midY;
+                                const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+                                
+                                if (mdist < 200) {
+                                    const bend = (200 - mdist) * 0.6;
+                                    const cpX = midX - (mdx/mdist)*bend;
+                                    const cpY = midY - (mdy/mdist)*bend;
+                                    netCtx.quadraticCurveTo(cpX, cpY, n2.x, n2.y);
+                                } else {
+                                    netCtx.lineTo(n2.x, n2.y);
+                                }
+                                
+                                netCtx.strokeStyle = `rgba(147, 197, 253, ${opacity})`;
+                                netCtx.lineWidth = n1.isPlanet && n2.isPlanet ? 2 : 1;
+                                netCtx.stroke();
+                            }
+                        }
+                    }
+                }
+                requestAnimationFrame(animateNet);
+            }
+            animateNet();
+        });
     </script>
 </body>
 </html>

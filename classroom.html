@@ -119,7 +119,7 @@
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10">
         
-        <!-- ================= 视图：多重宇宙星系 ================= -->
+        <!-- ================= 视图：多重宇宙星系 (自由平移架构) ================= -->
         <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms 
              class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
              @mousemove.window="doPan" @mouseup.window="endPan"
@@ -133,15 +133,15 @@
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <!-- 星系容器 -->
-            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <!-- 星系容器：已移除父级平移，实现独立移动 -->
+            <div class="absolute w-full h-full pointer-events-none">
                 
                 <template x-for="g in galaxies" :key="g.id">
                     <!-- 独立星系根节点 -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
@@ -531,7 +531,7 @@
                         g.subjects.forEach(s => {
                             if (s.description === undefined) s.description = '';
                             if (s.objectives === undefined) s.objectives = [];
-                            if (s.referenceText === undefined) s.referenceText = ''; // 兼容 RAG 字段
+                            if (s.referenceText === undefined) s.referenceText = ''; 
                         });
                     });
 

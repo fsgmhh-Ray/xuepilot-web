@@ -115,85 +115,85 @@
         </nav>
         
         <div class="p-4 border-t border-slate-800/50 text-[10px] font-mono text-center text-slate-500 shrink-0" x-text="dbConnected ? 'SUPABASE CONNECTED' : 'LOCAL FALLBACK'"></div>
-    </aside>
-
-    <main class="flex-1 relative overflow-hidden bg-transparent z-10">
-        
-        <!-- ================= 视图：多重宇宙星系 (自由平移架构) ================= -->
-        <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms 
-             class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
-             @mousemove.window="doPan" @mouseup.window="endPan"
-             @touchmove.window="doPan" @touchend.window="endPan">
-            
-            <div class="absolute inset-0 z-0 bg-[rgba(0,0,0,0.01)]" @mousedown="startPan" @touchstart="startPan"></div>
-            <canvas id="network-canvas"></canvas>
-
+            <!-- 空状态 -->
             <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
                 <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase" x-text="dict.emptyMap"></p>
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <!-- 🚀 星系容器：已移除父级容器的统一平移，确保远方星系绝对静止 -->
+            <!-- 🚀 星系容器：移除外层平移干扰，改为绝对定位架构 -->
             <div class="absolute w-full h-full pointer-events-none">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点：仅对处于激活状态的星系应用 panX 和 panY -->
+                    <!-- 🚀 独立星系定位层：不再使用 scale，确保名称雷达保持原生大小不被微雕化 -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
-                         :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
+                         :class="[g.id !== activeGalaxyId ? 'pointer-events-auto z-10' : 'pointer-events-none z-20', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
-                                 : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
+                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px); opacity: 1;` 
+                                 : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px); opacity: 0.8; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <div x-show="g.id !== activeGalaxyId" class="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 whitespace-nowrap flex flex-col items-center">
-                            <span class="bg-slate-900/95 text-amber-300 px-5 py-2 rounded-2xl border border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.6)] text-lg font-black tracking-widest uppercase flex items-center gap-2">
-                                <span class="text-2xl animate-pulse">🔥</span> <span x-text="g.title"></span>
+                        <!-- 🚀 远距离探测雷达：剥离缩放层，永远保持 100% 物理尺寸与绝对清晰度 -->
+                        <div x-show="g.id !== activeGalaxyId" class="absolute -top-32 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap flex flex-col items-center">
+                            <span class="bg-slate-900/95 text-amber-300 px-6 py-3 rounded-2xl border border-amber-500/50 shadow-[0_0_40px_rgba(245,158,11,0.8)] text-xl font-black tracking-widest uppercase flex items-center gap-3">
+                                <span class="text-3xl animate-pulse">🔥</span> <span x-text="g.title"></span>
                             </span>
-                            <div class="w-1 h-6 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
+                            <div class="w-1 h-8 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
-                        <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]"
-                             style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
+                        <!-- 🚀 星系视觉缩放层：只对内部行星、轨道、连线进行微雕化缩放 -->
+                        <div class="absolute flex items-center justify-center w-0 h-0 transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                             :class="g.id !== activeGalaxyId ? 'group-hover:scale-[0.16]' : ''"
+                             :style="g.id === activeGalaxyId ? 'transform: scale(1);' : 'transform: scale(0.12);'">
 
-                        <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
-                            <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
-                        </div>
+                            <!-- 隐形引力结界 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]"
+                                 style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
 
-                        <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
-                            <template x-for="s in g.subjects" :key="s.id">
-                                <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
-                            </template>
-                        </svg>
-
-                        <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
-                            <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
-                                 :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
-                                 @click.stop="g.id === activeGalaxyId ? openCurriculumEditor(g) : activateGalaxy(g.id)">
-                                <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
-                                <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
-                                <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg" x-text="dict.editBtnText || 'EDIT'"></div>
+                            <!-- 轨道环 (仅激活状态显示) -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
+                                <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
                             </div>
-                            
-                            <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
-                                <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
-                                <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
-                            </div>
-                        </div>
 
-                        <!-- 学科行星群 -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
-                            <template x-for="s in g.subjects" :key="s.id">
-                                <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
-                                     :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
-                                     @click.stop="openSubject(g, s)">
-                                    
-                                    <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
-                                    <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                            <!-- SVG 灵动连接线层 -->
+                            <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
+                                <template x-for="s in g.subjects" :key="s.id">
+                                    <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
+                                </template>
+                            </svg>
+
+                            <!-- 🚀 星系核心恒星 (高温火焰光芒与智能点击判定) -->
+                            <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
+                                <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
+                                     :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 300px; height: 300px;'"
+                                     @click.stop="g.id === activeGalaxyId ? openCurriculumEditor(g) : activateGalaxy(g.id)">
+                                    <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
+                                    <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
+                                    <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg" x-text="dict.editBtnText || 'EDIT'"></div>
                                 </div>
-                            </template>
-                        </div>
+                                
+                                <!-- 悬停延迟控制台 (Delay 400ms) -->
+                                <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
+                                    <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
+                                    <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
+                                </div>
+                            </div>
 
-                    </div>
+                            <!-- 学科行星群 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
+                                <template x-for="s in g.subjects" :key="s.id">
+                                    <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
+                                         :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
+                                         @click.stop="openSubject(g, s)">
+                                        
+                                        <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,0,0,0.8)]" x-text="s.icon"></div>
+                                        <span class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                        </div> <!-- /缩放层 -->
+                    </div> <!-- /定位层 -->
                 </template>
             </div>
         </div>

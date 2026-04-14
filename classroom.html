@@ -10,7 +10,7 @@
     <!-- Quill Rich Text Editor -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <!-- 🚀 引入 Supabase JS SDK -->
+    <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -27,7 +27,6 @@
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
         
-        /* 🚀 原生 NOVA */
         .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
         .nova-float:active { cursor: grabbing; }
         .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); animation: novaBreath 3s infinite alternate; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; }
@@ -39,7 +38,6 @@
         .planet:hover { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.2); }
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
 
-        /* 🚀 Quill 终极排版修复版 */
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.9); border-top-left-radius: 1.2rem; border-top-right-radius: 1.2rem; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
         .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-bottom-left-radius: 1.2rem; border-bottom-right-radius: 1.2rem; background: rgba(0,0,0,0.5); font-family: -apple-system, sans-serif; font-size: 0.95rem; color: #e2e8f0; }
         .ql-snow .ql-stroke { stroke: #94a3b8; } .ql-snow .ql-fill { fill: #94a3b8; } .ql-snow .ql-picker { color: #94a3b8; }
@@ -80,7 +78,6 @@
                 <span class="text-xl w-6 text-center">✍️</span> <span class="flex-1" x-text="dict.navWrite"></span>
             </button>
             
-            <!-- 🚀 保证阅读菜单独立一行 -->
             <button @click="openReading('en')" class="btn-nav-class block w-full" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]':'text-slate-400'">
                 <div class="flex items-center gap-4"><span class="text-xl w-6 text-center">📘</span> <span x-text="dict.navReadEn"></span></div>
             </button>
@@ -89,7 +86,6 @@
             </button>
         </nav>
         
-        <!-- 🚀 云端连接状态展示 -->
         <div class="p-4 border-t border-slate-800/50 text-center">
             <div class="text-[10px] font-mono tracking-widest uppercase flex items-center justify-center gap-2" :class="dbConnected ? 'text-emerald-400' : 'text-slate-500'">
                 <div class="w-2 h-2 rounded-full" :class="dbConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-slate-500'"></div>
@@ -186,7 +182,7 @@
             </div>
         </div>
 
-        <!-- 🚀 深度教案编辑器 (Quill Editor) -->
+        <!-- 🚀 深度教案编辑器 -->
         <div x-show="editSubject" x-cloak class="absolute inset-0 bg-slate-950 z-[55] p-6 md:p-10 overflow-y-auto fade-in">
             <div class="max-w-7xl mx-auto h-full flex flex-col">
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6 shrink-0">
@@ -210,14 +206,13 @@
                         </button>
                     </div>
 
-                    <!-- 🚀 右侧 Quill 完美排版区 -->
+                    <!-- 右侧 Quill 排版区 -->
                     <div class="lg:col-span-8 glass-panel rounded-[2rem] flex flex-col shadow-2xl relative min-h-[500px] bg-slate-900/60 p-6">
                         <template x-if="!curLesson">
                             <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-60 fade-in"><div class="text-7xl mb-6">✍️</div><p class="font-bold tracking-widest text-sm" x-text="dict.selLesMsg"></p></div>
                         </template>
                         <template x-if="curLesson">
                             <div class="flex flex-col h-full fade-in">
-                                <!-- AI 生成按钮单独放置在最上方，保证排版不乱 -->
                                 <div class="flex justify-between items-center mb-4 shrink-0">
                                     <input x-model="curLesson.title" class="bg-transparent text-2xl font-black border-none outline-none text-blue-300 flex-1 mr-4 transition tracking-tight">
                                     <button @click="generateLessonContent()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:scale-105 transition shadow-[0_0_15px_rgba(59,130,246,0.4)] whitespace-nowrap shrink-0" :disabled="contentLoad">
@@ -225,7 +220,6 @@
                                     </button>
                                 </div>
                                 
-                                <!-- Quill 标准工具栏 -->
                                 <div id="toolbar-container" class="w-full shrink-0">
                                     <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
                                     <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
@@ -265,7 +259,7 @@
             </div>
         </div>
 
-        <!-- 弹窗：大纲引擎规划器 -->
+        <!-- 🚀 强大坚固的大纲引擎规划器 -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.15)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
@@ -282,9 +276,13 @@
                             <template x-for="t in dict.terms"><option :value="t" x-text="t"></option></template>
                         </select>
                     </div>
+                    
+                    <!-- 🚀 排课按钮 (防止霸屏) -->
                     <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-3 transition text-white" :disabled="loading">
                         <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? dict.planLoad : dict.planBtn"></span>
                     </button>
+                    <!-- 危险操作：清空云端/本地数据 -->
+                    <button x-show="subjects.length > 0 && !loading" @click="clearGalaxy()" class="w-full py-2 text-rose-500 text-xs underline mt-2 bg-transparent opacity-60 hover:opacity-100 transition">清空现有星系数据 (Reset)</button>
                 </div>
             </div>
         </div>
@@ -310,16 +308,15 @@
                 
                 novaState: { open: false, input: '', msgs: [], loading: false, pos: {x: window.innerWidth - 100, y: window.innerHeight - 100}, isDragging: false, start: {x:0,y:0}, offset: {x:0,y:0} },
                 
-                // 🚀 Supabase 配置挂载
-                supaClient: null,
-                dbConnected: false,
+                // Supabase
+                supaClient: null, dbConnected: false,
 
                 i18n: {
                     zh: {
                         brand: 'XuePilot PRO', back: '返回主控舱', 
                         navMap: '云端知识星系', navEngine: '全球智能排课系统', navWrite: 'AI 启发写作舱', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
                         emptyMap: '请启动智能排课系统，构建知识星图',
-                        planTitle: '全球智能排课系统', planDesc: '系统将结合选定地区的教育标准，通过大模型智能构建知识星图，并同步至 Supabase 云端。', planBtn: '🚀 映射知识星图', planLoad: '正在深度解析...',
+                        planTitle: '全球智能排课系统', planDesc: '系统将结合教育标准，通过大模型智能构建知识星图，并同步至云端。', planBtn: '🚀 映射知识星图', planLoad: '正在深度解析...',
                         curries: ['中国义务教育课标 (2022版)', '美国 Common Core State Standards', '英国 National Curriculum (KS2/KS3)'], grades: ['三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
                         backMap: '返回星图概览', satTitle: '知识节点拆解', genSatBtn: '✨ 智能提取教学节点', genSatLoad: '挖掘知识架构中...',
                         selLesMsg: '选择左侧节点，进入教案编辑器', genConBtn: '✨ 智能生成教案', genConLoad: '结构化生成中...', saveBtn: '💾 存档至云端',
@@ -327,13 +324,13 @@
                         shelfTitle: '私享书架 (LIBRARY)', importBtn: '导入专属档案', readTitleEn: '英文智能伴读', readTitleZh: '大语文传承', acc: '掌握度', startRead: '开启深度阅读', exitRead: '← 退出阅读',
                         cmd: '指挥官', readPlace: '探讨核心思想...',
                         novaTitle: 'Nova 随舰导师', novaGreeting: '指挥官，我是 NOVA。可以在教室里随时呼叫我。', novaPlace: '输入疑惑...', novaLoad: '解析逻辑中...',
-                        quillPlace: '手动编写教案，或点击顶部 ✨ 按钮智能生成...', swalSucc: '成功', swalSaved: '数据已安全同步至云端', swalErr: '错误', swalNoKey: '请在主控舱配置 API 密钥', swalNetErr: '网络或代理配置错误', swalParsed: '全网解析排课完成'
+                        quillPlace: '手动编写教案，或点击顶部 ✨ 按钮智能生成...', swalSucc: '成功', swalSaved: '数据已安全同步', swalErr: '错误', swalNoKey: '请在主控舱配置 API 密钥', swalNetErr: '网络或代理配置错误', swalParsed: '解析排课完成'
                     },
                     en: {
                         brand: 'XuePilot PRO', back: 'Return to Portal', 
                         navMap: 'Cloud Galaxy Map', navEngine: 'Global Smart Scheduling', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Tutor',
                         emptyMap: 'Run the Scheduling System to build your map.',
-                        planTitle: 'Global Smart Scheduling', planDesc: 'Maps authentic knowledge galaxies based on regional standards and syncs with Supabase.', planBtn: '🚀 Map Galaxy', planLoad: 'Parsing standards...',
+                        planTitle: 'Global Smart Scheduling', planDesc: 'Maps authentic knowledge galaxies based on regional standards and syncs with Cloud.', planBtn: '🚀 Map Galaxy', planLoad: 'Parsing standards...',
                         curries: ['Chinese Education Standard (2022)', 'US Common Core State Standards', 'UK National Curriculum (KS2/KS3)'], grades: ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
                         backMap: 'Back to Map', satTitle: 'Learning Satellites', genSatBtn: '✨ Extract Core Nodes', genSatLoad: 'Mining...',
                         selLesMsg: 'Select a node to open editor', genConBtn: '✨ Auto-Gen Lesson', genConLoad: 'Structuring...', saveBtn: '💾 Save to Cloud',
@@ -341,7 +338,7 @@
                         shelfTitle: 'Commander Library', importBtn: 'Import Docs', readTitleEn: 'English Tutor', readTitleZh: 'Chinese Tutor', acc: 'Acc', startRead: 'Deep Reading', exitRead: '← Exit',
                         cmd: 'Cmdr.', readPlace: 'Explore ideas...',
                         novaTitle: 'Nova Advisor', novaGreeting: 'Greetings, Commander. Drag me anywhere. Need guidance?', novaPlace: 'Ask advisor...', novaLoad: 'Analyzing...',
-                        quillPlace: 'Edit manually, or click ✨ to auto-generate...', swalSucc: 'Success', swalSaved: 'Synced to Cloud Successfully', swalErr: 'Error', swalNoKey: 'Please configure API Keys in Portal', swalNetErr: 'Network or proxy error', swalParsed: 'Scheduling Complete'
+                        quillPlace: 'Edit manually, or click ✨ to auto-generate...', swalSucc: 'Success', swalSaved: 'Synced Successfully', swalErr: 'Error', swalNoKey: 'Please configure API Keys in Portal', swalNetErr: 'Network or proxy error', swalParsed: 'Scheduling Complete'
                     }
                 },
                 get dict() { return this.i18n[this.lang]; },
@@ -351,71 +348,48 @@
                     if(!this.isPro) { try { window.location.replace('index.html'); } catch(e) { window.location.href = 'index.html'; } }
                     this.planConfig.curriculum = this.dict.curries[1]; this.planConfig.grade = this.dict.grades[1]; this.planConfig.term = this.dict.terms[0];
                     
-                    // 🚀 初始化 Supabase
-                    const supaUrl = localStorage.getItem('xp_supa_url');
-                    const supaKey = localStorage.getItem('xp_supa_key');
-                    
+                    const supaUrl = localStorage.getItem('xp_supa_url'); const supaKey = localStorage.getItem('xp_supa_key');
                     if (supaUrl && supaKey && window.supabase) {
-                        try {
-                            this.supaClient = window.supabase.createClient(supaUrl, supaKey);
-                            this.dbConnected = true;
-                            await this.loadFromCloud();
-                        } catch (e) {
-                            console.error("Supabase Init Error:", e);
-                            this.fallbackLoad();
-                        }
-                    } else {
-                        this.fallbackLoad();
-                    }
+                        try { this.supaClient = window.supabase.createClient(supaUrl, supaKey); this.dbConnected = true; await this.loadFromCloud(); } 
+                        catch (e) { this.fallbackLoad(); }
+                    } else { this.fallbackLoad(); }
                 },
 
-                // 从 Supabase 恢复状态
                 async loadFromCloud() {
                     if (!this.supaClient) return;
                     try {
                         const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
-                        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is not found
-                        
-                        if (data && data.data) {
-                            if (data.data.subjects) this.subjects = data.data.subjects;
-                            if (data.data.books) this.books = data.data.books;
-                        }
-                    } catch (e) {
-                        console.error("Supabase Load Error:", e);
-                        this.fallbackLoad();
-                    }
+                        if (error && error.code !== 'PGRST116') throw error; 
+                        if (data && data.data) { if (data.data.subjects) this.subjects = data.data.subjects; if (data.data.books) this.books = data.data.books; }
+                    } catch (e) { this.fallbackLoad(); }
                 },
 
-                // 降级使用 LocalStorage
                 fallbackLoad() {
                     this.dbConnected = false;
-                    const savedSubjects = localStorage.getItem('xp_subjects');
-                    if (savedSubjects) { try { this.subjects = JSON.parse(savedSubjects); } catch(e) {} }
+                    const savedSubjects = localStorage.getItem('xp_subjects'); if (savedSubjects) { try { this.subjects = JSON.parse(savedSubjects); } catch(e) {} }
                 },
 
-                // 同步数据至云端
                 async syncToCloud() {
                     if (this.supaClient) {
                         try {
-                            const payload = { id: 'commander_1', data: { subjects: this.subjects, books: this.books } };
-                            const { error } = await this.supaClient.from('user_data').upsert(payload);
+                            const { error } = await this.supaClient.from('user_data').upsert({ id: 'commander_1', data: { subjects: this.subjects, books: this.books } });
                             if (error) throw error;
-                        } catch (e) {
-                            console.error("Supabase Sync Error:", e);
-                            // Fallback
-                            localStorage.setItem('xp_subjects', JSON.stringify(this.subjects));
-                        }
-                    } else {
-                        localStorage.setItem('xp_subjects', JSON.stringify(this.subjects));
-                    }
+                        } catch (e) { localStorage.setItem('xp_subjects', JSON.stringify(this.subjects)); }
+                    } else { localStorage.setItem('xp_subjects', JSON.stringify(this.subjects)); }
                 },
 
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('xp_lang', this.lang); },
                 goHome() { try { window.location.assign('index.html'); } catch(e) { window.location.href = 'index.html'; } },
                 openReading(lang) { this.view = 'reading-' + lang; this.activeBook = null; },
 
-                cleanCodeBlock(str) { const bk = String.fromCharCode(96, 96, 96); return str.replace(new RegExp(bk + '(?:json|html)?', 'gi'), '').trim(); },
+                // 🚀 核心 1：极其强健的 JSON 提取器 (无视大模型废话)
+                extractJSONArray(str) {
+                    const start = str.indexOf('['); const end = str.lastIndexOf(']');
+                    if (start !== -1 && end !== -1) return str.substring(start, end + 1);
+                    return '[]'; // 默认保底
+                },
 
+                // 🚀 核心 2：强化版 API 调度与错误捕获
                 async callAI(prompt, type = 'sys', customSys = null) {
                     const key = localStorage.getItem(`xp_${type}_key`) || localStorage.getItem('xp_sys_key'); 
                     const url = (localStorage.getItem(`xp_${type}_url`) || localStorage.getItem('xp_sys_url') || '/proxy/groq') + '/chat/completions';
@@ -424,48 +398,66 @@
                     let sysMsg = customSys || (type === 'sys' ? 'You are an elite Socratic educator.' : 'You are NOVA Tutor.');
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: sysMsg }, { role: 'user', content: prompt }] }) });
-                        if(!res.ok) throw new Error('Reject');
+                        if(!res.ok) { const errTxt = await res.text(); throw new Error(res.status + ' ' + errTxt); }
                         const data = await res.json(); return data.choices[0].message.content;
-                    } catch(e) { Swal.fire(this.dict.swalErr, this.dict.swalNetErr, 'error'); return null; }
+                    } catch(e) { Swal.fire(this.dict.swalErr, `${this.dict.swalNetErr}: ${e.message}`, 'error'); return null; }
                 },
 
+                // 🚀 核心 3：安全排课 (解决霸屏)
                 async generateSemesterMap() { 
                     this.loading = true; 
                     const isEn = this.lang === 'en';
                     const langInst = isEn ? '[FATAL CONSTRAINT]: Output STRICTLY in English. Subject titles MUST be real local English terms (e.g. Language Arts). No Chinese.' : '必须全部使用纯正中文。';
-                    const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】【${this.planConfig.term}】标准，生成5个核心学科。\n${langInst}\n返回JSON格式：[{"title": "学科名", "icon": "单字符emoji"}]。`;
+                    const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】【${this.planConfig.term}】标准，生成5个核心学科。\n${langInst}\n必须返回严格的JSON数组格式：[{"title": "学科名", "icon": "单字符emoji"}]。`;
+                    
                     const res = await this.callAI(prompt, 'sys');
                     if(res) { 
                         try { 
-                            const parsed = JSON.parse(this.cleanCodeBlock(res));
-                            this.subjects = parsed.map((s,i)=>({...s, id:Date.now()+i, radius: 200+(Math.floor(i/3)*150), angle:(i*1.2)+Math.random()*0.5, lessons: []})); 
+                            const jsonStr = this.extractJSONArray(res); // 强制只取 [...]
+                            const parsed = JSON.parse(jsonStr);
+                            if(parsed.length === 0) throw new Error('Empty Parsed Array');
                             
-                            await this.syncToCloud(); // 🚀 云端同步
-
-                            this.modals.planner=false; 
+                            this.subjects = parsed.map((s,i)=>({...s, id:Date.now()+i, radius: 200+(Math.floor(i/3)*150), angle:(i*1.2)+Math.random()*0.5, lessons: []})); 
+                            await this.syncToCloud();
+                            
+                            // 🚀 只有成功了，才关闭弹窗并提示
+                            this.modals.planner = false; 
                             Swal.fire({title: this.dict.swalSucc, text: this.dict.swalParsed, icon:'success', background:'#0f172a', color:'#fff'});
-                        } catch(e){} 
+                        } catch(e){ 
+                            console.error("JSON Parse Error:", e, res);
+                            Swal.fire(this.dict.swalErr, this.lang==='zh'?'大模型返回数据格式异常，请重试。':'AI returned invalid data format, please retry.', 'error');
+                        } 
                     }
+                    // 无论成功失败，都关闭 loading 动画
                     this.loading = false;
+                },
+
+                async clearGalaxy() {
+                    this.subjects = []; await this.syncToCloud(); this.modals.planner = false;
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'已重置', showConfirmButton:false, timer:1500});
                 },
 
                 openSubjectDetail(s) { this.editSubject = s; this.curLesson = null; window.quillEditor = null; },
                 closeSubjectDetail() { if(this.curLesson) this.saveLessonContent(); this.editSubject = null; },
 
+                // 🚀 安全生成章节
                 async generateLessons() {
                     this.lessonLoad = true;
                     const isEn = this.lang === 'en';
                     const langInst = isEn ? '[FATAL CONSTRAINT]: Output STRICTLY in English.' : '必须全部使用中文。';
-                    const res = await this.callAI(`为【${this.editSubject.title}】学科生成3个教学核心章节。\n${langInst}\n返回JSON格式：[{"title": "章节名"}]。`, 'sys');
+                    const res = await this.callAI(`为【${this.editSubject.title}】学科生成3个教学核心章节。\n${langInst}\n必须返回严格的JSON数组格式：[{"title": "章节名"}]。`, 'sys');
                     if(res) { 
                         try { 
-                            const parsed = JSON.parse(this.cleanCodeBlock(res));
-                            this.editSubject.lessons = parsed.map((l,i)=>({id:Date.now()+i, title:l.title, content:''})); 
+                            const jsonStr = this.extractJSONArray(res);
+                            const parsed = JSON.parse(jsonStr);
+                            if(parsed.length === 0) throw new Error('Empty Array');
                             
-                            // 更新主体数组并同步
+                            this.editSubject.lessons = parsed.map((l,i)=>({id:Date.now()+i, title:l.title, content:''})); 
                             const idx = this.subjects.findIndex(s => s.id === this.editSubject.id);
                             if(idx !== -1) { this.subjects[idx] = this.editSubject; await this.syncToCloud(); }
-                        } catch(e){} 
+                        } catch(e){
+                            Swal.fire(this.dict.swalErr, '解析失败，请重试', 'warning');
+                        } 
                     }
                     this.lessonLoad = false;
                 },
@@ -484,15 +476,17 @@
                     });
                 },
 
+                // 🚀 安全生成教案
                 async generateLessonContent() {
                     if (!this.curLesson || !window.quillEditor) return;
                     this.contentLoad = true;
                     const isEn = this.lang === 'en';
                     const langInst = isEn ? '[FATAL CONSTRAINT]: Output ALL content entirely in English.' : '用中文输出内容。';
-                    const prompt = `为章节【${this.curLesson.title}】编写苏格拉底式教案。\n【限制】：输出排版优美的 HTML (使用 <h3> <ul> <li> <p> <strong>)。不要 <html> 外层。\n${langInst}`;
+                    const prompt = `为章节【${this.curLesson.title}】编写苏格拉底式教案。\n【限制】：输出排版优美的 HTML 代码 (可使用 <h3> <ul> <li> <p> <strong>)。绝对不要包含 <html>、<head> 或 <body> 外层。不要使用 markdown 标记包裹。\n${langInst}`;
                     const res = await this.callAI(prompt, 'sys');
                     if(res) { 
-                        const clean = this.cleanCodeBlock(res); 
+                        // 去除多余的 markdown 符号，保证纯净 HTML
+                        const clean = res.replace(/```html/gi, '').replace(/```/gi, '').trim(); 
                         window.quillEditor.root.innerHTML = clean; 
                         this.curLesson.content = clean; 
                     }
@@ -502,17 +496,10 @@
                 async saveLessonContent() { 
                     if(this.curLesson && window.quillEditor){ 
                         this.curLesson.content = window.quillEditor.root.innerHTML; 
-                        
-                        // 查找并更新
                         const lessonIdx = this.editSubject.lessons.findIndex(l => l.id === this.curLesson.id);
                         if (lessonIdx !== -1) this.editSubject.lessons[lessonIdx] = this.curLesson;
-
                         const subIdx = this.subjects.findIndex(s => s.id === this.editSubject.id);
-                        if (subIdx !== -1) { 
-                            this.subjects[subIdx] = this.editSubject; 
-                            await this.syncToCloud(); // 🚀 云端同步
-                        }
-
+                        if (subIdx !== -1) { this.subjects[subIdx] = this.editSubject; await this.syncToCloud(); }
                         Swal.fire({toast:true, position:'top-end', icon:'success', title:this.dict.swalSaved, showConfirmButton:false, timer:1500}); 
                     } 
                 },

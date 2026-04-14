@@ -6,9 +6,9 @@
     <title>XuePilot - Explorer Deck</title>
     <!-- PWA -->
     <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22XuePilot%20Explorer%22%2C%22short_name%22%3A%22Explorer%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%7D">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/sweetalert2@11](https://cdn.jsdelivr.net/npm/sweetalert2@11)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; perspective: 1000px; }
@@ -28,7 +28,7 @@
         .no-select { user-select: none; -webkit-user-select: none; }
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
         
-        /* 🚀 修复：引力丝线样式 */
+        /* 🚀 物理法则：引力丝线样式 */
         .galaxy-line { stroke: rgba(59, 130, 246, 0.2); stroke-width: 1.5; stroke-dasharray: 4; }
 
         #bg-starfield { position: fixed; inset: 0; z-index: -3; pointer-events: none; background: #02040a; }
@@ -36,6 +36,11 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* 🚀 跃迁载入屏 (解决卡顿感) */
+        .warp-overlay { position: fixed; inset: 0; z-index: 100; background: #02040a; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
+        .warp-spinner { width: 60px; height: 60px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
     <script>
         window.safeStorage = {
@@ -46,9 +51,15 @@
 </head>
 <body x-data="explorerApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
 
+    <!-- 🚀 跃迁缓冲层 -->
+    <div x-show="isWarping" x-transition.opacity class="warp-overlay">
+        <div class="warp-spinner mb-6"></div>
+        <div class="text-blue-400 font-mono tracking-[0.5em] animate-pulse text-xs uppercase">Quantum Linking...</div>
+    </div>
+
     <canvas id="bg-starfield"></canvas>
 
-    <!-- 🚀 返回主页按钮 (防误解版) -->
+    <!-- 返回主页按钮 -->
     <div @click="goHome()" class="absolute top-6 left-6 z-40 flex items-center gap-4 bg-slate-900/60 backdrop-blur-md p-3 rounded-2xl border border-slate-700 shadow-xl cursor-pointer hover:bg-slate-800 transition group">
         <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition border border-slate-600 shadow-inner">🏠</button>
         <div>
@@ -59,7 +70,7 @@
 
     <main class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full">
         
-        <!-- ================= 视图：3D 宇宙航线漫游 (遵循白皮书物理法则) ================= -->
+        <!-- ================= 视图：3D 宇宙航线漫游 ================= -->
         <div class="absolute inset-0 min-h-full no-select cursor-move" id="galaxy-viewport"
              @mousedown="startPan" @touchstart="startPan"
              @mousemove.window="doPan" @mouseup.window="endPan" 
@@ -68,14 +79,13 @@
             <canvas id="network-canvas"></canvas>
 
             <!-- 空状态 -->
-            <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
-                <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase">等待指挥官 (家长) 部署星系任务...</p>
+            <div x-show="!isWarping && galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40 pointer-events-none">
+                <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase">等待指挥官部署星系任务...</p>
             </div>
 
-            <!-- 星系容器：移除了全局 translate，实现真正的物理隔离 -->
+            <!-- 星系容器 (独立平移架构) -->
             <div class="absolute w-full h-full pointer-events-none">
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点：仅对激活的星系应用 panX 和 panY -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
@@ -83,30 +93,25 @@
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <!-- 🚀 逆向物理缩放名牌：scale(8.333) 抵消 0.12 缩放 -->
+                        <!-- 逆向物理缩放名牌 -->
                         <div x-show="g.id !== activeGalaxyId" class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); transform-origin: bottom center; bottom: 140px;">
                             <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-xs font-black tracking-widest uppercase flex items-center gap-2 whitespace-nowrap"><span class="text-base animate-pulse">🔥</span> <span x-text="g.title"></span></span>
                             <div class="w-px h-6 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
-                        <!-- 引力背景圆 (仅激活) -->
+                        <!-- 激活态视觉元素 -->
                         <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]" style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
+                        <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;"><template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template></div>
 
-                        <!-- 轨道 (仅激活) -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
-                            <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
-                        </div>
-
-                        <!-- 🚀 引力丝线 (SVG) -->
+                        <!-- 引力丝线 -->
                         <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
                             <template x-for="s in g.subjects" :key="s.id">
                                 <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
                             </template>
                         </svg>
 
-                        <!-- 星系核心恒星 -->
+                        <!-- 星系核心恒星 (智能点击路由修复) -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
-                            <!-- 🚀 修复：智能点击路由，如果是远方星系点击核心也执行激活 -->
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
                                  @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
@@ -132,7 +137,7 @@
             </div>
         </div>
 
-        <!-- ================= 任务清单侧边栏 (Mission Log) ================= -->
+        <!-- ================= 任务清单侧边栏 ================= -->
         <div x-show="activeSubject && !activeLesson" x-cloak class="absolute right-0 top-0 bottom-0 w-96 bg-slate-900/80 backdrop-blur-2xl border-l border-blue-500/30 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] flex flex-col z-40 transform transition-transform duration-500" x-transition:enter="translate-x-full" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-full">
             <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-black/40">
                 <div class="flex items-center gap-3">
@@ -145,7 +150,6 @@
                 <button @click="activeSubject = null" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition text-slate-400">✖</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-                <div x-show="!activeSubject?.units || activeSubject?.units.length===0" class="text-center text-slate-600 mt-10 text-sm italic">该星球暂未配置任务，请等待指挥官部署。</div>
                 <template x-for="(unit, uIdx) in activeSubject?.units" :key="unit.id">
                     <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-3 shadow-inner">
                         <div class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><span>📂</span> <span x-text="unit.title"></span></div>
@@ -163,11 +167,9 @@
             </div>
         </div>
 
-        <!-- ================= 苏格拉底交互舱 (Socratic Dialog Interface) ================= -->
+        <!-- ================= 苏格拉底交互舱 ================= -->
         <div x-show="activeLesson" x-cloak class="absolute inset-0 bg-[#030712] z-50 p-6 md:p-10 flex flex-col fade-in">
             <div class="max-w-6xl w-full mx-auto flex-1 flex flex-col h-full bg-slate-900/60 rounded-3xl border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden backdrop-blur-md">
-                
-                <!-- 顶部状态栏 -->
                 <div class="h-16 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center px-6 shrink-0">
                     <button @click="activeLesson = null" class="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-lg transition border border-slate-700 shadow-sm flex items-center gap-2">
                         <span>⬅</span> 撤离轨道
@@ -178,47 +180,26 @@
                     </div>
                     <div class="w-20"></div>
                 </div>
-
                 <div class="flex-1 flex min-h-0 relative">
-                    <!-- 资料库面板 -->
                     <div class="w-1/3 border-r border-slate-800 p-6 overflow-y-auto bg-black/40 scrollbar-hide" x-show="showBriefing" x-transition>
-                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 flex justify-between">
-                            <span>Mission Briefing (教案背景)</span>
-                            <button @click="showBriefing = false" class="text-slate-400 hover:text-white">隐藏</button>
-                        </div>
-                        <div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content || '<p class=text-center text-slate-600 mt-10>尚未部署教案资料。</p>'"></div>
+                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 flex justify-between"><span>Mission Briefing</span><button @click="showBriefing = false" class="text-slate-400 hover:text-white">隐藏</button></div>
+                        <div class="text-sm leading-relaxed text-slate-300 font-serif prose-invert" x-html="activeLesson?.content"></div>
                     </div>
-
-                    <!-- NOVA 对话区 -->
                     <div class="flex-1 flex flex-col bg-slate-900/20 relative">
-                        <button x-show="!showBriefing" @click="showBriefing = true" class="absolute top-4 left-4 z-10 text-[10px] bg-slate-800/80 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2 backdrop-blur-md">
-                            <span>📖</span> 查看学习资料
-                        </button>
-
+                        <button x-show="!showBriefing" @click="showBriefing = true" class="absolute top-4 left-4 z-10 text-[10px] bg-slate-800/80 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 shadow-lg flex items-center gap-2 backdrop-blur-md"><span>📖</span> 查看学习资料</button>
                         <div class="flex-1 p-6 md:p-10 overflow-y-auto space-y-6 scrollbar-hide" id="chat-container">
                             <template x-for="(msg, idx) in chatLog" :key="idx">
                                 <div class="flex flex-col" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
                                     <span class="text-[9px] font-bold text-slate-600 mb-1 tracking-widest uppercase" x-text="msg.role === 'user' ? 'Explorer' : 'NOVA 导师'"></span>
-                                    <div class="max-w-[85%] p-4 md:p-5 rounded-2xl text-sm leading-relaxed shadow-lg" 
-                                         :class="msg.role === 'user' ? 'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none' : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-tl-none backdrop-blur-sm'">
-                                        <span x-html="msg.text"></span>
-                                    </div>
+                                    <div class="max-w-[85%] p-4 md:p-5 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role === 'user' ? 'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none' : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-tl-none backdrop-blur-sm'"><span x-html="msg.text"></span></div>
                                 </div>
                             </template>
-                            <div x-show="chatLoading" class="flex items-start">
-                                <div class="bg-slate-800/50 p-4 rounded-2xl rounded-tl-none border border-slate-700 text-blue-400 text-xs font-mono animate-pulse flex items-center gap-3">
-                                    <span class="text-lg">🤖</span> NOVA 正在连接智库节点...
-                                </div>
-                            </div>
+                            <div x-show="chatLoading" class="flex items-start"><div class="bg-slate-800/50 p-4 rounded-2xl rounded-tl-none border border-slate-700 text-blue-400 text-xs font-mono animate-pulse flex items-center gap-3"><span class="text-lg">🤖</span> NOVA 正在连接智库节点...</div></div>
                         </div>
-                        
-                        <!-- 输入区 -->
                         <div class="p-6 bg-slate-950/80 border-t border-slate-800 shrink-0">
                             <div class="flex gap-3 max-w-4xl mx-auto relative">
                                 <input type="text" x-model="chatInput" @keydown.enter="sendChatMessage()" class="flex-1 input-dark px-6 py-4 rounded-2xl text-sm shadow-inner" placeholder="向 NOVA 发送你的思考..." :disabled="chatLoading">
-                                <button @click="sendChatMessage()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transition transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2" :disabled="chatLoading || !chatInput.trim()">
-                                    🚀 <span class="hidden md:inline">发送</span>
-                                </button>
+                                <button @click="sendChatMessage()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] transition transform hover:scale-105 active:scale-95 flex items-center gap-2" :disabled="chatLoading || !chatInput.trim()">🚀</button>
                             </div>
                         </div>
                     </div>
@@ -234,6 +215,7 @@
                 dbConnected: false, supaClient: null,
                 galaxies: [], activeGalaxyId: null,
                 panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
+                isWarping: true, // 初始载入屏
                 
                 activeSubject: null, activeLesson: null,
                 showBriefing: false, chatLog: [], chatInput: '', chatLoading: false,
@@ -246,23 +228,25 @@
                 async init() {
                     const url = this.config.supa.url; const key = this.config.supa.key;
                     if (url && key && window.supabase) {
-                        try { this.supaClient = window.supabase.createClient(url, key); this.dbConnected = true; await this.loadFromCloud(); } catch (e) { this.fallbackLoad(); }
+                        try { 
+                            this.supaClient = window.supabase.createClient(url, key); 
+                            this.dbConnected = true; 
+                            await this.loadFromCloud(); 
+                        } catch (e) { this.fallbackLoad(); }
                     } else { this.fallbackLoad(); }
                     window.galaxyState = this;
+                    
+                    // 数据加载完，延迟关闭缓冲屏，增加沉浸感
+                    setTimeout(() => { this.isWarping = false; }, 1200);
                 },
 
                 async loadFromCloud() {
-                    try { 
-                        const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
-                        if (!error && data?.data?.galaxies) this.applyLoadedData({ galaxies: data.data.galaxies });
-                    } catch (e) { this.fallbackLoad(); }
+                    const { data, error } = await this.supaClient.from('user_data').select('data').eq('id', 'commander_1').single();
+                    if (!error && data?.data?.galaxies) this.applyLoadedData({ galaxies: data.data.galaxies });
                 },
                 fallbackLoad() { 
                     const s = window.safeStorage.get('xp_galaxies'); 
-                    if(s) { 
-                        const p = JSON.parse(s); 
-                        if(Array.isArray(p) && p.length>0 && p[0].subjects) this.applyLoadedData({ galaxies: p }); 
-                    } 
+                    if(s) { const p = JSON.parse(s); if(Array.isArray(p)) this.applyLoadedData({ galaxies: p }); }
                 },
 
                 applyLoadedData(data) {
@@ -277,14 +261,14 @@
                     window.safeStorage.set('xp_galaxies', JSON.stringify(this.galaxies));
                 },
 
-                goHome() { window.location.href = 'index.html'; },
+                goHome() { this.isWarping = true; setTimeout(() => { window.location.href = 'index.html'; }, 500); },
                 
                 activateGalaxy(gid) { 
                     this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; this.activeSubject = null;
                 },
 
                 startPan(e) {
-                    if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || e.target.closest('.group-hover-delay') || this.activeSubject || this.activeLesson) return;
+                    if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || this.activeSubject || this.activeLesson) return;
                     this.isPanning = true;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; 
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -325,33 +309,24 @@
                     const t = this.chatInput.trim(); if(!t || this.chatLoading) return;
                     this.chatInput = ''; this.chatLog.push({role: 'user', text: t}); this.chatLoading = true;
                     this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
-                    
-                    const isEnglish = /^[A-Za-z\s]+$/.test(this.activeSubject?.title || '');
-                    const sysMsg = isEnglish ? `You are a Socratic Tutor. Guide the student based ONLY on the provided lesson plan. NEVER give direct answers. End with a thought-provoking question.` : `你是一位苏格拉底导师。请仅基于提供的教案内容引导学生。绝不直接给出答案，通过比喻和反问引导。每次回复的末尾必须抛出一个能引发深度思考的问题。`;
-                    
-                    const prompt = `【教案背景】：\n${this.activeLesson.content || '通用知识库模式'}\n\n【角色准则】：${sysMsg}\n\n【学生发言】：${t}`;
-                    
+                    const prompt = `【教案背景】：\n${this.activeLesson.content}\n\n【学生发言】：${t}`;
                     const reply = await this.callAI(prompt);
-                    if(reply) { 
-                        this.chatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); 
-                        this.activeLesson.chatLog = this.chatLog;
-                        this.sync(); 
-                        this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; }); 
-                    }
+                    if(reply) { this.chatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); this.activeLesson.chatLog = this.chatLog; this.sync(); }
                     this.chatLoading = false;
+                    this.$nextTick(() => { const el = document.getElementById('chat-container'); if(el) el.scrollTop = el.scrollHeight; });
                 }
             }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="[https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js](https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js)" defer></script>
 
-    <!-- 🚀 3D 星空渲染引擎 -->
+    <!-- 🚀 3D 星空渲染引擎 (优化：限制帧率提高切换流畅度) -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const bgCanvas = document.getElementById('bg-starfield');
             const bgCtx = bgCanvas.getContext('2d');
             let stars = [];
-            const numStars = 800;
+            const numStars = 600; // 减少粒子数提高性能
 
             function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
             window.addEventListener('resize', resizeBg); resizeBg();
@@ -361,15 +336,12 @@
             }
 
             function animateBg() {
-                bgCtx.fillStyle = '#02040a';
-                bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+                bgCtx.fillStyle = '#02040a'; bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
                 const cx = bgCanvas.width / 2; const cy = bgCanvas.height / 2;
-
                 stars.forEach(star => {
-                    star.z -= 2; 
+                    star.z -= 2.5; 
                     if (star.z <= 0) { star.z = 2000; star.x = Math.random() * 2000 - 1000; star.y = Math.random() * 2000 - 1000; }
-                    const k = 128.0 / star.z;
-                    const px = star.x * k + cx; const py = star.y * k + cy;
+                    const k = 128.0 / star.z; const px = star.x * k + cx; const py = star.y * k + cy;
                     const size = (1 - star.z / 2000) * 2;
                     if (px >= 0 && px <= bgCanvas.width && py >= 0 && py <= bgCanvas.height) {
                         bgCtx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/2000})`;
@@ -383,75 +355,43 @@
             const netCanvas = document.getElementById('network-canvas');
             const netCtx = netCanvas.getContext('2d');
             let dustNodes = [];
-            const numDust = 60; 
+            const numDust = 40; 
             let mouse = { x: -1000, y: -1000 };
 
             function resizeNet() { netCanvas.width = window.innerWidth; netCanvas.height = window.innerHeight; }
             window.addEventListener('resize', resizeNet); resizeNet();
-
             window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
             for (let i = 0; i < numDust; i++) {
-                dustNodes.push({
-                    baseAngle: Math.random() * Math.PI * 2,
-                    baseRadius: 100 + Math.random() * 800,
-                    speed: (Math.random() - 0.5) * 0.002,
-                    x: window.innerWidth / 2, y: window.innerHeight / 2,
-                    size: Math.random() * 2 + 1
-                });
+                dustNodes.push({ baseAngle: Math.random()*Math.PI*2, baseRadius: 100+Math.random()*800, speed: (Math.random()-0.5)*0.002, x: 0, y: 0, size: Math.random()*2+1 });
             }
 
             function animateNet() {
                 netCtx.clearRect(0, 0, netCanvas.width, netCanvas.height);
-                
                 const appState = window.galaxyState;
-                if (appState && appState.activeGalaxyId) {
+                if (appState && appState.activeGalaxyId && !appState.isWarping) {
                     const activeG = appState.galaxies.find(g => g.id === appState.activeGalaxyId);
                     if (!activeG) return requestAnimationFrame(animateNet);
-
-                    const cx = netCanvas.width / 2 + appState.panX;
-                    const cy = netCanvas.height / 2 + appState.panY;
-                    
-                    const planets = activeG.subjects.map(s => ({
-                        x: cx + Math.cos(s.angle) * s.radius,
-                        y: cy + Math.sin(s.angle) * s.radius,
-                        isPlanet: true
-                    }));
-                    const core = { x: cx, y: cy, isPlanet: true };
-                    
+                    const cx = netCanvas.width/2 + appState.panX; const cy = netCanvas.height/2 + appState.panY;
+                    const planets = activeG.subjects.map(s => ({ x: cx+Math.cos(s.angle)*s.radius, y: cy+Math.sin(s.angle)*s.radius, isPlanet: true }));
                     dustNodes.forEach(node => {
                         node.baseAngle += node.speed;
-                        let targetX = cx + Math.cos(node.baseAngle) * node.baseRadius;
-                        let targetY = cy + Math.sin(node.baseAngle) * node.baseRadius;
-                        const dx = mouse.x - targetX; const dy = mouse.y - targetY;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        if (dist < 250) {
-                            const force = (250 - dist) / 250;
-                            targetX += (dx / dist) * force * 120; 
-                        }
-                        node.x += (targetX - node.x) * 0.08;
-                        node.y += (targetY - node.y) * 0.08;
-                        netCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
+                        let tx = cx + Math.cos(node.baseAngle)*node.baseRadius; let ty = cy + Math.sin(node.baseAngle)*node.baseRadius;
+                        node.x += (tx - node.x) * 0.1; node.y += (ty - node.y) * 0.1;
+                        netCtx.fillStyle = 'rgba(147, 197, 253, 0.5)';
                         netCtx.beginPath(); netCtx.arc(node.x, node.y, node.size, 0, Math.PI*2); netCtx.fill();
                     });
-
-                    const allNodes = [core, ...planets, ...dustNodes];
-                    for (let i = 0; i < allNodes.length; i++) {
-                        for (let j = i + 1; j < allNodes.length; j++) {
-                            const n1 = allNodes[i]; const n2 = allNodes[j];
-                            const dx = n1.x - n2.x; const dy = n1.y - n2.y;
-                            const dist = Math.sqrt(dx*dx + dy*dy);
-                            const threshold = (n1.isPlanet && n2.isPlanet) ? 400 : 150;
-                            if (dist < threshold) {
-                                const opacity = (1 - dist / threshold) * 0.3;
-                                netCtx.beginPath();
-                                netCtx.moveTo(n1.x, n1.y);
-                                netCtx.lineTo(n2.x, n2.y);
-                                netCtx.strokeStyle = `rgba(147, 197, 253, ${opacity})`;
-                                netCtx.stroke();
+                    // 只在激活状态下绘制少量连线提高切换性能
+                    const all = [{x:cx,y:cy,isPlanet:true}, ...planets];
+                    all.forEach((n1, i) => {
+                        all.slice(i+1).forEach(n2 => {
+                            const d = Math.hypot(n1.x-n2.x, n1.y-n2.y);
+                            if(d < 400) {
+                                netCtx.beginPath(); netCtx.moveTo(n1.x, n1.y); netCtx.lineTo(n2.x, n2.y);
+                                netCtx.strokeStyle = `rgba(147,197,253,${(1-d/400)*0.1})`; netCtx.stroke();
                             }
-                        }
-                    }
+                        });
+                    });
                 }
                 requestAnimationFrame(animateNet);
             }

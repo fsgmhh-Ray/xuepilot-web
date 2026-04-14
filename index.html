@@ -19,6 +19,11 @@
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
 
+        /* 🚀 跃迁载入屏样式 (同步自学生端) */
+        .warp-overlay { position: fixed; inset: 0; z-index: 100; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
+        .warp-spinner { width: 50px; height: 50px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* 3D 翻牌特效 */
         .flip-card { background-color: transparent; perspective: 1000px; height: 180px; }
         .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
@@ -42,7 +47,14 @@
         };
     </script>
 </head>
-<body x-data="portalApp()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+<body x-data="portalApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+
+    <!-- 🚀 门户加载/跃迁缓冲层 -->
+    <div x-show="isWarping" x-transition.opacity.duration.500ms class="warp-overlay">
+        <div class="warp-spinner mb-6"></div>
+        <div class="text-blue-400 font-mono tracking-[0.4em] animate-pulse text-[10px] uppercase">Connecting to Matrix...</div>
+    </div>
+
     <div class="space-bg"></div><div class="grid-bg"></div>
 
     <aside class="flex flex-col glass-panel border-r border-slate-800/50 w-[19rem] z-30 shrink-0 shadow-2xl relative">
@@ -60,7 +72,7 @@
         <div class="flex-1 py-8 px-4 space-y-4 overflow-y-auto">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2" x-text="dict.coreMod"></div>
             
-            <!-- 🚀 C端：学生探索舱 (高亮显示，占据 C 位) -->
+            <!-- 🚀 C端：学生探索舱 -->
             <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-4 py-5 rounded-2xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/50 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform">
                 <div class="flex items-center"><span class="text-3xl mr-4 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">👨‍🚀</span> <span class="font-black text-lg text-emerald-50" x-text="dict.explorer"></span></div>
             </a>
@@ -76,9 +88,7 @@
             </a>
         </div>
 
-        <!-- 🚀 B端：低调的家长与系统入口 -->
         <div class="p-4 border-t border-slate-800/50 bg-slate-900/20 flex flex-col gap-2">
-            <!-- 家长主控中枢路由 (低调隐藏) -->
             <button @click.prevent="goTo('dashboard.html', true)" class="w-full py-2.5 hover:bg-slate-800/60 rounded-xl text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-2 border border-transparent hover:border-slate-700">
                 <span>🎛️</span> <span x-text="dict.commander"></span>
                 <span x-show="!isPro" class="text-[8px] font-black border border-amber-500/50 text-amber-500 px-1 rounded opacity-50">PRO</span>
@@ -95,7 +105,6 @@
             <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
             <p class="text-slate-400 text-sm leading-relaxed mb-10" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
             
-            <!-- 3D 翻牌矩阵：全球教育资源 -->
             <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left mb-4 fade-in">
                 <template x-for="tool in toolsList" :key="tool.id">
                     <div class="flip-card cursor-pointer group" @click="window.open(tool.link, '_blank')">
@@ -123,12 +132,11 @@
             </div>
         </div>
 
-        <!-- 🎛️ 引擎配置面板 -->
+        <!-- 引擎配置面板 -->
         <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
              <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
                  <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
                  <div class="space-y-5">
-                     <!-- 引擎 A -->
                      <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20 relative">
                          <div class="flex justify-between items-center mb-3">
                              <div class="font-bold text-blue-400 text-sm tracking-widest uppercase">🌌 Main Planning Core (排课引擎)</div>
@@ -142,21 +150,19 @@
                              </div>
                          </div>
                      </div>
-                     <!-- 引擎 B -->
                      <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
                          <div class="flex justify-between items-center mb-3">
                              <div class="font-bold text-indigo-400 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (伴读导师)</div>
                              <button @click="testNode('nova')" class="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded-md transition shadow-md text-white">Test Connection</button>
                          </div>
                          <div class="space-y-3">
-                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
+                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
                              <div class="grid grid-cols-2 gap-3">
                                  <input type="text" x-model="config.nova.url" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
                                  <input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
                              </div>
                          </div>
                      </div>
-                     <!-- Supabase 云端数据库 -->
                      <div class="bg-emerald-900/10 p-5 rounded-2xl border border-emerald-500/20">
                          <div class="font-bold text-emerald-400 mb-3 text-sm tracking-widest uppercase">🗄️ Supabase Cloud Storage</div>
                          <div class="grid grid-cols-2 gap-3">
@@ -190,7 +196,8 @@
                 lang: window.safeStorage.get('xp_lang') || 'zh',
                 isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
                 view: 'welcome', modals: { upgrade: false, settings: false },
-                
+                isWarping: true, // 🚀 页面初始化加载状态
+
                 config: {
                     sys: { key: window.safeStorage.get('xp_sys_key')||'', url: window.safeStorage.get('xp_sys_url')||'/proxy/groq', model: window.safeStorage.get('xp_sys_model')||'llama-3.3-70b-versatile' },
                     nova: { key: window.safeStorage.get('xp_nova_key')||'', url: window.safeStorage.get('xp_nova_url')||'/proxy/nvidia', model: window.safeStorage.get('xp_nova_model')||'google/gemma-4-31b-it' },
@@ -203,7 +210,7 @@
                 ],
                 i18n: {
                     zh: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
+                        brand: 'XuePilot', ver: 'Blueprint V7.3', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
                         commander: '家长/教师主控后台', explorer: '进入学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
                         welcome: '欢迎登舰', welcomeDesc: '准备好开启全新的知识宇宙探索之旅。',
                         tools: '全球教育资源矩阵', toolsDesc: '精选全球顶尖免费教育资源网站。',
@@ -211,7 +218,7 @@
                         upgTitle: '获取领航员通行证', upgDesc: '解锁双端物理隔离舱室、云端教研资产同步与学情分析雷达。', upgBtn: '获取 PRO 权限', upgHint: '请先升级以解锁核心教育引擎。'
                     },
                     en: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.1', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
+                        brand: 'XuePilot', ver: 'Blueprint V7.3', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
                         commander: 'Parent / Teacher Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
                         welcome: 'Welcome Aboard', welcomeDesc: 'Get ready to explore the new knowledge universe.',
                         tools: 'Global Matrix', toolsDesc: 'Curated world-class free educational resources.',
@@ -221,8 +228,20 @@
                 },
                 get dict() { return this.i18n[this.lang]; },
                 
+                init() {
+                    // 🚀 模拟数据就绪，消除初始化白屏
+                    setTimeout(() => { this.isWarping = false; }, 800);
+                },
+
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; window.safeStorage.set('xp_lang', this.lang); },
-                goTo(url, requiresPro) { if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; } window.location.href = url; },
+                
+                // 🚀 增强版跳转逻辑：在跳转前显示“曲率启动”动画
+                goTo(url, requiresPro) { 
+                    if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; } 
+                    this.isWarping = true;
+                    setTimeout(() => { window.location.href = url; }, 400); 
+                },
+
                 executeUpgrade() { this.isPro = true; window.safeStorage.set('xp_is_pro', 'true'); this.modals.upgrade = false; },
                 
                 async testNode(type) {

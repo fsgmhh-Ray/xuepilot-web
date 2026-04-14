@@ -106,12 +106,13 @@
 
                         <!-- 星系核心恒星 -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
+                            <!-- 🚀 修复：智能点击路由，如果是远方星系点击核心也执行激活 -->
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer shadow-2xl"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
-                                 @click.stop="if(g.id === activeGalaxyId) activateGalaxy(null)">
+                                 @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
                                 <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
                                 <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
-                                <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg">退回深空 🌌</div>
+                                <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg">退回全景 🌌</div>
                             </div>
                         </div>
 
@@ -264,7 +265,6 @@
                     } 
                 },
 
-                // 🚀 数据加载完毕后，自动激活第一个星系
                 applyLoadedData(data) {
                     if (data.galaxies) this.galaxies = data.galaxies;
                     if (this.galaxies.length > 0 && !this.activeGalaxyId) {
@@ -283,7 +283,6 @@
                     this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; this.activeSubject = null;
                 },
 
-                // 🚀 核心：真正的独立平移逻辑
                 startPan(e) {
                     if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || e.target.closest('.group-hover-delay') || this.activeSubject || this.activeLesson) return;
                     this.isPanning = true;

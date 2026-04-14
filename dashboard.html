@@ -685,7 +685,8 @@
                     this.editingSubject.isFetchingSchedule = true;
                     this.galaxies = [...this.galaxies];
 
-                    const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
+                    // 💡 修复语种判断：读取父级星系 region，同时兼容学科名为"英语"的情况
+                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
                     const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
                     let ragPrompt = hasCustomRag ? `\n【RAG 锚定验证】：仅在确认找到官方进度后，结合此大纲原文调整格式：\n"""\n${this.editingSubject.referenceText.substring(0,500)}...\n"""\n` : '';
                     
@@ -700,7 +701,17 @@
                         await new Promise(r => setTimeout(r, 600)); 
                     } else {
                         // 2 & 3 & 4. 严格回退逻辑抓取排课
-                        const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
+                        const prompt = targetLang === 'English'
+                            ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
+As a global education data retrieval expert, search for the official "Scope and Sequence / Pacing Guide" for "${this.editingSubject.title}" under the [${this.editingGalaxy.title}] framework.
+[Mandatory Order]:
+1. Fetch the exact official school/district pacing guide.
+2. If unavailable, use the closest equivalent national standard pacing guide.
+3. If completely unavailable, output ONLY an empty array []. DO NOT hallucinate or invent!
+[Minimal JSON Format to prevent timeout]:
+[{"title": "Unit Name", "lessons": ["Lesson 1 Name", "Lesson 2 Name"]}]
+${hasCustomRag ? '\n[RAG Grounding Validation]: Format based on this syllabus text:\n"""\n' + this.editingSubject.referenceText.substring(0,500) + '...\n"""\n' : ''}`
+                            : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
 作为全球教育数据检索专家，请搜索【${this.editingGalaxy.title}】体系下《${this.editingSubject.title}》的真实【学期教学进度表 (Scope and Sequence / Pacing Guide)】。
 【强制执行顺序】：
 1. 优先精准获取该体系真实的学校/教育局公开排课进度。
@@ -709,6 +720,7 @@
 【防熔断极简JSON格式】：
 [{"title": "单元名", "lessons": ["课时1名称", "课时2名称"]}]
 ${ragPrompt}`;
+
                         const res = await this.callAI(prompt);
                         if (res) {
                             try { 
@@ -742,7 +754,8 @@ ${ragPrompt}`;
                     this.editingSubject.isGeneratingSchedule = true;
                     this.galaxies = [...this.galaxies];
 
-                    const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
+                    // 💡 修复语种判断
+                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
                     const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
                     let ragPrompt = hasCustomRag ? `\n【RAG 锚定投喂】：仅依据以下大纲原文进行拆解，严禁偏离：\n"""\n${this.editingSubject.referenceText}\n"""\n` : '';
                     
@@ -755,7 +768,18 @@ ${ragPrompt}`;
                         isFromCache = true; 
                         await new Promise(r => setTimeout(r, 600)); 
                     } else {
-                        const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
+                        const prompt = targetLang === 'English'
+                            ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
+Due to lack of specific regional data, act as a top curriculum expert and strictly plan a professional semester schedule for "${this.editingSubject.title}".
+[Dynamic Lesson Density]: Generate 40-60 core lessons for major subjects, or 15-30 for comprehensive/elective subjects.
+[Anti-Timeout Compression]: To prevent truncation, the JSON structure MUST be extremely minimal! The "lessons" array MUST contain ONLY strings, NOT nested objects! Limit lesson names to 10 words.
+${hasCustomRag ? '\n[RAG Grounding]: Break down strictly based on this syllabus text:\n"""\n' + this.editingSubject.referenceText + '\n"""\n' : ''}
+Required JSON format:
+[
+  {"title": "Unit 1 Name", "lessons": ["Lesson 1 Name", "Lesson 2 Name"]},
+  {"title": "Unit 2 Name", "lessons": ["Lesson 3 Name", "Lesson 4 Name"]}
+]`
+                            : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
 由于缺乏特定地区的官方现成排课数据，请你作为顶尖教育专家，严格为《${this.editingSubject.title}》规划一份极其专业的学期计划。
 【动态课时密度】：主课生成 40-60 节核心课时，综合课生成 15-30 节。
 【极致压缩Token防熔断】：为极大提升生成速度并防止输出被截断，JSON结构必须极简！lessons 数组中只需包含纯字符串，绝对不要嵌套对象！课时名称限10字内。${ragPrompt}
@@ -764,6 +788,7 @@ ${ragPrompt}`;
   {"title": "第一单元名", "lessons": ["课时1名称", "课时2名称"]},
   {"title": "第二单元名", "lessons": ["课时3名称", "课时4名称"]}
 ]`;
+
                         const res = await this.callAI(prompt);
                         if (res) {
                             try { 
@@ -810,10 +835,21 @@ ${ragPrompt}`;
                 
                 async generatePlan() {
                     this.loading = true;
-                    const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
+                    // 💡 修复语种判断
+                    const targetLang = (this.editingGalaxy.region === 'INTL' || /english|英语/i.test(this.editingSubject.title)) ? 'English' : 'Chinese';
                     let ragPrompt = (this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '') ? `\n【RAG 锚定】：参考大纲要求：\n"""\n${this.editingSubject.referenceText.substring(0, 1000)}\n"""\n` : '';
                     
-                    const res = await this.callAI(`[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n为"${this.curLesson.title}"创建互动式教案。仅输出纯 HTML (h3, ul, p)。结尾用3个引导反问句。${ragPrompt}`);
+                    // 💡 动态 Prompt 引擎：纯外语指令防干扰
+                    const prompt = targetLang === 'English'
+                        ? `[FATAL CONSTRAINT]: Output STRICTLY in English.
+Create an interactive Socratic lesson plan for the topic: "${this.curLesson.title}".
+Format Requirement: Output ONLY raw HTML tags (h3, ul, p) without any markdown wrappers. 
+Content Requirement: End the lesson plan with 3 thought-provoking Socratic questions to guide student thinking.
+${this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '' ? '[RAG Grounding]: Please refer to the syllabus requirements:\n"""\n' + this.editingSubject.referenceText.substring(0, 1000) + '\n"""\n' : ''}`
+                        : `[FATAL CONSTRAINT]: Output STRICTLY in Chinese.
+为"${this.curLesson.title}"创建互动式教案。仅输出纯 HTML (h3, ul, p)。结尾用3个引导反问句。${ragPrompt}`;
+                    
+                    const res = await this.callAI(prompt);
                     if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
                     this.loading = false;
                 },

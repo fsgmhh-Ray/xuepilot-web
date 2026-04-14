@@ -22,7 +22,7 @@
         .nav-icon { width: 2.5rem; display: inline-flex; align-items: center; justify-content: flex-start; font-size: 1.25rem; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.2)); flex-shrink: 0; }
         
         /* 🚀 3D 星体特效 (无黑框物理渲染) */
-        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; position: relative; }
+        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; position: relative; transition: transform 0.3s ease; }
         
         .planet-3d {
             background: radial-gradient(circle at 35% 35%, rgba(147, 197, 253, 1) 0%, rgba(37, 99, 235, 0.8) 45%, rgba(2, 6, 23, 0.95) 100%);
@@ -44,6 +44,7 @@
             from { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 30px rgba(245, 158, 11, 0.5), 0 0 60px rgba(147, 51, 234, 0.4); transform: scale(1); }
             to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.9), 0 0 60px rgba(245, 158, 11, 0.9), 0 0 120px rgba(147, 51, 234, 0.8); transform: scale(1.05); }
         }
+        .planet-core:hover { transform: scale(1.15) !important; animation-play-state: paused; z-index: 50; }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         
@@ -55,6 +56,9 @@
         
         .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
         .no-select { user-select: none; -webkit-user-select: none; }
+        
+        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
+        .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
         
         /* 画布层级 */
         #bg-starfield { position: fixed; inset: 0; z-index: -3; pointer-events: none; background: #02040a; }
@@ -146,18 +150,18 @@
             </div>
 
             <!-- 🚀 星系容器：利用绝对定位渲染每一颗星系 -->
-            <div class="absolute w-full h-full pointer-events-none">
+            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点 (处理位置系切换与平移) -->
+                    <!-- 🚀 独立星系根节点 -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px); z-index: 20; opacity: 1;` 
-                                 : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0, 0); z-index: 10; opacity: 0.6; cursor: pointer;`"
+                                 ? `left: 50%; top: 50%; transform: scale(1); z-index: 20; opacity: 1;` 
+                                 : `left: ${g.bgX}%; top: ${g.bgY}%; transform: scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
-                        <!-- 🚀 远距离探测雷达 (永远 100% 原生尺寸，不受星系缩放影响) -->
+                        <!-- 🚀 远距离探测雷达 -->
                         <div x-show="g.id !== activeGalaxyId" class="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 whitespace-nowrap flex flex-col items-center">
                             <span class="bg-slate-900/95 text-amber-300 px-5 py-2 rounded-2xl border border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.6)] text-lg font-black tracking-widest uppercase flex items-center gap-2">
                                 <span class="text-2xl animate-pulse">🔥</span> <span x-text="g.title"></span>
@@ -165,15 +169,14 @@
                             <div class="w-1 h-6 bg-gradient-to-b from-amber-500/50 to-transparent mt-1"></div>
                         </div>
 
-                        <!-- 🚀 星系缩放微雕层 (控制星系内部星球的整体大小) -->
-                        <div class="relative flex items-center justify-center w-0 h-0 transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                             :style="g.id === activeGalaxyId ? 'transform: scale(1);' : 'transform: scale(0.12);'">
+                        <!-- 🚀 星系内部轨道系 -->
+                        <div class="relative flex items-center justify-center w-0 h-0">
                             
                             <!-- 隐形引力结界 -->
                             <div x-show="g.id === activeGalaxyId" class="absolute rounded-full border-2 border-dashed border-blue-500/20 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]"
                                  style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);"></div>
 
-                            <!-- 轨道环 (仅激活状态显示) -->
+                            <!-- 轨道环 -->
                             <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
                                 <template x-for="r in [240, 380, 520, 660]"><div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div></template>
                             </div>
@@ -185,17 +188,20 @@
                                 </template>
                             </svg>
 
-                            <!-- 星系核心恒星 (高温火焰光芒) -->
+                            <!-- 🚀 星系核心恒星 (点击打开编辑器) -->
                             <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                                 <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
-                                     :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'">
+                                     :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
+                                     @click.stop="if(g.id === activeGalaxyId) openCurriculumEditor(g)">
                                     <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
                                     <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
+                                    <!-- 编辑提示 Badge -->
+                                    <div x-show="g.id === activeGalaxyId" class="mt-2 text-[8px] text-purple-300 bg-purple-900/60 uppercase tracking-widest px-2 py-0.5 border border-purple-500/50 rounded-full shadow-lg" x-text="dict.editBtnText || 'EDIT'"></div>
                                 </div>
                                 
                                 <!-- 悬停延迟控制台 (Delay 400ms) -->
                                 <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
-                                    <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="编辑大纲">✏️</button>
+                                    <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="重命名星系">✏️</button>
                                     <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
                                 </div>
                             </div>
@@ -330,7 +336,7 @@
             </div>
         </div>
 
-        <!-- 🚀 排课弹窗 -->
+        <!-- 🚀 弹窗：全球智能排课系统 -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
@@ -369,6 +375,37 @@
             </div>
         </div>
 
+        <!-- 🚀 弹窗：大纲学科编辑器 -->
+        <div x-show="modals.editCurriculum" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
+            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.3)] fade-in max-h-[90vh] flex flex-col">
+                <button @click="modals.editCurriculum = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
+                <div class="text-center mb-8">
+                    <div class="text-5xl mb-4">⚙️</div>
+                    <h2 class="text-2xl font-black text-blue-400 uppercase tracking-widest" x-text="dict.editCurriculumTitle"></h2>
+                    <p class="text-slate-400 text-xs mt-2" x-text="editingCurriculum?.title"></p>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+                    <template x-for="(subj, idx) in editingCurriculum?.subjects" :key="idx">
+                        <div class="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                            <input type="text" x-model="subj.icon" class="w-16 input-dark p-3 rounded-lg text-center text-xl" placeholder="图标">
+                            <input type="text" x-model="subj.title" class="flex-1 input-dark p-3 rounded-lg text-sm" placeholder="学科名称">
+                            <button @click="removeSubject(idx)" class="text-rose-500 hover:text-rose-400 p-2 text-xl transition" title="删除学科">🗑️</button>
+                        </div>
+                    </template>
+                    <button @click="addSubject()" class="w-full py-4 border-2 border-dashed border-slate-700 rounded-xl text-xs text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition font-bold mt-4">
+                        + 添加新学科节点
+                    </button>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-slate-800 flex gap-4 shrink-0">
+                    <button @click="saveCurriculum()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg transition text-white text-sm tracking-widest">
+                        💾 保存大纲重组配置
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Alpine.js 业务逻辑 -->
@@ -377,14 +414,15 @@
             return {
                 lang: window.safeStorage.get('xp_lang') || 'zh', 
                 isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
-                view: 'galaxy', loading: false, modals: { planner: false },
+                view: 'galaxy', loading: false, modals: { planner: false, editCurriculum: false },
                 
-                // 🚀 多重宇宙状态架构 & 平移坐标
+                // 多重宇宙状态架构
                 galaxies: [], activeGalaxyId: null,
                 panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
                 
                 planMode: 'standard', planConfig: { curriculum: '', grade: '', term: '' }, customTheme: '',
                 editingSubject: null, curLesson: null,
+                editingCurriculum: null, // 新增大纲编辑态
                 books: [ 
                     { id: 'b1', title: 'The Little Prince', lang: 'en', progress: 45, accuracy: 88, content: 'Once when I was six years old...', chatLog: [] }
                 ],
@@ -392,8 +430,8 @@
                 supaClient: null, dbConnected: false,
 
                 i18n: {
-                    zh: { brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承', emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎', curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'], backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨...' },
-                    en: { brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage', emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine', curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'], backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore...' }
+                    zh: { brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承', emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎', curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'], backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨...', editCurriculumTitle: '重组星系大纲', editBtnText: '点击编辑大纲' },
+                    en: { brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage', emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine', curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'], backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore...', editCurriculumTitle: 'Restructure Curriculum', editBtnText: 'EDIT CURRICULUM' }
                 },
                 get dict() { return this.i18n[this.lang]; },
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
@@ -445,7 +483,7 @@
                     this.panX = 0; this.panY = 0;
                 },
 
-                // 🚀 修复拖拽联动：拖拽时只改变 activeGalaxy 的相对 panX/Y 坐标
+                // 全局引力拖拽引擎
                 startPan(e) {
                     if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d')) return;
                     this.isPanning = true;
@@ -507,7 +545,6 @@
                         try {
                             const parsed = JSON.parse(this.extractJSONArray(res));
                             
-                            // 🚀 修复双语翻译：准确提取该国家的简写
                             let gradeStr = this.planConfig.grade;
                             const toEnMap = {'一年级':'Grade 1', '二年级':'Grade 2', '三年级':'Grade 3', '四年级':'Grade 4', '五年级':'Grade 5', '六年级':'Grade 6'};
                             const toZhMap = {'Grade 1':'一年级', 'Grade 2':'二年级', 'Grade 3':'三年级', 'Grade 4':'四年级', 'Grade 5':'五年级', 'Grade 6':'六年级'};
@@ -515,14 +552,14 @@
                             else gradeStr = toZhMap[gradeStr] || gradeStr;
                             
                             let currPrefix = this.planConfig.curriculum.split(' ')[0]; 
-                            if (currPrefix === 'UK') currPrefix = 'GB'; // 严格对应您的需求
+                            if (currPrefix === 'UK') currPrefix = 'GB'; 
                             else if (!isIntl) currPrefix = '中国课标';
 
                             const newGalaxy = {
                                 id: `gal_${Date.now()}`,
                                 title: this.planMode === 'standard' ? `${gradeStr} ${currPrefix}` : this.customTheme,
                                 region: isIntl ? 'INTL' : 'CN',
-                                bgX: 10 + (Math.random() * 80), // 散布在 10% - 90% 空间
+                                bgX: 10 + (Math.random() * 80), 
                                 bgY: 10 + (Math.random() * 80),
                                 subjects: parsed.map((s,i) => {
                                     let orbitIndex = Math.floor(i / 5); 
@@ -533,11 +570,48 @@
                             };
                             this.galaxies.push(newGalaxy); 
                             this.activeGalaxyId = newGalaxy.id; 
-                            this.panX = 0; this.panY = 0; // 重置居中
+                            this.panX = 0; this.panY = 0; 
                             await this.sync(); this.modals.planner = false;
                         } catch(e) { Swal.fire('Error', 'AI format error', 'error'); }
                     }
                     this.loading = false;
+                },
+
+                // 🚀 大纲重组引擎
+                openCurriculumEditor(galaxy) {
+                    this.editingCurriculum = JSON.parse(JSON.stringify(galaxy));
+                    this.modals.editCurriculum = true;
+                },
+                addSubject() {
+                    if(!this.editingCurriculum) return;
+                    this.editingCurriculum.subjects.push({
+                        id: `sub_${Date.now()}_${this.editingCurriculum.subjects.length}`,
+                        title: this.lang === 'en' ? 'New Subject' : '新学科',
+                        icon: '🌟', radius: 0, angle: 0, units: []
+                    });
+                },
+                removeSubject(index) {
+                    if(!this.editingCurriculum) return;
+                    this.editingCurriculum.subjects.splice(index, 1);
+                },
+                saveCurriculum() {
+                    if(!this.editingCurriculum) return;
+                    
+                    // 重新分配物理紧凑型轨道
+                    this.editingCurriculum.subjects.forEach((s, i) => {
+                        let orbitIndex = Math.floor(i / 5); 
+                        let r = 240 + orbitIndex * 140; 
+                        let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
+                        s.radius = r; s.angle = angle;
+                    });
+
+                    const gIdx = this.galaxies.findIndex(g => g.id === this.editingCurriculum.id);
+                    if(gIdx !== -1) {
+                        this.galaxies[gIdx].subjects = this.editingCurriculum.subjects;
+                        this.sync();
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang === 'en' ? 'Curriculum Saved' : '大纲已更新', showConfirmButton: false, timer: 1500 });
+                    }
+                    this.modals.editCurriculum = false;
                 },
 
                 editGalaxy(g) {

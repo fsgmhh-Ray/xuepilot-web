@@ -52,7 +52,7 @@
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心管理 (Core)</div>
             <button @click="view = 'forge'" class="btn-nav-class" :class="view==='forge'?'bg-blue-600/20 text-blue-400 border-blue-500/30':'text-slate-400'">
-                <span class="mr-3 text-xl">🪐</span> 教研资产锻造厂
+                <span class="mr-3 text-xl">🪐</span> 课程规划中心
             </button>
             <button @click="view = 'radar'" class="btn-nav-class" :class="view==='radar'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-400'">
                 <span class="mr-3 text-xl">📡</span> 学情分析雷达
@@ -61,7 +61,7 @@
             <div class="h-px bg-slate-800/50 my-4 mx-2"></div>
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2">系统 (System)</div>
             <button @click="view = 'config'" class="btn-nav-class" :class="view==='config'?'bg-purple-600/20 text-purple-400 border-purple-500/30':'text-slate-400'">
-                <span class="mr-3 text-xl">⚙️</span> 全局算力与数据库
+                <span class="mr-3 text-xl">⚙️</span> 引擎算力与云存储
             </button>
             <button @click="goHome()" class="btn-nav-class text-slate-400 hover:text-white mt-4 bg-slate-800/50 border-slate-700">
                 <span class="mr-3 text-xl">⬅</span> 返回入口大厅
@@ -79,15 +79,15 @@
         <!-- 动态网格背景 -->
         <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-        <!-- ================= 视图 A：教研锻造厂 (Curriculum Forge) ================= -->
+        <!-- ================= 视图 A：教研锻造厂 (Curriculum Forge) 改为 课程规划中心 ================= -->
         <div x-show="view === 'forge'" x-transition class="flex-1 flex flex-col p-8 z-10 overflow-hidden fade-in">
             <div class="flex justify-between items-end mb-8 shrink-0">
                 <div>
-                    <h2 class="text-3xl font-black text-white mb-2">教研资产锻造厂 (Curriculum Forge)</h2>
-                    <p class="text-slate-400 text-sm">管理并编排孩子的多元宇宙星系。配置完成后，孩子将在探索舱中看到它们。</p>
+                    <h2 class="text-3xl font-black text-white mb-2">课程规划中心</h2>
+                    <p class="text-slate-400 text-sm">为孩子定制专属的知识星系与学习路径。配置上线后，孩子即可在探索舱中开启学习任务。</p>
                 </div>
                 <button @click="modals.planner = true" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition flex items-center gap-2">
-                    <span class="text-lg">✨</span> 缔造新星系
+                    <span class="text-lg">✨</span> 规划新课程体系
                 </button>
             </div>
 
@@ -103,18 +103,18 @@
                                 <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-800/50" x-text="g.baseStandard"></span>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-400 line-clamp-2 mb-4 flex-1" x-text="g.overview || '暂无全局大纲概述'"></p>
+                        <p class="text-xs text-slate-400 line-clamp-2 mb-4 flex-1" x-text="g.overview || '暂无全局目标概述'"></p>
                         <div class="flex gap-2 mb-6">
                             <span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded" x-text="`包含 ${g.subjects.length} 个核心学科`"></span>
                         </div>
                         <button @click="openGalaxyEditor(g)" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition border border-slate-700 hover:border-blue-500 shadow-md">
-                            ⚙️ 配置星系大纲与排课
+                            ⚙️ 配置课程大纲与排课
                         </button>
                     </div>
                 </template>
                 <div x-show="galaxies.length === 0" class="col-span-full py-20 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-3xl">
                     <div class="text-6xl mb-4 opacity-50">🌌</div>
-                    <p>尚未建立任何星系，点击右上角缔造孩子的第一个知识宇宙。</p>
+                    <p>尚未建立任何学习体系，点击右上角为孩子规划第一个知识宇宙。</p>
                 </div>
             </div>
 
@@ -123,25 +123,25 @@
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 shrink-0">
                     <div class="flex items-center gap-4">
                         <button @click="editingGalaxy = null" class="text-slate-400 hover:text-white text-2xl transition">⬅</button>
-                        <h3 class="text-xl font-bold text-blue-300" x-text="`编辑星系：${editingGalaxy?.title}`"></h3>
+                        <h3 class="text-xl font-bold text-blue-300" x-text="`管理体系：${editingGalaxy?.title}`"></h3>
                     </div>
-                    <button @click="saveGalaxyMetadata()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-md transition">💾 保存全局元数据</button>
+                    <button @click="saveGalaxyMetadata()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-md transition">💾 保存体系设置</button>
                 </div>
                 <div class="p-6 flex-1 overflow-y-auto space-y-6">
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">全局目标概述 (Overview)</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">课程总目标 (Overview)</label>
                             <textarea x-model="editingGalaxy?.overview" class="w-full input-dark p-4 rounded-xl text-sm h-24 resize-none"></textarea>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">核心素养指标 (Competencies，逗号分隔)</label>
+                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">核心培养能力 (Competencies，以逗号分隔)</label>
                             <input type="text" :value="editingGalaxy?.competencies?.join(', ')" @input="editingGalaxy.competencies = $event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" class="w-full input-dark p-4 rounded-xl text-sm text-emerald-400 font-bold">
                         </div>
                     </div>
                     <div class="h-px bg-slate-800 w-full"></div>
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest">🪐 学科阵列 (Subjects & RAG Grounding)</label>
+                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest">🪐 学科设置与官方大纲绑定</label>
                             <button @click="addSubject()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 transition">+ 新增学科</button>
                         </div>
                         <div class="space-y-4">
@@ -152,15 +152,22 @@
                                         <input type="text" x-model="subj.icon" class="w-14 input-dark p-3 rounded-xl text-center text-2xl shadow-inner" title="Emoji">
                                         <input type="text" x-model="subj.title" class="flex-1 input-dark p-3 rounded-xl text-sm font-bold shadow-inner" placeholder="学科名称 (如: 四年级数学)">
                                         <button @click="openSubjectPlanner(subj)" class="px-6 py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-xl text-xs font-bold transition shadow-sm">
-                                            进入该学科排课室 ➔
+                                            进入该科排课室 ➔
                                         </button>
                                     </div>
                                     <div x-data="{ exp: false }">
                                         <button @click="exp = !exp" class="w-full text-left text-[10px] font-mono text-slate-500 hover:text-emerald-400 transition bg-slate-900 px-4 py-2.5 rounded-lg border border-slate-800 flex justify-between">
-                                            <span>📄 注入真实大纲原件 (RAG 防幻觉投喂锚点)</span><span x-text="exp ? '▲' : '▼'"></span>
+                                            <span>📄 注入 / 智能获取官方教学大纲</span><span x-text="exp ? '▲' : '▼'"></span>
                                         </button>
-                                        <div x-show="exp" class="mt-2">
-                                            <textarea x-model="subj.referenceText" class="w-full input-dark p-4 rounded-xl text-xs h-32 resize-none font-mono text-slate-400" placeholder="在此粘贴该科目在现实中的官方大纲全文、进度表或大学 Syllabus。一旦投喂，该科目的 AI 拆解将被死死锚定在此文本内，杜绝一切幻觉。"></textarea>
+                                        <div x-show="exp" class="mt-2 relative">
+                                            <!-- 🤖 智能抓取/匹配大纲回退按钮 -->
+                                            <div class="flex justify-end mb-2 mt-2">
+                                                <button @click="fetchSyllabusText(subj)" class="text-xs bg-indigo-600/60 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 shadow-md border border-indigo-400/50" :disabled="subj.isFetching">
+                                                    <span x-show="subj.isFetching" class="animate-spin text-lg">↻</span>
+                                                    <span x-text="subj.isFetching ? '正在检索全球大纲库...' : '🤖 AI 智能抓取/参照匹配大纲'"></span>
+                                                </button>
+                                            </div>
+                                            <textarea x-model="subj.referenceText" class="w-full input-dark p-4 rounded-xl text-xs h-32 resize-none font-mono text-slate-400" placeholder="您可以手动在此粘贴该科目的官方教学大纲全文。若留空或点击上方按钮，AI 将优先为您抓取官方大纲；若找不到，则会自动为您匹配教育水平相似的国家标准作为排课基准。"></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -182,7 +189,7 @@
                     <!-- 左侧：单元与课时树 -->
                     <div class="w-80 border-r border-slate-800 p-4 flex flex-col bg-black/20 shrink-0">
                         <button @click="generateUnits()" class="w-full mb-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-2" :disabled="loading">
-                            <span x-show="loading" class="animate-spin">↻</span> ✨ 智能拆解学期排课
+                            <span x-show="loading" class="animate-spin">↻</span> ✨ 根据大纲智能排课
                         </button>
                         <div class="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-hide">
                             <template x-for="unit in editingSubject?.units" :key="unit.id">
@@ -203,14 +210,14 @@
                     <!-- 右侧：苏格拉底教案编辑器 -->
                     <div class="flex-1 p-6 flex flex-col bg-slate-900/30 relative">
                         <template x-if="!curLesson">
-                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50"><div class="text-6xl mb-4">✍️</div><p class="text-sm font-bold tracking-widest">请在左侧选择具体课时</p></div>
+                            <div class="flex-1 flex flex-col items-center justify-center text-slate-600 opacity-50"><div class="text-6xl mb-4">✍️</div><p class="text-sm font-bold tracking-widest">请在左侧选择具体课时以编写教案</p></div>
                         </template>
                         <template x-if="curLesson">
                             <div class="flex flex-col h-full fade-in">
                                 <div class="flex justify-between items-center mb-4 shrink-0 bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/20">
                                     <input x-model="curLesson.title" class="bg-transparent text-xl font-black border-none outline-none text-white flex-1 mr-4 transition">
                                     <button @click="generatePlan()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-md transition flex items-center gap-2" :disabled="loading">
-                                        <span x-show="loading" class="animate-spin text-sm">↻</span> ✨ AI 生成苏格拉底教案
+                                        <span x-show="loading" class="animate-spin text-sm">↻</span> ✨ AI 生成启发式教案
                                     </button>
                                 </div>
                                 <div id="toolbar-container" class="shrink-0 mb-2 flex flex-wrap gap-2">
@@ -231,7 +238,7 @@
         <div x-show="view === 'radar'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
             <div class="mb-8 shrink-0">
                 <h2 class="text-3xl font-black text-white mb-2 flex items-center gap-3">📡 全息学情雷达</h2>
-                <p class="text-slate-400 text-sm">实时监控孩子在探索舱中与 NOVA 导师交互的数据沉淀。（演示面板）</p>
+                <p class="text-slate-400 text-sm">实时监控孩子在探索舱中与 AI 导师交互产生的能力评估数据。（演示面板）</p>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -273,7 +280,7 @@
                         <h3 class="font-bold text-rose-400 mb-4 flex items-center gap-2"><span>⚠️</span> 思维断层智能预警</h3>
                         <div class="bg-rose-900/20 border border-rose-800/50 p-4 rounded-xl text-sm text-rose-200">
                             <p class="font-bold mb-1">《四年级科学：浮力与密度》 - 课时 2.1</p>
-                            <p class="opacity-80 leading-relaxed">系统检测到孩子在此环节连续 3 次未能回答出 NOVA 导师关于“体积变化”的苏格拉底提问。大模型判断其缺乏直观的“密度”概念锚点。建议本周末在家进行“盐水浮鸡蛋”的物理实验干预。</p>
+                            <p class="opacity-80 leading-relaxed">系统检测到孩子在此环节连续 3 次未能回答出导师关于“体积变化”的启发提问。AI 判断其缺乏直观的“密度”概念。建议本周末在家进行“盐水浮鸡蛋”的家庭实验进行干预。</p>
                         </div>
                     </div>
                     
@@ -295,8 +302,8 @@
         <div x-show="view === 'config'" x-cloak x-transition class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.15)] relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl">⚙️</div>
-                <h2 class="text-3xl font-black text-white mb-2 relative z-10">算力与云端引擎配置</h2>
-                <p class="text-slate-400 text-sm mb-8 relative z-10">所有核心 API 密钥在此设定，与学生端完全物理隔离。</p>
+                <h2 class="text-3xl font-black text-white mb-2 relative z-10">引擎算力与云端存储</h2>
+                <p class="text-slate-400 text-sm mb-8 relative z-10">设置大模型 API 密钥与数据库同步节点。此类核心设定与学生探索舱完全物理隔离。</p>
                 
                 <div class="space-y-6 relative z-10">
                     <!-- 排课大模型 -->
@@ -332,24 +339,24 @@
                 </div>
                 <div class="mt-8 flex justify-end relative z-10">
                     <button @click="saveConfig()" class="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] transition tracking-widest uppercase">
-                        💾 烧录全局配置
+                        💾 烧录全局设定
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 🚀 弹窗：缔造新星系 (Planner) -->
+        <!-- 🚀 弹窗：缔造新体系 (Planner) -->
         <div x-show="modals.planner" x-cloak class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 backdrop-blur-xl">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.3)] fade-in">
                 <button @click="modals.planner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
                 <div class="text-center mb-8">
                     <div class="text-6xl mb-4">🔮</div>
-                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest">智能星系排课引擎</h2>
+                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-widest">智能教育课程规划引擎</h2>
                 </div>
                 
                 <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
-                    <button @click="planMode = 'standard'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'standard' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">官方真题大纲</button>
-                    <button @click="planMode = 'custom'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'custom' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">自由主题建模</button>
+                    <button @click="planMode = 'standard'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'standard' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">官方标准大纲体系</button>
+                    <button @click="planMode = 'custom'" class="flex-1 py-3 text-xs font-bold rounded-xl transition" :class="planMode === 'custom' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500'">自由拓展主题</button>
                 </div>
 
                 <div class="space-y-6">
@@ -375,7 +382,7 @@
                     </template>
 
                     <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-3 transition text-white text-base tracking-widest" :disabled="loading">
-                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在链接多重宇宙计算节点...' : '🚀 缔造新宇宙星系'"></span>
+                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在链接云端大纲数据库...' : '🚀 开始规划学习路径'"></span>
                     </button>
                 </div>
             </div>
@@ -483,26 +490,56 @@
                             bgX: 10 + (Math.random() * 80), bgY: 10 + (Math.random() * 80),
                             subjects: (parsed.subjects || []).map((s,i) => {
                                 let orbitIndex = Math.floor(i / 5); let r = 240 + orbitIndex * 140; let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
-                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[] };
+                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false };
                             })
                         };
                         this.galaxies.push(newGalaxy); await this.sync(); this.modals.planner = false;
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已从云端教研库极速读取' : '星系已生成沉淀', showConfirmButton: false, timer: 3000 });
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已从云端教研库极速读取' : '大纲已智能解析并保存', showConfirmButton: false, timer: 3000 });
                     }
                     this.loading = false;
                 },
 
                 deleteGalaxy(gid) {
-                    Swal.fire({ title: '确认销毁该星系？', text: '子端将同步失去该内容', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
+                    Swal.fire({ title: '确认删除该课程体系？', text: '删除后，孩子将无法看到对应的知识星球', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
                         if(res.isConfirmed) { this.galaxies = this.galaxies.filter(x => x.id !== gid); this.sync(); }
                     });
                 },
 
                 openGalaxyEditor(g) { this.editingGalaxy = g; },
-                saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '元数据已保存', showConfirmButton: false, timer: 1500 }); },
+                saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已保存', showConfirmButton: false, timer: 1500 }); },
                 
-                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [] }); },
+                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false }); },
                 removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); },
+
+                // 🤖 智能抓取/匹配大纲回退机制
+                async fetchSyllabusText(subj) {
+                    subj.isFetching = true;
+                    this.galaxies = [...this.galaxies]; // 触发视图更新
+                    
+                    const targetStandard = this.editingGalaxy.title;
+                    const prompt = `作为教育大纲搜索专家，请检索【${targetStandard}】体系下《${subj.title}》的官方详细教学大纲原文。
+【强制要求】：
+1. 首先尝试准确输出该体系原版官方大纲。
+2. 若无法获取该地区此科目的大纲，请自动参照教育水平最相近的国家标准（如无澳洲则参照英国，无加拿大则参照美国，均无则参照新加坡或中国课标）并输出。
+3. 若完全无法提供任何相似的高质量大纲，请仅输出大写英文字符串 'NO_DATA'。
+请直接输出大纲文本内容，禁止任何解释、寒暄或对话。`;
+
+                    const res = await this.callAI(prompt, 'sys');
+                    if (res) {
+                        const text = res.trim();
+                        if (text.includes('NO_DATA') || text.length < 20) {
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: '未获取到标准大纲，请手动粘贴', showConfirmButton: false, timer: 2500 });
+                        } else {
+                            subj.referenceText = text;
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '智能抓取/匹配成功！', showConfirmButton: false, timer: 2000 });
+                            this.sync(); 
+                        }
+                    } else {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: '获取超时或出错', showConfirmButton: false, timer: 2000 });
+                    }
+                    subj.isFetching = false;
+                    this.galaxies = [...this.galaxies];
+                },
 
                 openSubjectPlanner(subj) { this.editingSubject = subj; this.curLesson = null; window.quillEditor = null; },
                 closeSubjectPlanner() { if(this.curLesson) this.savePlan(); this.editingSubject = null; this.sync(); },
@@ -552,7 +589,7 @@
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
                     let ragPrompt = (this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '') ? `\n【RAG 锚定】：参考大纲要求：\n"""\n${this.editingSubject.referenceText.substring(0, 1000)}\n"""\n` : '';
                     
-                    const res = await this.callAI(`[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n为"${this.curLesson.title}"创建苏格拉底教案。仅输出纯 HTML (h3, ul, p)。结尾用3个反问句。${ragPrompt}`);
+                    const res = await this.callAI(`[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.\n为"${this.curLesson.title}"创建互动式教案。仅输出纯 HTML (h3, ul, p)。结尾用3个引导反问句。${ragPrompt}`);
                     if (res) { window.quillEditor.root.innerHTML = res.replace(/```html/gi,'').replace(/```/gi,'').trim(); this.curLesson.content = window.quillEditor.root.innerHTML; }
                     this.loading = false;
                 },

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Classroom</title>
+    <!-- PWA: 使用 Data URI 内联 Manifest -->
     <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22XuePilot%20PRO%22%2C%22short_name%22%3A%22XuePilot%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%7D">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -132,12 +133,15 @@
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <!-- 🚀 星系容器：利用绝对定位渲染每一颗星系 -->
+            <div class="absolute w-full h-full pointer-events-none">
+                
                 <template x-for="g in galaxies" :key="g.id">
+                    <!-- 🚀 独立星系根节点 (仅对活跃星系应用平移变换，实现独立移动并防遮挡) -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
@@ -239,7 +243,7 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 内页：科目大纲与教案编辑器 ================= -->
+        <!-- ================= 动态大纲编辑器 ================= -->
         <div x-show="editingSubject" x-cloak class="absolute inset-0 bg-[#030712] z-[55] p-6 flex flex-col fade-in">
             <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4 shrink-0">
                 <div class="flex items-center gap-5">
@@ -253,7 +257,6 @@
             </div>
             
             <div class="flex flex-1 gap-6 min-h-0">
-                <!-- 左侧：全局排课树 -->
                 <div class="w-80 flex flex-col gap-4 overflow-y-auto pr-2 scrollbar-hide shrink-0">
                     <template x-for="unit in editingSubject?.units" :key="unit.id">
                         <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
@@ -277,10 +280,8 @@
                     </button>
                 </div>
 
-                <!-- 右侧主屏 -->
                 <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col relative bg-slate-900/40 border border-slate-800 shadow-2xl overflow-hidden">
                     
-                    <!-- 🚀 场景 A：科目教学大纲面板 (Syllabus) -->
                     <template x-if="!curLesson">
                         <div class="flex flex-col h-full fade-in overflow-y-auto pr-2 scrollbar-hide">
                             <div class="flex justify-between items-center mb-6 shrink-0">
@@ -334,7 +335,6 @@
                         </div>
                     </template>
 
-                    <!-- 🚀 场景 B：教案编辑器 -->
                     <template x-if="curLesson">
                         <div class="flex flex-col h-full fade-in">
                             <div class="flex justify-between items-center mb-6 shrink-0 bg-indigo-900/10 p-4 rounded-2xl border border-indigo-500/10">
@@ -412,10 +412,8 @@
                 
                 <div class="flex-1 overflow-y-auto pr-4 scrollbar-hide space-y-6">
                     
-                    <!-- RAG 投喂与架构区 (双栏设计) -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
-                        <!-- 左栏：大纲元数据 -->
                         <div class="space-y-6">
                             <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-700">
                                 <label class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-2 block flex items-center gap-2"><span>🔭</span> 全局大纲概述 (Overview)</label>
@@ -428,7 +426,6 @@
                             </div>
                         </div>
 
-                        <!-- 右栏：学科与真实大纲锚点 (RAG) -->
                         <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-700 flex flex-col">
                             <label class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-3 block flex items-center justify-between">
                                 <span class="flex items-center gap-2"><span>🪐</span> 学科与真实大纲锚点</span>
@@ -443,7 +440,6 @@
                                             <input type="text" x-model="subj.icon" class="w-12 input-dark p-2 rounded-lg text-center text-lg shadow-inner" placeholder="图标">
                                             <input type="text" x-model="subj.title" class="flex-1 input-dark p-2 rounded-lg text-sm font-bold shadow-inner text-blue-200" placeholder="学科名称">
                                         </div>
-                                        <!-- RAG 投喂入口 -->
                                         <div x-data="{ expanded: false }">
                                             <button @click="expanded = !expanded" class="w-full text-left text-[10px] font-mono text-slate-500 hover:text-blue-400 transition flex justify-between items-center bg-slate-900 px-3 py-2 rounded-lg border border-slate-800">
                                                 <span>📄 注入真实大纲原件 (防幻觉投喂)</span>
@@ -824,7 +820,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <!-- 🚀 纯粹的 3D 星空与浪漫拓扑网络 Canvas 渲染引擎 -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const bgCanvas = document.getElementById('bg-starfield');

@@ -34,7 +34,7 @@
             to { box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.6), 0 0 40px rgba(59,130,246,0.7); transform: scale(1.05); }
         }
 
-        /* 🚀 核心恒星：加入淡淡的高温火焰光芒 */
+        /* 🚀 核心恒星：高温火焰光芒 */
         .planet-core {
             background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fde68a 20%, #f59e0b 45%, #9333ea 85%, #020617 100%);
             border: 1px solid rgba(253, 230, 138, 0.5);
@@ -149,15 +149,15 @@
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <!-- 🚀 星系容器：已移除父级容器的统一位移，改为绝对定位 -->
-            <div class="absolute w-full h-full pointer-events-none">
+            <!-- 🚀 星系容器 -->
+            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点：当激活时应用物理平移和100%放大，背景时固定在其背景坐标点 -->
+                    <!-- 🚀 独立星系根节点 -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
@@ -185,11 +185,11 @@
                             </template>
                         </svg>
 
-                        <!-- 🚀 星系核心恒星 (点击打开编辑器) -->
+                        <!-- 🚀 星系核心恒星 (修复点击激活逻辑) -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"
-                                 @click.stop="if(g.id === activeGalaxyId) openCurriculumEditor(g)">
+                                 @click.stop="g.id === activeGalaxyId ? openCurriculumEditor(g) : activateGalaxy(g.id)">
                                 <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-4xl' : 'text-8xl'">🔮</div>
                                 <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
                                 <!-- 编辑提示 Badge -->
@@ -198,7 +198,6 @@
                             
                             <!-- 悬停延迟控制台 (Delay 400ms) -->
                             <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 opacity-0 translate-y-4 transition-all duration-300 hover-delay-target pointer-events-none">
-                                <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] backdrop-blur-md transition border border-blue-400/50" title="重命名星系">✏️</button>
                                 <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] backdrop-blur-md transition border border-rose-400/50" title="摧毁星系">🗑️</button>
                             </div>
                         </div>
@@ -371,32 +370,52 @@
             </div>
         </div>
 
-        <!-- 🚀 弹窗：大纲学科编辑器 -->
+        <!-- 🚀 弹窗：大纲全局控制中枢 (全功能版) -->
         <div x-show="modals.editCurriculum" x-cloak class="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-8 backdrop-blur-xl">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.3)] fade-in max-h-[90vh] flex flex-col">
+            <div class="glass-panel w-full max-w-3xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.3)] fade-in max-h-[90vh] flex flex-col">
                 <button @click="modals.editCurriculum = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
                 <div class="text-center mb-8">
                     <div class="text-5xl mb-4">⚙️</div>
                     <h2 class="text-2xl font-black text-blue-400 uppercase tracking-widest" x-text="dict.editCurriculumTitle"></h2>
-                    <p class="text-slate-400 text-xs mt-2" x-text="editingCurriculum?.title"></p>
+                    <input type="text" x-model="editingCurriculum?.title" class="bg-transparent text-center text-slate-300 text-sm mt-2 outline-none border-b border-slate-700 hover:border-blue-500 transition focus:border-blue-400 px-2 py-1">
                 </div>
                 
-                <div class="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
-                    <template x-for="(subj, idx) in editingCurriculum?.subjects" :key="idx">
-                        <div class="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                            <input type="text" x-model="subj.icon" class="w-16 input-dark p-3 rounded-lg text-center text-xl" placeholder="图标">
-                            <input type="text" x-model="subj.title" class="flex-1 input-dark p-3 rounded-lg text-sm" placeholder="学科名称">
-                            <button @click="removeSubject(idx)" class="text-rose-500 hover:text-rose-400 p-2 text-xl transition" title="删除学科">🗑️</button>
+                <div class="flex-1 overflow-y-auto pr-2 scrollbar-hide space-y-6">
+                    <!-- 大纲全局概述 -->
+                    <div>
+                        <label class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-2 block flex items-center gap-2"><span>🔭</span> 全局大纲概述 (Overview)</label>
+                        <textarea x-model="editingCurriculum?.overview" class="w-full input-dark p-4 rounded-xl text-sm h-24 resize-none leading-relaxed text-slate-300" placeholder="该大纲的核心目标是..."></textarea>
+                    </div>
+
+                    <!-- 核心素养指标 -->
+                    <div>
+                        <label class="text-[10px] text-purple-400 font-bold uppercase tracking-widest mb-2 block flex items-center gap-2"><span>💎</span> 核心素养指标 (Competencies)</label>
+                        <input type="text" :value="editingCurriculum?.competencies?.join(', ')" @input="editingCurriculum.competencies = $event.target.value.split(',').map(s=>s.trim()).filter(Boolean)" class="w-full input-dark p-4 rounded-xl text-sm font-bold text-emerald-300" placeholder="用逗号分隔，如：逻辑思维, 跨域整合, 审美感知">
+                    </div>
+
+                    <div class="h-px bg-slate-800 w-full my-4"></div>
+
+                    <!-- 学科体系重组 -->
+                    <div>
+                        <label class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-3 block flex items-center gap-2"><span>🪐</span> 学科体系重组 (Subjects)</label>
+                        <div class="space-y-3">
+                            <template x-for="(subj, idx) in editingCurriculum?.subjects" :key="idx">
+                                <div class="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-700 hover:border-slate-500 transition">
+                                    <input type="text" x-model="subj.icon" class="w-16 input-dark p-3 rounded-lg text-center text-xl shadow-inner" placeholder="图标">
+                                    <input type="text" x-model="subj.title" class="flex-1 input-dark p-3 rounded-lg text-sm font-bold shadow-inner" placeholder="学科名称">
+                                    <button @click="removeSubject(idx)" class="text-rose-500 hover:text-rose-400 p-2 text-xl transition" title="删除学科">🗑️</button>
+                                </div>
+                            </template>
+                            <button @click="addSubject()" class="w-full py-4 border-2 border-dashed border-slate-700 rounded-xl text-xs text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition font-bold mt-2 bg-slate-900/20">
+                                + 孕育新学科行星
+                            </button>
                         </div>
-                    </template>
-                    <button @click="addSubject()" class="w-full py-4 border-2 border-dashed border-slate-700 rounded-xl text-xs text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition font-bold mt-4">
-                        + 添加新学科节点
-                    </button>
+                    </div>
                 </div>
                 
                 <div class="mt-8 pt-6 border-t border-slate-800 flex gap-4 shrink-0">
-                    <button @click="saveCurriculum()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg transition text-white text-sm tracking-widest">
-                        💾 保存大纲重组配置
+                    <button @click="saveCurriculum()" class="flex-1 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.4)] transition text-white text-sm tracking-widest uppercase">
+                        💾 确认重组并应用至当前宇宙
                     </button>
                 </div>
             </div>
@@ -426,8 +445,8 @@
                 supaClient: null, dbConnected: false,
 
                 i18n: {
-                    zh: { brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承', emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎', curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'], backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨...', editCurriculumTitle: '重组星系大纲', editBtnText: '点击编辑大纲' },
-                    en: { brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage', emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine', curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'], backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore...', editCurriculumTitle: 'Restructure Curriculum', editBtnText: 'EDIT CURRICULUM' }
+                    zh: { brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承', emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎', curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'], backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨...', editCurriculumTitle: '大纲中枢与学科重组', editBtnText: '点击激活控制台' },
+                    en: { brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage', emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine', curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'], grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'], backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore...', editCurriculumTitle: 'Curriculum Control Center', editBtnText: 'OPEN CONSOLE' }
                 },
                 get dict() { return this.i18n[this.lang]; },
                 get filteredBooks() { return this.books.filter(b => b.lang === (this.view === 'reading-en' ? 'en' : 'zh')); },
@@ -459,7 +478,7 @@
                 },
                 applyLoadedData(data) {
                     if (data.galaxies) this.galaxies = data.galaxies;
-                    else if (data.subjects && data.subjects.length > 0) this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, subjects: data.subjects }];
+                    else if (data.subjects && data.subjects.length > 0) this.galaxies = [{ id: 'gal_legacy', title: 'Legacy Universe', region: 'CN', bgX: 50, bgY: 50, overview: '', competencies: [], subjects: data.subjects }];
                     this.books = data.books || this.books;
                     if(this.galaxies.length > 0 && !this.activeGalaxyId) {
                         this.activeGalaxyId = this.galaxies[0].id;
@@ -481,7 +500,7 @@
 
                 // 全局引力拖拽引擎
                 startPan(e) {
-                    if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d')) return;
+                    if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d') || e.target.closest('.group-hover-delay')) return;
                     this.isPanning = true;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -497,7 +516,9 @@
                 },
                 endPan() { this.isPanning = false; },
 
+                extractJSONObject(str) { const s = str.indexOf('{'); const e = str.lastIndexOf('}'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '{}'; },
                 extractJSONArray(str) { const s = str.indexOf('['), e = str.lastIndexOf(']'); return (s !== -1 && e !== -1) ? str.substring(s, e + 1) : '[]'; },
+                
                 async callAI(prompt, type = 'sys', customSys = null) {
                     const key = window.safeStorage.get(`xp_${type}_key`) || window.safeStorage.get('xp_sys_key');
                     const url = (window.safeStorage.get(`xp_${type}_url`) || window.safeStorage.get('xp_sys_url') || '/proxy/groq') + '/chat/completions';
@@ -527,19 +548,30 @@
 
                 startReading(book) { this.activeBook = book; if(this.activeBook.chatLog.length === 0) { this.activeBook.chatLog.push({ role: 'nova', text: this.lang === 'en' ? "Welcome, Commander. I've analyzed this piece. What intrigues you the most?" : "欢迎指挥官。我已经解析了这份卷宗，你对文中的哪个细节最感兴趣？" }); } },
 
+                // 🚀 宏观建图 (获取真正的教育大纲与素养指标)
                 async generateSemesterMap() {
                     this.loading = true;
                     const isIntl = !this.planConfig.curriculum.includes('中国');
                     const targetLang = isIntl ? 'English' : 'Chinese';
-                    const context = this.planMode === 'standard' ? `【${this.planConfig.curriculum}】在【${this.planConfig.grade}】` : `自定义探索领域：【${this.customTheme}】`;
+                    const context = this.planMode === 'standard' ? `【${this.planConfig.curriculum}】在【${this.planConfig.grade}】阶段` : `自定义探索领域：【${this.customTheme}】`;
                     
                     const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
-                    输出该学期官方规定的所有核心标准学科（Subjects）。学科数量由该国真实大纲决定。必须返回严格JSON格式: [{"title": "学科官方原生名称", "icon": "单字符emoji"}]`;
+                    作为全球顶尖教育大纲专家，请严格查阅并遵循${context}的官方最新课程标准（如 Common Core, 新课标等）。
+                    要求：
+                    1. 提炼出该阶段大纲的“全局总体目标概述(overview)”。
+                    2. 提炼出该大纲最强调的 3-4 个“核心素养(competencies)”。
+                    3. 输出该学期官方规定的所有核心标准学科（subjects）。学科数量由真实大纲决定。严禁机翻导致出现伪学科（如中国课标必须有语文、道德与法治等，绝不能有机翻的“社会课”）。
+                    必须返回严格的 JSON Object 格式: 
+                    {
+                        "overview": "总体目标概述...",
+                        "competencies": ["素养1", "素养2", "素养3"],
+                        "subjects": [{"title": "学科官方原生名称", "icon": "单字符emoji"}]
+                    }`;
 
                     const res = await this.callAI(prompt);
                     if (res) {
                         try {
-                            const parsed = JSON.parse(this.extractJSONArray(res));
+                            const parsed = JSON.parse(this.extractJSONObject(res));
                             
                             let gradeStr = this.planConfig.grade;
                             const toEnMap = {'一年级':'Grade 1', '二年级':'Grade 2', '三年级':'Grade 3', '四年级':'Grade 4', '五年级':'Grade 5', '六年级':'Grade 6'};
@@ -555,9 +587,11 @@
                                 id: `gal_${Date.now()}`,
                                 title: this.planMode === 'standard' ? `${gradeStr} ${currPrefix}` : this.customTheme,
                                 region: isIntl ? 'INTL' : 'CN',
-                                bgX: 10 + (Math.random() * 80), 
-                                bgY: 10 + (Math.random() * 80),
-                                subjects: parsed.map((s,i) => {
+                                overview: parsed.overview || '',
+                                competencies: parsed.competencies || [],
+                                bgX: 50 + (Math.random() * 80 - 40), 
+                                bgY: 50 + (Math.random() * 80 - 40),
+                                subjects: (parsed.subjects || []).map((s,i) => {
                                     let orbitIndex = Math.floor(i / 5); 
                                     let r = 240 + orbitIndex * 140; 
                                     let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
@@ -568,14 +602,17 @@
                             this.activeGalaxyId = newGalaxy.id; 
                             this.panX = 0; this.panY = 0; 
                             await this.sync(); this.modals.planner = false;
-                        } catch(e) { Swal.fire('Error', 'AI format error', 'error'); }
+                        } catch(e) { Swal.fire('Error', 'AI 格式解析异常，请重试', 'error'); }
                     }
                     this.loading = false;
                 },
 
-                // 🚀 大纲重组引擎
+                // 🚀 大纲控制中枢
                 openCurriculumEditor(galaxy) {
                     this.editingCurriculum = JSON.parse(JSON.stringify(galaxy));
+                    // 保证老数据兼容
+                    if (!this.editingCurriculum.overview) this.editingCurriculum.overview = '';
+                    if (!this.editingCurriculum.competencies) this.editingCurriculum.competencies = [];
                     this.modals.editCurriculum = true;
                 },
                 addSubject() {
@@ -593,7 +630,6 @@
                 saveCurriculum() {
                     if(!this.editingCurriculum) return;
                     
-                    // 重新分配物理紧凑型轨道
                     this.editingCurriculum.subjects.forEach((s, i) => {
                         let orbitIndex = Math.floor(i / 5); 
                         let r = 240 + orbitIndex * 140; 
@@ -603,16 +639,16 @@
 
                     const gIdx = this.galaxies.findIndex(g => g.id === this.editingCurriculum.id);
                     if(gIdx !== -1) {
+                        this.galaxies[gIdx].title = this.editingCurriculum.title;
+                        this.galaxies[gIdx].overview = this.editingCurriculum.overview;
+                        this.galaxies[gIdx].competencies = this.editingCurriculum.competencies;
                         this.galaxies[gIdx].subjects = this.editingCurriculum.subjects;
                         this.sync();
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang === 'en' ? 'Curriculum Saved' : '大纲已更新', showConfirmButton: false, timer: 1500 });
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '大纲已同步至矩阵', showConfirmButton: false, timer: 1500 });
                     }
                     this.modals.editCurriculum = false;
                 },
 
-                editGalaxy(g) {
-                    Swal.fire({ title: 'Rename Galaxy', input: 'text', inputValue: g.title, background: '#0f172a', color: '#fff', showCancelButton: true }).then(res => { if(res.isConfirmed && res.value.trim()) { g.title = res.value.trim(); this.sync(); } });
-                },
                 deleteGalaxy(gid) {
                     Swal.fire({ title: 'Destroy Galaxy?', text: 'Irreversible action!', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
                         if(res.isConfirmed) {
@@ -733,7 +769,6 @@
                     const activeG = appState.galaxies.find(g => g.id === appState.activeGalaxyId);
                     if (!activeG) return requestAnimationFrame(animateNet);
 
-                    // SVG 线条引擎匹配当前活跃星系
                     const cx = netCanvas.width / 2 + appState.panX;
                     const cy = netCanvas.height / 2 + appState.panY;
                     

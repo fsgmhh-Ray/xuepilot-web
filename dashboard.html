@@ -234,10 +234,23 @@
                 <div class="flex-1 flex min-h-0">
                     <!-- 左侧：单元与课时树 -->
                     <div class="w-80 border-r border-slate-800 p-4 flex flex-col bg-black/20 shrink-0">
-                        <button @click="generateUnits()" class="w-full mb-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-2" :disabled="loading">
-                            <span x-show="loading" class="animate-spin">↻</span> ✨ 根据大纲智能排课
+                        
+                        <!-- 🚀 核心优化：获取官方排课 VS AI泛化排课 -->
+                        <button @click="fetchOfficialSchedule()" class="w-full mb-3 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-2" :disabled="editingSubject?.isFetchingSchedule">
+                            <span x-show="editingSubject?.isFetchingSchedule" class="animate-spin">↻</span> 
+                            <span x-text="editingSubject?.isFetchingSchedule ? '检索全球教研进度库...' : '🤖 抓取官方学期进度表'"></span>
                         </button>
-                        <div class="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-hide">
+                        
+                        <!-- 只有在没有获取到进度时，才显示备用泛化按钮 -->
+                        <button x-show="!editingSubject?.units || editingSubject?.units.length === 0" @click="generateFallbackSchedule()" class="w-full mb-4 py-3 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-500/50 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2" :disabled="editingSubject?.isGeneratingSchedule">
+                            <span x-show="editingSubject?.isGeneratingSchedule" class="animate-spin">↻</span> 
+                            <span x-text="editingSubject?.isGeneratingSchedule ? '跨维推演排课中...' : '✨ AI 泛化生成排课 (备用)'"></span>
+                        </button>
+
+                        <div class="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-hide mt-2">
+                            <div x-show="!editingSubject?.units || editingSubject?.units.length === 0" class="text-center text-slate-600 text-xs mt-10 px-4">
+                                点击上方按钮抓取现成课表，为您节省大量算力。
+                            </div>
                             <template x-for="unit in editingSubject?.units" :key="unit.id">
                                 <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 shadow-sm">
                                     <div class="text-[10px] font-bold text-slate-400 uppercase mb-2 border-b border-slate-800 pb-2" x-text="unit.title"></div>
@@ -476,6 +489,8 @@
                             if (s.isFetching === undefined) s.isFetching = false;
                             if (s.isGenerating === undefined) s.isGenerating = false;
                             if (s.showEditor === undefined) s.showEditor = false;
+                            if (s.isFetchingSchedule === undefined) s.isFetchingSchedule = false;
+                            if (s.isGeneratingSchedule === undefined) s.isGeneratingSchedule = false;
                         });
                     });
                 },
@@ -545,7 +560,7 @@
                             bgX: 10 + (Math.random() * 80), bgY: 10 + (Math.random() * 80),
                             subjects: (parsed.subjects || []).map((s,i) => {
                                 let orbitIndex = Math.floor(i / 5); let r = 240 + orbitIndex * 140; let angle = (i % 5) * (Math.PI * 2 / 5) + (orbitIndex * 0.5);
-                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false, isGenerating: false, showEditor: false };
+                                return { ...s, id: `sub_${Date.now()}_${i}`, referenceText: '', radius: r, angle: angle, units:[], isFetching: false, isGenerating: false, showEditor: false, isFetchingSchedule: false, isGeneratingSchedule: false };
                             })
                         };
                         this.galaxies.push(newGalaxy); await this.sync(); this.modals.planner = false;
@@ -554,48 +569,50 @@
                     this.loading = false;
                 },
 
-                deleteGalaxy(gid) {
-                    Swal.fire({ title: '确认删除该课程体系？', text: '删除后，孩子将无法看到对应的知识星球', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then(res => {
-                        if(res.isConfirmed) { this.galaxies = this.galaxies.filter(x => x.id !== gid); this.sync(); }
-                    });
-                },
-
-                openGalaxyEditor(g) { 
-                    g.subjects.forEach(s => {
-                        if(s.isFetching === undefined) s.isFetching = false;
-                        if(s.isGenerating === undefined) s.isGenerating = false;
-                        if(s.showEditor === undefined) s.showEditor = false;
-                    });
-                    this.editingGalaxy = g; 
-                },
-                saveGalaxyMetadata() { this.sync(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '配置已保存', showConfirmButton: false, timer: 1500 }); },
-                
-                addSubject() { this.editingGalaxy.subjects.push({ id: `sub_${Date.now()}`, title: '新学科', icon: '🌟', referenceText: '', radius: 300, angle: Math.random()*6, units: [], isFetching: false, isGenerating: false, showEditor: false }); },
-                removeSubject(idx) { this.editingGalaxy.subjects.splice(idx, 1); this.sync(); },
-
-                // 🤖 智能抓取/匹配大纲回退机制
+                // 🤖 智能抓取/匹配大纲文本 (Syllabus) 引入 4 段式回退
                 async fetchSyllabusText(subj) {
                     subj.isFetching = true;
-                    this.galaxies = [...this.galaxies]; // 触发视图更新
+                    this.galaxies = [...this.galaxies]; 
                     
                     const targetStandard = this.editingGalaxy.title;
+                    const cacheKey = `syllabus_${this.editingGalaxy.baseStandard}_${subj.title}`;
+
+                    // 1. 优先从云端教研资产库秒读
+                    if (this.standardAssets[cacheKey]) {
+                        subj.referenceText = this.standardAssets[cacheKey];
+                        subj.showEditor = false;
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '✨ 已从云端资产库极速读取大纲！', showConfirmButton: false, timer: 2000 });
+                        subj.isFetching = false;
+                        this.galaxies = [...this.galaxies];
+                        return;
+                    }
+
+                    // 2 & 3 & 4. 资产库没有，呼叫 AI 走严格回退逻辑
                     const prompt = `作为教育大纲搜索专家，请检索【${targetStandard}】体系下《${subj.title}》的官方详细教学大纲原文。
-【强制要求】：
-1. 首先尝试准确输出该体系原版官方大纲。
-2. 若无法获取该地区此科目的大纲，请自动参照教育水平最相近的国家标准（如无澳洲则参照英国，无加拿大则参照美国，均无则参照新加坡或中国课标）并输出。
-3. 若完全无法提供任何相似的高质量大纲，请仅输出大写英文字符串 'NO_DATA'。
+【强制执行顺序】：
+1. 优先尝试精准获取该体系原版官方大纲全文。
+2. 若无法获取该地区此科目的大纲，自动参照教育水平最相近的国家标准（如无澳洲则参照英国，无加拿大则参照美国，其他参照新加坡或中国课标）并提取输出。
+3. 若连相似国家的高质量大纲都完全无法获取，请仅输出大写英文字符串 'NO_DATA'，绝不准自行胡编乱造！
 请直接输出大纲文本内容，禁止任何解释、寒暄或对话。`;
 
                     const res = await this.callAI(prompt, 'sys');
                     if (res) {
                         const text = res.trim();
                         if (text.includes('NO_DATA') || text.length < 20) {
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: '未找到标准大纲，请手动输入或让 AI 泛化生成', showConfirmButton: false, timer: 3000 });
-                            subj.showEditor = true; // 自动展开编辑器提供备用生成按钮
+                            // 触发第 4 步：彻底兜底
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: '未找到官方大纲，请手动输入或让 AI 泛化', showConfirmButton: false, timer: 3000 });
+                            subj.showEditor = true; 
                         } else {
                             subj.referenceText = text;
-                            subj.showEditor = false; // 成功则收起
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '大纲锚定成功！排课功能已解锁', showConfirmButton: false, timer: 2000 });
+                            subj.showEditor = false; 
+                            
+                            // 💡 沉淀入库：将 AI 辛苦找来的纯正大纲存入全球资产库！
+                            if (this.editingGalaxy.baseStandard !== 'custom') {
+                                this.standardAssets[cacheKey] = text;
+                                this.saveAssets();
+                            }
+                            
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '大纲抓取并入库成功！排课已解锁', showConfirmButton: false, timer: 2000 });
                             this.sync(); 
                         }
                     } else {
@@ -605,7 +622,7 @@
                     this.galaxies = [...this.galaxies];
                 },
 
-                // ✨ 备用方案：AI 泛化生成大纲
+                // ✨ 备用方案：AI 泛化生成大纲文本
                 async generateFallbackSyllabus(subj) {
                     subj.isGenerating = true;
                     this.galaxies = [...this.galaxies];
@@ -629,35 +646,123 @@
                 openSubjectPlanner(subj) { this.editingSubject = subj; this.curLesson = null; window.quillEditor = null; },
                 closeSubjectPlanner() { if(this.curLesson) this.savePlan(); this.editingSubject = null; this.sync(); },
 
-                async generateUnits() {
-                    this.loading = true;
+                // 🚀 核心飞轮：智能抓取官方排课进度 (Scope & Sequence / Pacing Guide)
+                async fetchOfficialSchedule() {
+                    this.editingSubject.isFetchingSchedule = true;
+                    this.galaxies = [...this.galaxies];
+
                     const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
                     const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
-                    let ragPrompt = hasCustomRag ? `\n【RAG 锚定投喂】：仅依据以下官方大纲原文拆解，严禁偏离：\n"""\n${this.editingSubject.referenceText}\n"""\n` : '';
-                    const cacheKey = `units_${this.editingGalaxy.baseStandard}_${this.editingSubject.title}`;
+                    let ragPrompt = hasCustomRag ? `\n【RAG 锚定验证】：仅在确认找到官方进度后，结合此大纲原文调整格式：\n"""\n${this.editingSubject.referenceText.substring(0,500)}...\n"""\n` : '';
                     
+                    // 飞轮缓存 Key
+                    const cacheKey = `schedule_official_${this.editingGalaxy.baseStandard}_${this.editingSubject.title}`;
                     let parsedUnits = null; let isFromCache = false;
 
+                    // 1. 优先从云端教研资产库秒读 (且没有被私有 RAG 污染时)
                     if (!hasCustomRag && this.standardAssets[cacheKey]) {
-                        parsedUnits = this.standardAssets[cacheKey]; isFromCache = true; await new Promise(r => setTimeout(r, 600)); 
+                        parsedUnits = this.standardAssets[cacheKey]; 
+                        isFromCache = true; 
+                        await new Promise(r => setTimeout(r, 600)); 
                     } else {
+                        // 2 & 3 & 4. 严格回退逻辑抓取排课
                         const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
-严格为《${this.editingSubject.title}》规划学期计划。
-【动态课时密度】：主课每周4-5节(共60-80节)，综合课每周1-2节(共15-40节)。
-【防熔断】：课时名高度精炼(限10字)。${ragPrompt}
-返回格式: [{"title": "单元名", "lessons": [{"title": "课时名"}]}]`;
+作为全球教育数据检索专家，请搜索【${this.editingGalaxy.title}】体系下《${this.editingSubject.title}》的真实【学期教学进度表 (Scope and Sequence / Pacing Guide)】。
+【强制执行顺序】：
+1. 优先精准获取该体系真实的学校/教育局公开排课进度。
+2. 若找不到，自动平替为教育水平最相近国家的标准排课进度并输出。
+3. 若连相似国家的排课都完全找不到，请直接返回空数组 []，严禁自行泛化编造！
+【防熔断极简JSON格式】：
+[{"title": "单元名", "lessons": ["课时1名称", "课时2名称"]}]
+${ragPrompt}`;
                         const res = await this.callAI(prompt);
                         if (res) {
-                            try { parsedUnits = JSON.parse(this.extractJSONArray(res)); if (!hasCustomRag && this.editingGalaxy.baseStandard !== 'custom') { this.standardAssets[cacheKey] = parsedUnits; this.saveAssets(); } } catch(e) { Swal.fire('Error', '模型输出截断', 'error'); this.loading = false; return; }
+                            try { 
+                                const jsonStr = this.extractJSONArray(res);
+                                parsedUnits = JSON.parse(jsonStr); 
+                                // 判断是否未找到 (空数组)
+                                if (parsedUnits.length === 0) {
+                                    parsedUnits = null;
+                                } else if (!hasCustomRag && this.editingGalaxy.baseStandard !== 'custom') { 
+                                    // 💡 沉淀入库：将真实排课存入全球资产库！
+                                    this.standardAssets[cacheKey] = parsedUnits; 
+                                    this.saveAssets(); 
+                                } 
+                            } catch(e) { console.error('JSON Error', e); parsedUnits = null; }
                         }
                     }
 
                     if (parsedUnits) {
-                        this.editingSubject.units = parsedUnits.map((u, i) => ({ ...u, id: `unit_${i}_${Date.now()}`, lessons: u.lessons.map((l, j) => ({ ...l, id: `les_${i}_${j}_${Date.now()}`, content: '' })) }));
-                        await this.sync();
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已调用云端标准排课' : '排课拆解完毕并入库', showConfirmButton: false, timer: 3000 });
+                        this.applyParsedSchedule(parsedUnits);
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '✨ 已从云端真实排课库秒读' : '成功抓取真实排课并入库', showConfirmButton: false, timer: 3000 });
+                    } else {
+                        Swal.fire({ title: '未找到现成进度表', text: '该科目可能缺乏公开的官方进度（或已平替失败）。请点击“AI 泛化生成排课”进行系统推演。', icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#3b82f6' });
                     }
-                    this.loading = false;
+                    
+                    this.editingSubject.isFetchingSchedule = false;
+                    this.galaxies = [...this.galaxies];
+                },
+
+                // ✨ 备用方案：AI 泛化推演排课
+                async generateFallbackSchedule() {
+                    this.editingSubject.isGeneratingSchedule = true;
+                    this.galaxies = [...this.galaxies];
+
+                    const targetLang = this.editingSubject.region === 'INTL' ? 'English' : 'Chinese';
+                    const hasCustomRag = this.editingSubject.referenceText && this.editingSubject.referenceText.trim() !== '';
+                    let ragPrompt = hasCustomRag ? `\n【RAG 锚定投喂】：仅依据以下大纲原文进行拆解，严禁偏离：\n"""\n${this.editingSubject.referenceText}\n"""\n` : '';
+                    
+                    // 泛化缓存 Key
+                    const cacheKey = `schedule_generated_${this.editingGalaxy.baseStandard}_${this.editingSubject.title}`;
+                    let parsedUnits = null; let isFromCache = false;
+
+                    if (!hasCustomRag && this.standardAssets[cacheKey]) {
+                        parsedUnits = this.standardAssets[cacheKey]; 
+                        isFromCache = true; 
+                        await new Promise(r => setTimeout(r, 600)); 
+                    } else {
+                        const prompt = `[FATAL CONSTRAINT]: Output STRICTLY in ${targetLang}.
+由于缺乏特定地区的官方现成排课数据，请你作为顶尖教育专家，严格为《${this.editingSubject.title}》规划一份极其专业的学期计划。
+【动态课时密度】：主课生成 40-60 节核心课时，综合课生成 15-30 节。
+【极致压缩Token防熔断】：为极大提升生成速度并防止输出被截断，JSON结构必须极简！lessons 数组中只需包含纯字符串，绝对不要嵌套对象！课时名称限10字内。${ragPrompt}
+必须返回严格JSON数组格式范例:
+[
+  {"title": "第一单元名", "lessons": ["课时1名称", "课时2名称"]},
+  {"title": "第二单元名", "lessons": ["课时3名称", "课时4名称"]}
+]`;
+                        const res = await this.callAI(prompt);
+                        if (res) {
+                            try { 
+                                parsedUnits = JSON.parse(this.extractJSONArray(res)); 
+                                if (!hasCustomRag && this.editingGalaxy.baseStandard !== 'custom') { 
+                                    this.standardAssets[cacheKey] = parsedUnits; 
+                                    this.saveAssets(); 
+                                } 
+                            } catch(e) { Swal.fire('Error', '模型输出截断', 'error'); }
+                        }
+                    }
+
+                    if (parsedUnits) {
+                        this.applyParsedSchedule(parsedUnits);
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isFromCache ? '已调用云端泛化排课库' : 'AI 泛化推演排课完毕并入库', showConfirmButton: false, timer: 3000 });
+                    }
+                    
+                    this.editingSubject.isGeneratingSchedule = false;
+                    this.galaxies = [...this.galaxies];
+                },
+
+                // 提取出共通的结构映射方法
+                async applyParsedSchedule(parsedUnits) {
+                    this.editingSubject.units = parsedUnits.map((u, i) => ({
+                        ...u,
+                        id: `unit_${i}_${Date.now()}`,
+                        lessons: u.lessons.map((l, j) => ({
+                            title: typeof l === 'string' ? l : (l.title || '未命名课时'),
+                            id: `les_${i}_${j}_${Date.now()}`,
+                            content: ''
+                        }))
+                    }));
+                    await this.sync();
                 },
 
                 selectLesson(lesson) {

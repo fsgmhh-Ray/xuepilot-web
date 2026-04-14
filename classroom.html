@@ -133,15 +133,15 @@
                 <button @click.stop="modals.planner = true" class="mt-8 px-8 py-3 bg-purple-600/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold hover:bg-purple-600/30 transition shadow-lg pointer-events-auto">🚀 激活全局引擎</button>
             </div>
 
-            <!-- 🚀 星系容器：利用绝对定位渲染每一颗星系 -->
-            <div class="absolute w-full h-full pointer-events-none transition-transform duration-75 ease-out" :style="`transform: translate(${panX}px, ${panY}px);`">
+            <!-- 🚀 星系容器：已移除父级容器的统一平移，确保远方星系绝对静止 -->
+            <div class="absolute w-full h-full pointer-events-none">
                 
                 <template x-for="g in galaxies" :key="g.id">
-                    <!-- 🚀 独立星系根节点 -->
+                    <!-- 🚀 独立星系根节点：仅对处于激活状态的星系应用 panX 和 panY -->
                     <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
                          :class="[g.id !== activeGalaxyId ? 'pointer-events-auto' : 'pointer-events-none', isPanning && g.id === activeGalaxyId ? 'duration-0' : 'duration-1000']"
                          :style="g.id === activeGalaxyId 
-                                 ? `left: 50%; top: 50%; transform: translate(0px, 0px) scale(1); z-index: 20; opacity: 1;` 
+                                 ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
                                  : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
                          @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                         
@@ -165,7 +165,6 @@
                             </template>
                         </svg>
 
-                        <!-- 🚀 星系核心恒星 (智能判别点击动作) -->
                         <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto group-hover-delay" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                             <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
                                  :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 250px; height: 250px;'"

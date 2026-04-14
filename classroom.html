@@ -46,7 +46,7 @@
         }
         
         /* 🚀 灵动连接线 (流光特效) */
-        .galaxy-line { stroke: rgba(96, 165, 250, 0.6); stroke-width: 2; stroke-dasharray: 4 8; animation: flowLine 20s linear infinite; fill: none; }
+        .galaxy-line { stroke: rgba(96, 165, 250, 0.8); stroke-width: 2.5px; stroke-dasharray: 6 12; animation: flowLine 20s linear infinite; fill: none; }
         @keyframes flowLine { to { stroke-dashoffset: -1000; } }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -129,9 +129,9 @@
             <!-- 多重星系渲染 -->
             <template x-for="g in galaxies" :key="g.id">
                 
-                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考 -->
+                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考，已修复平移逻辑 -->
                 <div class="absolute flex items-center justify-center transition-all duration-300 ease-out w-0 h-0"
-                     :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(calc(-50% + ${galaxyPan.x}px), calc(-50% + ${galaxyPan.y}px)) scale(1); z-index: 20;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
+                     :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(-50%, -50%) translate(${galaxyPan.x}px, ${galaxyPan.y}px) scale(1); z-index: 20;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
                      @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                     
                     <!-- 🚀 隐形引力边界：区隔各个星系 -->
@@ -140,11 +140,10 @@
                          style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);">
                     </div>
 
-                    <!-- 🚀 灵动星际连线 (修复 SVG 物理剪裁 Bug，赋予绝对坐标与尺寸) -->
-                    <svg class="absolute pointer-events-none" style="width: 2000px; height: 2000px; left: -1000px; top: -1000px; z-index: 1;">
+                    <!-- 🚀 灵动星际连线 (修复裁切：强制溢出可见，0,0起点) -->
+                    <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 5;">
                         <template x-for="s in g.subjects" :key="s.id">
-                            <!-- 1000, 1000 是此 SVG 画布的绝对圆心 -->
-                            <line x1="1000" y1="1000" :x2="1000 + Math.cos(s.angle) * s.radius" :y2="1000 + Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
+                            <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
                         </template>
                     </svg>
 
@@ -155,8 +154,8 @@
                         </template>
                     </div>
 
-                    <!-- 🚀 星系核心 (大纲标识) -->
-                    <div class="absolute z-10" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                    <!-- 🚀 星系核心 (大纲标识) 与悬停控制台 -->
+                    <div class="absolute z-30 group flex flex-col items-center justify-start" style="left: 0; top: 0; transform: translate(-50%, -50%); padding-bottom: 80px; margin-bottom: -80px;">
                         <div class="planet-core core-breath flex flex-col items-center justify-center text-center cursor-pointer"
                              :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 200px; height: 200px;'">
                             <div class="text-4xl mb-1 drop-shadow-md">🔮</div>
@@ -164,8 +163,8 @@
                             <div x-show="g.id !== activeGalaxyId" class="mt-4 px-5 py-2 bg-blue-600 rounded-full text-xl text-white font-bold animate-pulse shadow-lg whitespace-nowrap">点击跃迁</div>
                         </div>
                         
-                        <!-- 编辑与毁灭大纲控制台 -->
-                        <div x-show="g.id === activeGalaxyId" class="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-4 z-30 pointer-events-auto">
+                        <!-- 🚀 Hover 显示的编辑与毁灭控制台 -->
+                        <div x-show="g.id === activeGalaxyId" class="absolute bottom-0 flex gap-4 pointer-events-auto opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                             <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-blue-400/50" title="编辑大纲名称">✏️</button>
                             <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-rose-400/50" title="摧毁大纲星系">🗑️</button>
                         </div>
@@ -173,7 +172,7 @@
 
                     <!-- 🚀 学科行星群 -->
                     <template x-for="s in g.subjects" :key="s.id">
-                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-30 cursor-pointer pointer-events-auto" 
+                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-40 cursor-pointer pointer-events-auto" 
                              :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
                              @click.stop="g.id === activeGalaxyId ? openSubject(g, s) : activateGalaxy(g.id)">
                             
@@ -449,21 +448,18 @@
                 // 🚀 引力拖拽引擎 (Free Panning)
                 startGalaxyPan(e) {
                     if (this.view !== 'galaxy' || e.target.closest('button') || e.target.closest('.planet-container') || e.target.closest('.planet-core')) return;
-                    if (e.type === 'mousedown') e.preventDefault();
                     this.isGalaxyPanning = true;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    this.panStart = { x: cx - this.galaxyPan.x, y: cy - this.galaxyPan.y };
+                    this.panStart.x = cx - this.galaxyPan.x;
+                    this.panStart.y = cy - this.galaxyPan.y;
                 },
                 doGalaxyPan(e) {
                     if (!this.isGalaxyPanning) return;
                     const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    let nx = cx - this.panStart.x;
-                    let ny = cy - this.panStart.y;
-                    // 边界限制 [-800, 800] 防止飞丢
-                    this.galaxyPan.x = Math.max(-800, Math.min(800, nx));
-                    this.galaxyPan.y = Math.max(-800, Math.min(800, ny));
+                    this.galaxyPan.x = Math.max(-1000, Math.min(1000, cx - this.panStart.x));
+                    this.galaxyPan.y = Math.max(-1000, Math.min(1000, cy - this.panStart.y));
                 },
                 endGalaxyPan() { this.isGalaxyPanning = false; },
 

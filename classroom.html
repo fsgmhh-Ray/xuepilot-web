@@ -22,31 +22,34 @@
         .btn-nav-class:hover { background-color: rgba(30, 41, 59, 0.6); border-color: rgba(51, 65, 85, 1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .nav-icon { width: 2.5rem; display: inline-flex; align-items: center; justify-content: flex-start; font-size: 1.25rem; filter: drop-shadow(0 4px 3px rgba(0,0,0,0.07)); flex-shrink: 0; }
         
-        /* 🚀 3D 星体与呼吸特效 (核心重制) */
+        /* 🚀 3D 星体与呼吸特效 (硬件加速无损版，彻底消灭黑框) */
+        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; }
+        
         .planet-3d {
-            background: radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.9) 0%, rgba(37, 99, 235, 0.6) 40%, rgba(2, 6, 23, 0.95) 100%);
-            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 20px rgba(59,130,246,0.3);
+            background: radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.95) 0%, rgba(37, 99, 235, 0.7) 40%, rgba(2, 6, 23, 0.95) 100%);
             border: 1px solid rgba(147, 197, 253, 0.3);
-            border-radius: 50%;
         }
+        .planet-breath { animation: planetBreath 3s ease-in-out infinite alternate; }
+        @keyframes planetBreath {
+            from { transform: scale(1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 15px rgba(59,130,246,0.3); }
+            to { transform: scale(1.05); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 40px rgba(59,130,246,0.8); }
+        }
+
         .planet-core {
-            background: radial-gradient(circle at 30% 30%, rgba(216, 180, 254, 0.9) 0%, rgba(147, 51, 234, 0.6) 40%, rgba(2, 6, 23, 0.95) 100%);
-            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 30px rgba(168,85,247,0.5);
+            background: radial-gradient(circle at 30% 30%, rgba(216, 180, 254, 0.95) 0%, rgba(147, 51, 234, 0.7) 40%, rgba(2, 6, 23, 0.95) 100%);
             border: 1px solid rgba(216, 180, 254, 0.3);
         }
-        .planet-breath { animation: planetBreath 4s ease-in-out infinite alternate; }
-        @keyframes planetBreath {
-            from { transform: scale(1); filter: brightness(1); }
-            to { transform: scale(1.05); filter: brightness(1.1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 35px rgba(59,130,246,0.6); }
+        .core-breath { animation: coreBreath 3s ease-in-out infinite alternate; }
+        @keyframes coreBreath {
+            from { transform: scale(1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.2), 0 0 20px rgba(168,85,247,0.4); }
+            to { transform: scale(1.05); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), inset 5px 5px 15px rgba(255,255,255,0.5), 0 0 50px rgba(168,85,247,0.9); }
         }
         
-        /* 🚀 灵动连接线 */
-        .galaxy-line { stroke: rgba(96, 165, 250, 0.4); stroke-width: 1.5; stroke-dasharray: 6 6; animation: dash 30s linear infinite; fill: none; }
-        @keyframes dash { to { stroke-dashoffset: 1000; } }
+        /* 🚀 灵动连接线 (流光特效) */
+        .galaxy-line { stroke: rgba(96, 165, 250, 0.6); stroke-width: 2; stroke-dasharray: 4 8; animation: flowLine 20s linear infinite; fill: none; }
+        @keyframes flowLine { to { stroke-dashoffset: -1000; } }
         
         .orbit { border: 1px dashed rgba(59, 130, 246, 0.15); border-radius: 50%; position: absolute; pointer-events: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        .planet-container { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: absolute; transform: translate(-50%, -50%); z-index: 10; }
-        .planet-container:hover { z-index: 30; }
         
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.9); border-radius: 1rem 1rem 0 0; padding: 10px; }
         .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 1rem 1rem; background: rgba(0,0,0,0.5); color: #e2e8f0; font-size: 1rem; }
@@ -57,6 +60,7 @@
         .nova-float { width: 64px; height: 64px; position: fixed; z-index: 100; cursor: grab; user-select: none; touch-action: none; }
         .nova-orb-inner { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb, #1e3a8a); box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); }
         .nova-chat-panel { position: fixed; width: 380px; height: 550px; z-index: 99; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }
+        .shelf-card { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body x-data="classroomApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
@@ -109,6 +113,7 @@
         
         <!-- ================= 视图：星系地图 (多重宇宙核心重构) ================= -->
         <div x-show="view === 'galaxy'" x-transition.opacity.duration.500ms class="absolute inset-0 min-h-full">
+            
             <!-- 空状态 -->
             <div x-show="galaxies.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center opacity-40">
                 <div class="text-8xl mb-4">🌌</div><p class="font-mono text-sm tracking-widest uppercase" x-text="dict.emptyMap"></p>
@@ -117,44 +122,59 @@
 
             <!-- 多重星系渲染 -->
             <template x-for="g in galaxies" :key="g.id">
-                <div class="absolute transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                     :style="g.id === activeGalaxyId ? 'left: 50%; top: 50%; transform: translate(-50%, -50%) scale(1); z-index: 20;' : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.2); z-index: 10; opacity: 0.6; cursor: pointer;`"
+                
+                <!-- 🚀 零坐标基点容器：所有位置均以此容器绝对中心为参考，确保动画无错位 -->
+                <div class="absolute flex items-center justify-center transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)] w-0 h-0"
+                     :style="g.id === activeGalaxyId ? 'left: 50%; top: 50%; transform: scale(1); z-index: 20;' : `left: ${g.bgX}%; top: ${g.bgY}%; transform: scale(0.15); z-index: 10; opacity: 0.5; cursor: pointer;`"
                      @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
                     
-                    <!-- 灵动星际连线 (仅在中心向外发散) -->
-                    <svg class="absolute pointer-events-none" style="width: 2000px; height: 2000px; left: -1000px; top: -1000px; z-index: 0;">
+                    <!-- 🚀 隐形边界 (引力结界)：区隔各个星系 -->
+                    <div class="absolute rounded-full border-2 border-dashed border-blue-500/20 pointer-events-none transition-opacity duration-1000"
+                         :class="g.id === activeGalaxyId ? 'bg-blue-900/10 opacity-100 shadow-[inset_0_0_100px_rgba(59,130,246,0.1)]' : 'bg-slate-900/40 opacity-50'"
+                         style="width: 1600px; height: 1600px; left: 0; top: 0; transform: translate(-50%, -50%);">
+                    </div>
+
+                    <!-- 🚀 灵动星际连线 (纯净SVG层，0,0原点发散) -->
+                    <svg class="absolute overflow-visible pointer-events-none" style="left: 0; top: 0; z-index: 1;">
                         <template x-for="s in g.subjects" :key="s.id">
-                            <line x1="1000" y1="1000" :x2="1000 + Math.cos(s.angle) * s.radius" :y2="1000 + Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
+                            <line x1="0" y1="0" :x2="Math.cos(s.angle) * s.radius" :y2="Math.sin(s.angle) * s.radius" class="galaxy-line"></line>
                         </template>
                     </svg>
 
-                    <!-- 轨道环 (仅激活状态显示以减少背景杂乱) -->
-                    <div x-show="g.id === activeGalaxyId">
-                        <template x-for="r in [200, 350, 500]">
+                    <!-- 轨道环 (仅激活状态显示) -->
+                    <div x-show="g.id === activeGalaxyId" class="absolute" style="left: 0; top: 0;">
+                        <template x-for="r in [220, 370, 520]">
                             <div class="orbit" :style="`width: ${r*2}px; height: ${r*2}px;`"></div>
                         </template>
                     </div>
 
-                    <!-- 星系核心 (大纲标识) -->
-                    <div class="absolute planet-core planet-breath rounded-full flex flex-col items-center justify-center border-2 border-purple-400/30 text-center shadow-2xl z-10"
-                         :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px; transform: translate(-50%, -50%);' : 'width: 200px; height: 200px; transform: translate(-50%, -50%);'">
-                        <div class="text-3xl mb-1 drop-shadow-md">🔮</div>
-                        <div class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
-                        <div x-show="g.id !== activeGalaxyId" class="mt-4 px-4 py-2 bg-blue-600 rounded-full text-xs text-white font-bold animate-pulse shadow-lg whitespace-nowrap">点击跃迁</div>
+                    <!-- 🚀 星系核心 (大纲标识) -->
+                    <div class="absolute z-10" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                        <div class="planet-core core-breath flex flex-col items-center justify-center text-center"
+                             :style="g.id === activeGalaxyId ? 'width: 140px; height: 140px;' : 'width: 200px; height: 200px;'">
+                            <div class="text-4xl mb-1 drop-shadow-md">🔮</div>
+                            <div class="text-[10px] font-black text-purple-200 px-3 leading-tight" x-text="g.title"></div>
+                            <div x-show="g.id !== activeGalaxyId" class="mt-4 px-5 py-2 bg-blue-600 rounded-full text-xl text-white font-bold animate-pulse shadow-lg whitespace-nowrap">点击跃迁</div>
+                        </div>
+                        
+                        <!-- 🚀 新增：编辑与毁灭大纲控制台 -->
+                        <div x-show="g.id === activeGalaxyId" class="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-4 z-30">
+                            <button @click.stop="editGalaxy(g)" class="w-12 h-12 bg-blue-600/80 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-blue-400/50" title="编辑大纲名称">✏️</button>
+                            <button @click.stop="deleteGalaxy(g.id)" class="w-12 h-12 bg-rose-600/80 hover:bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg backdrop-blur-md transition border border-rose-400/50" title="摧毁大纲星系">🗑️</button>
+                        </div>
                     </div>
 
-                    <!-- 学科行星群 -->
+                    <!-- 🚀 学科行星群 -->
                     <template x-for="s in g.subjects" :key="s.id">
-                        <div class="planet-container planet-breath flex flex-col items-center" 
-                             :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px;`" 
+                        <div class="absolute flex flex-col items-center z-20 transition-all hover:z-30 cursor-pointer" 
+                             :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
                              @click.stop="g.id === activeGalaxyId ? openSubject(g, s) : activateGalaxy(g.id)">
                             
-                            <!-- 3D星球 -->
-                            <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl shadow-2xl transition hover:scale-110" x-text="s.icon"></div>
+                            <!-- 呼吸的 3D 星球 -->
+                            <div class="w-20 h-20 planet-3d planet-breath flex items-center justify-center text-4xl hover:scale-110 transition-transform" x-text="s.icon"></div>
                             
-                            <!-- 星球标识牌 (激活时显示真实信息，背景时显示模糊信息) -->
+                            <!-- 悬浮标牌 -->
                             <span x-show="g.id === activeGalaxyId" class="mt-4 text-[11px] font-bold text-blue-100 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 shadow-[0_5px_15px_rgba(0,0,0,0.5)] tracking-widest whitespace-nowrap" x-text="s.title"></span>
-                            
                         </div>
                     </template>
                 </div>
@@ -209,7 +229,7 @@
             </div>
         </div>
 
-        <!-- ================= 视图：动态大纲编辑器 (Level 2->3->4->5) ================= -->
+        <!-- ================= 视图：动态大纲编辑器 ================= -->
         <div x-show="editingSubject" x-cloak class="absolute inset-0 bg-slate-950 z-[55] p-6 flex flex-col fade-in">
             <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                 <div class="flex items-center gap-5">
@@ -312,7 +332,6 @@
                     <button @click="generateSemesterMap()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-3 transition text-white text-base tracking-widest" :disabled="loading">
                         <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在链接多重宇宙计算节点...' : '🚀 缔造新宇宙星系'"></span>
                     </button>
-                    <button x-show="galaxies.length > 0 && !loading" @click="clearGalaxies()" class="w-full py-2 text-rose-500 text-[10px] font-bold uppercase tracking-widest underline mt-2 bg-transparent opacity-50 hover:opacity-100 transition">Reset Universe (危险操作)</button>
                 </div>
             </div>
         </div>
@@ -356,14 +375,14 @@
                 i18n: {
                     zh: {
                         brand: 'XuePilot PRO', back: '返回主控舱', navMap: '多元宇宙星系', navEngine: '全球大纲解析引擎', navWrite: 'AI 启发写作', navReadEn: '英文智能伴读', navReadZh: '大语文传承',
-                        emptyMap: '星系空旷，请激活排课引擎缔造知识宇宙。', planTitle: '智能排课引擎',
+                        emptyMap: '星空寥廓，请激活排课引擎缔造你的第一个知识星系。', planTitle: '智能排课引擎',
                         curries: ['中国义务教育课标 (2022版)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
                         grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'], terms: ['上学期', '下学期'],
                         backMap: '返回多元宇宙', openBook: '开启深度阅读', import: '导入档案', exit: '退出阅读', readPlace: '探讨核心思想...'
                     },
                     en: {
                         brand: 'XuePilot PRO', back: 'Return', navMap: 'Multiverse Galaxies', navEngine: 'Curriculum Engine', navWrite: 'Writing Lab', navReadEn: 'English Tutor', navReadZh: 'Chinese Heritage',
-                        emptyMap: 'Multiverse is empty. Activate engine to forge galaxies.', planTitle: 'Scheduling Engine',
+                        emptyMap: 'Deep space. Activate engine to forge your first galaxy.', planTitle: 'Scheduling Engine',
                         curries: ['CN MOE Curriculum (2022)', 'US Common Core State Standards', 'UK National Curriculum', 'Singapore MOE Syllabus'],
                         grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], terms: ['Term 1', 'Term 2'],
                         backMap: 'Back to Multiverse', openBook: 'Deep Reading', import: 'Import', exit: 'Exit', readPlace: 'Explore ideas...'
@@ -492,6 +511,47 @@
                     this.loading = false;
                 },
 
+                // 🚀 星系重命名
+                editGalaxy(g) {
+                    Swal.fire({
+                        title: this.lang === 'zh' ? '重新命名此大纲星系' : 'Rename Curriculum Galaxy',
+                        input: 'text',
+                        inputValue: g.title,
+                        background: '#0f172a', color: '#fff',
+                        showCancelButton: true,
+                        confirmButtonText: '确定保存',
+                        cancelButtonText: '取消'
+                    }).then(res => {
+                        if(res.isConfirmed && res.value.trim()) {
+                            g.title = res.value.trim();
+                            this.sync();
+                        }
+                    });
+                },
+
+                // 🚀 星系摧毁
+                deleteGalaxy(gid) {
+                    Swal.fire({
+                        title: '摧毁星系指令确认',
+                        text: '警告：此操作将永久摧毁该星系及其包含的所有课程、单元与教案数据，且不可逆转！是否继续？',
+                        icon: 'warning',
+                        background: '#0f172a', color: '#fff',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        confirmButtonText: '确认摧毁',
+                        cancelButtonText: '取消终止'
+                    }).then(res => {
+                        if(res.isConfirmed) {
+                            this.galaxies = this.galaxies.filter(x => x.id !== gid);
+                            if(this.activeGalaxyId === gid) {
+                                this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null;
+                            }
+                            this.sync();
+                            Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系已成功清除', showConfirmButton:false, timer:2000});
+                        }
+                    });
+                },
+
                 openSubject(g, s) { this.editingSubject = { ...s, region: g.region }; this.curLesson = null; window.quillEditor = null; },
                 closeSubject() { if(this.curLesson) this.savePlan(); this.editingSubject = null; },
 
@@ -564,12 +624,6 @@
                         }
                     }
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved to Database', showConfirmButton: false, timer: 1500 });
-                },
-
-                clearGalaxies() {
-                    Swal.fire({ title: '引爆宇宙', text: '确认清除所有星系数据？此操作不可逆！', icon: 'warning', showCancelButton: true, background: '#0f172a', color: '#fff' }).then(res => {
-                        if(res.isConfirmed) { this.galaxies = []; this.activeGalaxyId = null; this.sync(); this.modals.planner = false; }
-                    });
                 },
 
                 // NOVA 拖拽

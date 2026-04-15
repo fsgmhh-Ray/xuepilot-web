@@ -8,63 +8,40 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         [x-cloak] { display: none !important; }
-        body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
-        
-        /* 🚀 电影级视频底座 */
+        body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         .video-container { position: fixed; inset: 0; z-index: 1; background: #000; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease; filter: brightness(0.7) contrast(1.2); }
         .video-active { opacity: 1; }
-
-        /* 🚀 数字特效：Glitch 干扰 */
         .glitch-fx { animation: shake 0.15s infinite; filter: hue-rotate(90deg) brightness(1.5); }
-        @keyframes shake {
-            0% { transform: translate(2px, 1px); }
-            50% { transform: translate(-2px, -1px); }
-            100% { transform: translate(1px, 2px); }
-        }
-
-        /* 🚀 全息 HUD 边框 */
-        .hud-border { 
-            position: fixed; inset: 0; z-index: 10; pointer-events: none;
-            border: 30px solid transparent;
-            border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M10 0 L0 0 L0 10 M90 0 L100 0 L100 10 M10 100 L0 100 L0 90 M90 100 L100 100 L100 90' fill='none' stroke='%233b82f6' stroke-width='1.5'/%3E%3C/svg%3E") 30 stretch;
-            opacity: 0.4;
-        }
-
-        /* 🚀 扫描线效果 */
+        @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 2px); } }
+        .hud-border { position: fixed; inset: 0; z-index: 10; pointer-events: none; border: 30px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M10 0 L0 0 L0 10 M90 0 L100 0 L100 10 M10 100 L0 100 L0 90 M90 100 L100 100 L100 90' fill='none' stroke='%233b82f6' stroke-width='1.5'/%3E%3C/svg%3E") 30 stretch; opacity: 0.4; }
         .scanline { position: fixed; inset: 0; z-index: 15; background: linear-gradient(to bottom, transparent 50%, rgba(59, 130, 246, 0.05) 50%); background-size: 100% 4px; pointer-events: none; }
-
-        /* 🚀 锁定框 (Targeting) */
-        .target-lock { 
-            position: absolute; width: 200px; height: 200px; border: 2px solid #3b82f6; 
-            left: 50%; top: 50%; transform: translate(-50%, -50%); 
-            z-index: 12; animation: rotateLock 4s linear infinite;
-        }
+        .target-lock { position: absolute; width: 200px; height: 200px; border: 2px solid #3b82f6; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 12; animation: rotateLock 4s linear infinite; }
         @keyframes rotateLock { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        /* 🚀 量子按钮样式 */
-        .quantum-btn { 
-            pointer-events: auto; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); 
-            border: 1px solid rgba(59, 130, 246, 0.4); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .quantum-btn:hover { 
-            background: rgba(30, 41, 59, 0.9); border-color: #3b82f6; 
-            transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 45px rgba(59, 130, 246, 0.3); 
-        }
-
+        .quantum-btn { pointer-events: auto; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(59, 130, 246, 0.4); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .quantum-btn:hover { background: rgba(30, 41, 59, 0.9); border-color: #3b82f6; transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 45px rgba(59, 130, 246, 0.3); }
         .terminal-font { font-family: 'Courier New', Courier, monospace; }
-        .warp-overlay { position: fixed; inset: 0; z-index: 150; background: #000; display: flex; items-center; justify-content: center; }
+        .warp-overlay { position: fixed; inset: 0; z-index: 150; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
     </style>
-    <script>
-        window.safeStorage = {
-            memory: {}, get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } },
-            set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
-        };
-    </script>
 </head>
 <body x-data="shipApp()" x-init="init()" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 1. 视频底座：自动根据 step 和 ageGroup 路由 -->
+    <!-- 🚀 强制解锁层：如果 Alpine 没跑通，原生 JS 会在 2 秒后强行关闭它 -->
+    <div id="master-loader" class="warp-overlay">
+        <div class="text-center">
+            <div class="w-12 h-12 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-6 mx-auto"></div>
+            <div class="text-blue-500 font-mono tracking-[0.8em] text-[10px] uppercase animate-pulse">Linking to Dimension...</div>
+        </div>
+    </div>
+    <script>
+        // 物理级保底：2秒后无论如何关闭转圈
+        setTimeout(() => { 
+            const loader = document.getElementById('master-loader');
+            if(loader) loader.style.opacity = '0';
+            setTimeout(() => { if(loader) loader.style.display = 'none'; }, 800);
+        }, 2000);
+    </script>
+
     <div class="video-container">
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''" 
                autoplay muted playsinline @timeupdate="handleTimeSync($event.target.currentTime)">
@@ -72,108 +49,66 @@
         </video>
     </div>
 
-    <!-- 2. 数字 HUD 层 -->
     <div class="scanline"></div>
     <div class="hud-border"></div>
     
-    <!-- 🚀 动态锁定框：在 5.0s 后浮现 -->
     <div x-show="isLocking" x-transition.opacity.duration.1000ms class="target-lock">
         <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-blue-400 font-black tracking-widest bg-black/40 px-2 py-0.5">TARGET_LOCKED</div>
     </div>
 
-    <!-- 3. 左上角仪表盘 -->
-    <div class="fixed top-10 left-12 z-20 flex flex-col gap-2 terminal-font opacity-60">
-        <div class="flex items-center gap-3">
-            <span class="text-[9px] text-blue-500 uppercase tracking-widest font-black">Sync Frequency</span>
-            <div class="w-32 h-0.5 bg-slate-800 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-500 animate-pulse" :style="`width: ${Math.random()*100}%`"></div>
-            </div>
-        </div>
-        <div class="text-[9px] text-blue-400">POS: <span x-text="coords"></span></div>
-    </div>
-
-    <!-- 4. 主交互区 -->
     <main class="fixed inset-0 z-30 flex flex-col items-center justify-end pb-20 px-10 pointer-events-none">
-        
-        <!-- 剧情对话 (在 0s 立即出现) -->
-        <div class="w-full max-w-4xl mb-12 transition-all duration-1000" :class="isThinking ? 'opacity-30 blur-sm' : 'opacity-100 translate-y-0'">
+        <div class="w-full max-w-4xl mb-12 transition-all duration-1000" :class="isThinking ? 'opacity-30 blur-sm' : 'opacity-100'">
             <div class="bg-black/60 backdrop-blur-2xl border-l-4 border-blue-600 p-8 rounded-r-3xl shadow-2xl relative">
-                <div class="absolute -top-3 left-6 bg-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white shadow-lg">A.I. Tactical Briefing</div>
+                <div class="absolute -top-3 left-6 bg-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white shadow-lg">A.I. Tactical Advisor</div>
                 <p class="text-xl md:text-2xl font-bold leading-relaxed text-blue-100 italic terminal-font" x-html="currentStoryText"></p>
             </div>
         </div>
 
-        <!-- 🚀 逻辑决策块 (在 8.0s 精准弹出) -->
         <div class="flex flex-wrap justify-center gap-6 w-full max-w-5xl transition-all duration-700"
              :class="showOptions ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'">
             <template x-for="(opt, idx) in currentOptions" :key="idx">
                 <button @click="makeChoice(opt)" class="quantum-btn px-10 py-6 rounded-2xl flex flex-col items-start gap-1 group relative">
-                    <span class="text-[8px] text-blue-500 font-mono">CODE_EXECUTION_0${idx+1}</span>
+                    <span class="text-[8px] text-blue-500 font-mono uppercase">Instruction Set 0x0${idx+1}</span>
                     <span class="text-base font-black text-white group-hover:text-blue-300 transition-colors uppercase tracking-tight" x-text="opt.text"></span>
                 </button>
             </template>
         </div>
     </main>
 
-    <!-- 🚀 物理层熔断 (PRO 引导) -->
-    <div x-show="showCrisis" x-cloak class="fixed inset-0 z-[120] bg-rose-950/95 backdrop-blur-3xl flex flex-col items-center justify-center p-10 text-center">
-        <div class="w-32 h-32 bg-rose-600 rounded-full flex items-center justify-center mb-8 shadow-[0_0_100px_#ef4444] animate-pulse">
-            <span class="text-6xl">🚫</span>
+    <div x-show="showCrisis" x-cloak class="fixed inset-0 z-[120] bg-rose-950/90 backdrop-blur-3xl flex flex-col items-center justify-center p-10 text-center">
+        <div class="w-24 h-24 bg-rose-600 rounded-full flex items-center justify-center mb-8 shadow-[0_0_100px_#ef4444] animate-pulse">
+            <span class="text-5xl">🚫</span>
         </div>
-        <h2 class="text-6xl font-black text-white mb-6 tracking-tighter uppercase">Quantum Engine Halted</h2>
-        <p class="text-rose-200 text-xl max-w-2xl mb-12 font-bold leading-relaxed">
-            指挥官，由于当前终端缺乏<span class="text-white underline underline-offset-8">量子 Pro 密钥</span>，预制维度的因果链已断裂。<br>
-            前方区域受 <span class="text-white font-black italic">Imagen 4.0</span> 动态算力保护，需激活权限。
+        <h2 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase">Engine Halted</h2>
+        <p class="text-rose-200 text-lg max-w-2xl mb-12 font-bold leading-relaxed">
+            预制维度的算力已耗尽。前方区域需要解锁<br><span class="text-white underline underline-offset-8">量子 Pro 密钥</span> 才能继续。
         </p>
-        <button @click="window.location.href='index.html'" class="px-16 py-6 bg-white text-rose-900 rounded-full font-black text-2xl hover:scale-110 transition-all shadow-2xl active:scale-95">
+        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 rounded-full font-black text-xl hover:scale-105 transition-all shadow-2xl">
             获取 Pro 能量补给 ➔
         </button>
-    </div>
-
-    <!-- 初始载入屏 -->
-    <div x-show="isWarping" x-transition.opacity.duration.800ms class="warp-overlay">
-        <div class="text-center">
-            <div class="w-12 h-12 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-6 mx-auto"></div>
-            <div class="text-blue-500 font-mono tracking-[0.8em] text-[10px] uppercase animate-pulse">Linking to Dimension...</div>
-        </div>
     </div>
 
     <script>
         function shipApp() {
             return {
-                isWarping: true, videoReady: false, 
-                step: 0, ageGroup: 'mid',
+                videoReady: false, step: 0, ageGroup: 'mid',
                 isGlitching: false, isLocking: false, showOptions: false,
-                currentStoryText: '', currentOptions: [],
-                coords: '0.00 / 0.00',
-                isPro: window.safeStorage.get('xp_is_pro') === 'true',
-                showCrisis: false, isThinking: false,
+                currentStoryText: 'Initializing...', currentOptions: [],
+                isPro: false, showCrisis: false, isThinking: false,
 
-                // 🚀 计算 Supabase 视频 URL
                 get videoUrl() {
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
-                // 🚀 核心：帧同步处理器 (编舞矩阵实现)
                 handleTimeSync(time) {
-                    this.coords = `${(34.55 + Math.random()).toFixed(2)} / ${(88.12 + Math.random()).toFixed(2)}`;
-
-                    // 1. 2.5s 时刻：轻微颠簸
-                    if (time > 2.5 && time < 2.7) this.isGlitching = true;
-                    else this.isGlitching = false;
-
-                    // 2. 5.0s 时刻：目标锁定
-                    if (time > 5.0) this.isLocking = true;
-                    else this.isLocking = false;
-
-                    // 3. 8.0s 时刻：弹出指令选项
+                    if (time > 2.5 && time < 2.7) this.isGlitching = true; else this.isGlitching = false;
+                    if (time > 5.0) this.isLocking = true; else this.isLocking = false;
                     if (time > 8.0) this.showOptions = true;
                 },
 
-                // 🚀 剧本编排：全龄段覆盖
                 scripts: {
                     young: [
-                        { ai: "小指挥官，我们到了棉花糖星云！前面有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
+                        { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
                         { ai: "精彩！气泡破了。但里面的彩虹桥断了，你需要用逻辑修补它。告诉我，修桥的目的是什么？", options: [{ text: "为了让数据流过去" }, { text: "为了不让星星掉下来" }] },
                         { triggerCrisis: true }
                     ],
@@ -189,16 +124,25 @@
                     ]
                 },
 
-                async init() {
-                    const params = new URLSearchParams(window.location.search);
-                    this.ageGroup = params.get('age') || 'mid';
-                    
-                    const scene = this.scripts[this.ageGroup][0];
-                    this.currentStoryText = scene.ai;
-                    this.currentOptions = scene.options;
-
-                    // 预加载首屏视频，完成后关闭载入屏
-                    setTimeout(() => { this.isWarping = false; }, 2000);
+                init() {
+                    try {
+                        const params = new URLSearchParams(window.location.search);
+                        this.ageGroup = params.get('age') || 'mid';
+                        this.isPro = localStorage.getItem('xp_is_pro') === 'true';
+                        
+                        if (!this.scripts[this.ageGroup]) this.ageGroup = 'mid';
+                        const scene = this.scripts[this.ageGroup][0];
+                        this.currentStoryText = scene.ai;
+                        this.currentOptions = scene.options;
+                        
+                        // 逻辑正常运行，尝试主动关闭加载层
+                        setTimeout(() => {
+                            const loader = document.getElementById('master-loader');
+                            if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 800); }
+                        }, 1000);
+                    } catch (e) {
+                        console.error("Init Error:", e);
+                    }
                 },
 
                 makeChoice(opt) {
@@ -206,26 +150,20 @@
                     this.isThinking = true;
                     this.showOptions = false;
 
-                    // 模拟战术计算感
                     setTimeout(() => {
                         this.isThinking = false;
                         this.step++;
                         this.videoReady = false;
                         
                         const nextScene = this.scripts[this.ageGroup][this.step];
-                        
                         if (nextScene && nextScene.triggerCrisis) {
-                            if (this.isPro) {
-                                // 如果是 PRO，跳转到实时 AI 逻辑（此处可根据需要扩展）
-                                Swal.fire('PRO 权限已验证', '正在为您生成实时宇宙无限关卡...', 'success');
-                            } else {
-                                this.showCrisis = true;
-                            }
+                            if (this.isPro) Swal.fire('PRO 权限已验证', '正在为您生成实时宇宙...', 'success');
+                            else this.showCrisis = true;
                         } else if (nextScene) {
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
                             const v = document.getElementById('main-video');
-                            if(v) v.load(); // 强制加载新阶段对应的 mp4
+                            if(v) v.load();
                         }
                     }, 1200);
                 },
@@ -234,5 +172,6 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

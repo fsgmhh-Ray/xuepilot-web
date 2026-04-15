@@ -10,15 +10,14 @@
         [x-cloak] { display: none !important; }
         body { background-color: #050914; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; margin: 0; }
         
-        /* 动态背景 */
         .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
         
-        /* 视频底座 */
+        /* 视频底座与平滑过渡 */
         .video-container { position: fixed; inset: 0; z-index: 0; background: #000; }
-        .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease-in-out; }
-        .video-active { opacity: 1 !important; filter: brightness(0.8) contrast(1.1); }
+        .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; }
+        .video-active { opacity: 1 !important; filter: brightness(0.85) contrast(1.1); }
         
-        /* 科幻机甲风 UI 切角与渐变 */
+        /* 极客风 UI 面板 */
         .tech-panel {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.95) 100%);
             border-top: 2px solid #06b6d4;
@@ -38,25 +37,24 @@
             background: rgba(6, 182, 212, 0.15);
             border-color: #06b6d4;
             transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
         }
 
         .typing-cursor::after { content: '█'; animation: blink 1s step-start infinite; color: #06b6d4; margin-left: 4px; }
         @keyframes blink { 50% { opacity: 0; } }
         
+        /* 扫描线与 HUD 边框 */
         .scanline { position: fixed; inset: 0; z-index: 15; background: linear-gradient(to bottom, transparent 50%, rgba(6, 182, 212, 0.05) 50%); background-size: 100% 4px; pointer-events: none; }
         .hud-border { position: fixed; inset: 0; z-index: 10; pointer-events: none; border: 2px solid rgba(6, 182, 212, 0.1); margin: 10px; }
-        .hud-corner { position: absolute; width: 30px; height: 30px; border-color: #06b6d4; border-style: solid; border-width: 0; }
-        .hud-corner-tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
-        .hud-corner-tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
-        .hud-corner-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
-        .hud-corner-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
-
-        /* 启动与大厅屏 */
+        
         .start-overlay { position: fixed; inset: 0; z-index: 200; background: #030712; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
         .start-btn { position: relative; overflow: hidden; }
         .start-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: sweep 3s infinite; }
         @keyframes sweep { 100% { left: 200%; } }
+
+        /* 🚀 全新红屏惩罚特效 */
+        .critical-error { animation: criticalShake 0.4s ease-in-out; box-shadow: inset 0 0 100px rgba(225, 29, 72, 0.5); border: 2px solid #e11d48 !important; }
+        @keyframes criticalShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
         .glitch-fx { animation: shake 0.2s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 75% { transform: translate(1px, 2px); } }
@@ -70,10 +68,9 @@
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 背景元素 -->
     <div class="space-bg"></div>
 
-    <!-- 🚀 阶段 0：年龄段选关大厅 (Lobby) -->
+    <!-- 阶段 0：年龄段选关大厅 -->
     <div x-show="inLobby" x-cloak class="start-overlay fade-in">
         <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSg2LCAxODIsIDIxMiwgMC4yKSIvPjwvc3ZnPg==')] opacity-10"></div>
         <div class="z-10 w-full max-w-5xl px-6">
@@ -103,7 +100,7 @@
         </div>
     </div>
 
-    <!-- 🚀 阶段 1：启动屏（获取声音权限） -->
+    <!-- 阶段 1：启动屏（获取声音权限） -->
     <div x-show="!inLobby && !missionStarted" x-cloak class="start-overlay" :class="systemReady ? '' : 'cursor-wait'">
         <div class="z-10 text-center flex flex-col items-center">
             <div class="text-6xl mb-8 animate-pulse text-cyan-500 filter drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]">⎈</div>
@@ -113,7 +110,6 @@
             <button x-show="systemReady" @click="startMission()" class="start-btn px-12 py-5 bg-cyan-600/20 border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white font-black tracking-widest text-lg transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)]">
                 <span x-text="i18n[lang].startBtn"></span>
             </button>
-            
             <div x-show="!systemReady" class="flex flex-col items-center gap-3">
                 <div class="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
                 <span class="text-cyan-500 font-mono text-[10px] tracking-widest" x-text="i18n[lang].linking"></span>
@@ -121,14 +117,13 @@
         </div>
     </div>
 
-    <!-- 🚀 物理声控台 -->
+    <!-- 物理声控台 -->
     <button x-show="missionStarted" @click="toggleSound()" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center hover:bg-blue-900/80 hover:border-blue-500 transition shadow-[0_0_20px_rgba(0,0,0,0.5)] text-xl cursor-pointer">
         <span x-text="isMuted ? '🔇' : '🔊'"></span>
     </button>
 
-    <!-- 🚀 阶段 2：视频播放与 HUD -->
+    <!-- 视频底座：绝不循环，绝不黑屏 -->
     <div class="video-container">
-        <!-- 去除 loop 属性，使用原生 JS 在播放到最后一秒时强制暂停，防止黑屏 -->
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''"
                playsinline crossorigin="anonymous" muted
                @canplay="videoReady = true"
@@ -139,32 +134,40 @@
     </div>
 
     <div class="scanline"></div>
-    <div class="hud-border">
-        <div class="hud-corner hud-corner-tl"></div><div class="hud-corner hud-corner-tr"></div>
-        <div class="hud-corner hud-corner-bl"></div><div class="hud-corner hud-corner-br"></div>
-    </div>
+    <div class="hud-border"></div>
     
     <div x-show="isLocking" x-transition.opacity.duration.1000ms class="target-lock">
         <div class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-cyan-400 font-black tracking-widest bg-black/60 px-2 py-0.5 border border-cyan-500/30" x-text="i18n[lang].target"></div>
     </div>
 
-    <!-- 交互 UI 层：在第 8 秒弹出，且支持认知维度打标 -->
+    <!-- 🚀 核心交互 UI 层 -->
     <main class="fixed inset-0 z-30 flex flex-col items-center justify-end pb-16 px-10 pointer-events-none">
-        <!-- 对话面板 -->
-        <div x-show="showHUD" x-cloak x-transition:enter="transition ease-out duration-700 transform" x-transition:enter-start="opacity-0 translate-y-10 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="w-full max-w-4xl mb-8 relative pointer-events-auto">
+        
+        <!-- 🚀 专属错题红屏警报 (HUD Alert) -->
+        <div x-show="hudAlert.show" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100" class="absolute top-20 w-full max-w-3xl z-50 pointer-events-auto">
+            <div class="bg-rose-950/90 border-2 border-rose-500 p-6 rounded-lg shadow-[0_0_50px_rgba(225,29,72,0.6)] flex items-start gap-6 backdrop-blur-md critical-error">
+                <div class="text-5xl text-rose-500 animate-pulse">⚠️</div>
+                <div>
+                    <h3 class="text-rose-400 font-black text-xl mb-1 uppercase tracking-widest" x-text="i18n[lang].sysOverride"></h3>
+                    <p class="text-rose-100 text-lg leading-relaxed font-bold terminal-font" x-text="hudAlert.message"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 常规对话面板 -->
+        <div x-show="showHUD && !hudAlert.show" x-cloak x-transition:enter="transition ease-out duration-700 transform" x-transition:enter-start="opacity-0 translate-y-10 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="w-full max-w-4xl mb-8 relative pointer-events-auto">
             <div class="tech-panel p-8 relative mt-6">
-                <!-- 🚀 认知阶段指示器 -->
+                <!-- 认知阶段指示牌 -->
                 <div class="absolute -top-6 left-8 bg-blue-600/90 text-[11px] font-black px-5 py-1.5 uppercase tracking-widest text-white shadow-[0_0_15px_rgba(37,99,235,0.5)] border border-blue-400" x-text="currentPhase"></div>
-                
                 <div class="absolute top-0 right-0 w-32 h-1 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></div>
+                
                 <p class="text-xl md:text-2xl font-bold leading-relaxed text-cyan-50 italic mt-3 terminal-font min-h-[4rem]" :class="isTyping ? 'typing-cursor' : ''" x-html="displayedText"></p>
             </div>
         </div>
 
         <!-- 选项按钮组 -->
-        <div x-show="showHUD && !isTyping" x-cloak x-transition:enter="transition ease-out duration-500 delay-300 transform" x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0" class="flex flex-wrap justify-center gap-6 w-full max-w-5xl">
+        <div x-show="showHUD && !isTyping && !hudAlert.show" x-cloak x-transition:enter="transition ease-out duration-500 delay-300 transform" x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0" class="flex flex-wrap justify-center gap-6 w-full max-w-5xl">
             <template x-for="(opt, idx) in currentOptions" :key="idx">
-                <!-- 点击直接触发逻辑判断 -->
                 <button @click="makeChoice(opt)" class="quantum-btn px-10 py-6 flex flex-col items-start gap-1 group relative">
                     <span class="text-[9px] text-cyan-500 font-mono uppercase tracking-widest" x-text="`${i18n[lang].inst} 0x0${idx+1}`"></span>
                     <span class="text-base font-black text-white group-hover:text-cyan-300 transition-colors tracking-wide" x-text="opt.text"></span>
@@ -201,6 +204,9 @@
                 isTyping: false, typeInterval: null,
                 isPro: false, showCrisis: false, isThinking: false, isMuted: true,
                 failsafeTimer: null,
+                
+                // 🚀 自定义报错系统
+                hudAlert: { show: false, message: '' },
 
                 i18n: {
                     zh: {
@@ -209,7 +215,7 @@
                         a2Title: '少年先锋 (9-12岁)', a2Desc: '月球车救援，揪出系统方案漏洞',
                         a3Title: '银河领航员 (13-15岁)', a3Desc: '火星生态维护，进行严密物理推演',
                         sysName: 'XUEPILOT 神经链路', sysDesc: '音频系统与战术模块待命', startBtn: '⚡ 授权音轨并切入战场', linking: '核心模块加载中...',
-                        target: 'TARGET_LOCKED', inst: '执行指令',
+                        target: 'TARGET_LOCKED', inst: '执行指令', sysOverride: 'SYSTEM OVERRIDE: 逻辑拦截',
                         haltedTitle: '危机：算力不足', haltedDesc: '前方高危区域需要连接<br><span class="text-white underline underline-offset-8">量子 Pro 算力</span> 才能继续重构防线。', proBtn: '申请 Pro 级支援 ➔'
                     },
                     en: {
@@ -218,7 +224,7 @@
                         a2Title: 'Vanguard (9-12)', a2Desc: 'Lunar rover rescue. Identify AI flaws.',
                         a3Title: 'Navigator (13-15)', a3Desc: 'Mars ecology. Hardcore physics.',
                         sysName: 'NEURAL LINK', sysDesc: 'Audio & Tactical Modules Standby', startBtn: '⚡ ENGAGE LINK & AUDIO', linking: 'Loading modules...',
-                        target: 'TARGET_LOCKED', inst: 'EXECUTE',
+                        target: 'TARGET_LOCKED', inst: 'EXECUTE', sysOverride: 'SYSTEM OVERRIDE',
                         haltedTitle: 'Crisis: Low Compute', haltedDesc: 'The hazardous sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Request PRO Support ➔'
                     }
                 },
@@ -227,62 +233,62 @@
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
-                // 🚀 核心重构：注入“教育灵魂”。每个选项必须判断对错并给出导师反馈！
+                // 🚀 富有教育深度的“判官剧本”
                 scripts: {
                     zh: {
                         young: [
                             { 
-                                phase: "阶段一：提问引导 (Prompting)",
+                                phase: "🧠 提问引导 (Prompting)",
                                 ai: "小指挥官，前面有一群迷路的‘星际太空鸭’挡住了航线。你要怎么让它们乖乖让路？", 
                                 options: [
-                                    { text: "放一首好听的鸭鸭儿歌引导它们", isCorrect: true }, 
-                                    { text: "发射飞船上的大炮把它们吓跑", isCorrect: false, feedback: "大炮会伤害小鸭子，而且违反了星际和平法则！作为优秀指挥官，想想更和平的办法。" }
+                                    { text: "播放鸭妈妈的声波频率引导它们", isCorrect: true }, 
+                                    { text: "向它们发射激光吓跑它们", isCorrect: false, feedback: "指挥官！激光会伤害生命，且违反了《星际和平保护法》。请思考更友善的解决方式！" }
                                 ] 
                             },
                             { 
-                                phase: "阶段二：安全判断 (Judging)",
-                                ai: "鸭鸭们跟着音乐游走了，但领头的小鸭子肚子咕咕叫了。你打算喂它什么？", 
+                                phase: "⚖️ 安全判断 (Judging)",
+                                ai: "鸭鸭们跟着音乐游走了，但领头的小鸭子肚子咕咕叫了。AI 建议喂它们太空钛合金，是否批准？", 
                                 options: [
-                                    { text: "给它一块闪闪发光的太空石头", isCorrect: false, feedback: "石头虽然漂亮但太硬了，鸭鸭咬不动，还会崩坏牙齿的！" }, 
-                                    { text: "给它一块香喷喷的太空饼干", isCorrect: true }
+                                    { text: "批准，喂它们钛合金", isCorrect: false, feedback: "判断严重失误！钛合金太硬了，会崩坏小鸭子的肠胃！你被不靠谱的 AI 误导了！" }, 
+                                    { text: "驳回！喂它们柔软的有机饼干", isCorrect: true }
                                 ] 
                             },
                             { isCrisisVideo: true }
                         ],
                         mid: [
                             { 
-                                phase: "阶段一：行动判断 (Judging)",
+                                phase: "🧠 行动决策 (Logic Prompt)",
                                 ai: "指挥官，我们的月球探测车卡在陨石坑里出不来了。第一步救援指令是什么？", 
                                 options: [
-                                    { text: "直接让探测车全速踩油门往前冲", isCorrect: false, feedback: "在没有查明卡住原因的情况下猛踩油门，极易导致电机过载烧毁或底盘彻底断裂！" }, 
-                                    { text: "先扫描探测车周围的地形和受损情况", isCorrect: true }
+                                    { text: "给引擎输入 200% 的动力冲出去", isCorrect: false, feedback: "莽撞！在未扫描卡阻原因时盲目加速，极易导致电机过载烧毁或底盘彻底断裂！" }, 
+                                    { text: "启动底层雷达，扫描车轮的卡阻位置", isCorrect: true }
                                 ] 
                             },
                             { 
-                                phase: "阶段二：逻辑纠错 (Critical Thinking)",
-                                ai: "扫描发现轮子被卡住了。AI 建议：‘把车子全部拆掉重新组装’。这个建议有什么漏洞？", 
+                                phase: "⚖️ 破除幻觉 (Critical Judging)",
+                                ai: "雷达显示轮子被岩石卡死。AI 建议：‘直接引爆车轮模块，牺牲轮子保全车身’。你的决断是？", 
                                 options: [
-                                    { text: "这个建议很好，非常彻底", isCorrect: false, feedback: "在缺乏空气保护的月球真空中拆解整车极其耗时且面临生命危险，AI 完全没有考虑现实的执行成本！" }, 
-                                    { text: "太浪费时间了，在月球外拆车非常危险", isCorrect: true }
+                                    { text: "批准，立刻牺牲轮子", isCorrect: false, feedback: "毫无常识的 AI 幻觉！失去轮子的月球车形同废铁。必须寻找非破坏性的方案！" }, 
+                                    { text: "驳回！使用机械臂粉碎卡住的岩石", isCorrect: true }
                                 ] 
                             },
                             { isCrisisVideo: true }
                         ],
                         old: [
                             { 
-                                phase: "阶段一：系统排查 (System Check)",
-                                ai: "火星基地的室内植物突然大面积发黄。作为生态官，你首先要求 AI 排查哪个系统？", 
+                                phase: "🧠 系统化提问 (System Prompting)",
+                                ai: "火星基地的室内植物大面积枯黄。作为生态官，你首先要求 AI 排查哪个系统？", 
                                 options: [
-                                    { text: "检查水循环系统和土壤的营养成分", isCorrect: true }, 
-                                    { text: "检查基地外墙的防陨石装甲厚度", isCorrect: false, feedback: "防陨石装甲的厚度与植物发黄缺乏直接的因果联系。优秀的生态官不会在无关系统上浪费宝贵的算力！" }
+                                    { text: "交叉比对土壤 pH 值与大气成分", isCorrect: true }, 
+                                    { text: "检查防陨石装甲是否发生漏气", isCorrect: false, feedback: "缺乏逻辑关联！装甲漏气会导致气压瞬间归零，植物会瞬间结冰而不是缓慢枯黄。不要浪费算力！" }
                                 ] 
                             },
                             { 
-                                phase: "阶段二：科学判断 (Scientific Logic)",
-                                ai: "排查发现是水管堵塞。AI 建议：‘直接提高室内温度到 50 度，让植物多出汗’。请指出漏洞。", 
+                                phase: "🔗 跨域整合 (Synthesizing)",
+                                ai: "查明是 CO2 浓度过高。AI 建议：‘立刻打开气闸，将多余的 CO2 排放到火星真空中’。请指示。", 
                                 options: [
-                                    { text: "50度会加速水分蒸发，植物会死得更快", isCorrect: true }, 
-                                    { text: "可以，温度高能促进植物的光合作用", isCorrect: false, feedback: "50 度的极端高温会直接破坏植物体内的酶活性，导致细胞不可逆的坏死！你的选择违背了基础的生物学常识。" }
+                                    { text: "批准，立刻进行大气排放", isCorrect: false, feedback: "严重的资源浪费！火星生存法则第一条：一切废料皆为资源。你没有展现出整合资源的思维！" }, 
+                                    { text: "驳回！将 CO2 导入微藻反应器合成氧气", isCorrect: true }
                                 ] 
                             },
                             { isCrisisVideo: true }
@@ -290,18 +296,18 @@
                     },
                     en: {
                         young: [
-                            { phase: "PHASE 1: Prompting", ai: "Commander, a flock of 'Space Ducks' is blocking our path. How do we make them move?", options: [{ text: "Play a nice duck song to guide them.", isCorrect: true }, { text: "Shoot lasers to scare them away.", isCorrect: false, feedback: "Lasers will hurt the ducks and violate Space Peace Laws! Think of a peaceful way." }] },
-                            { phase: "PHASE 2: Judging", ai: "The ducks followed the music, but the leader is hungry. What should we feed it?", options: [{ text: "A shiny space rock.", isCorrect: false, feedback: "Rocks are too hard! It will break the duck's teeth!" }, { text: "Space nutrition biscuits.", isCorrect: true }] },
+                            { phase: "🧠 Prompting", ai: "Commander, lost 'Space Ducks' are blocking our path. How do we make them move?", options: [{ text: "Play a duck song to guide them.", isCorrect: true }, { text: "Shoot lasers to scare them away.", isCorrect: false, feedback: "Lasers will hurt the ducks and violate Space Peace Laws! Think of a peaceful way." }] },
+                            { phase: "⚖️ Judging", ai: "The ducks are hungry. AI suggests feeding them Space Titanium. Approve?", options: [{ text: "Approve. Feed them Titanium.", isCorrect: false, feedback: "Critical Error! Titanium will break their teeth! You were misled by AI." }, { text: "Reject! Feed them organic biscuits.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ],
                         mid: [
-                            { phase: "PHASE 1: Action Logic", ai: "Commander, our Lunar Rover is stuck in a crater. What's our first rescue command?", options: [{ text: "Tell the rover to accelerate at full speed.", isCorrect: false, feedback: "Accelerating blindly without knowing why it's stuck will burn out the motors or break the chassis!" }, { text: "Scan the terrain and rover damage.", isCorrect: true }] },
-                            { phase: "PHASE 2: Critical Thinking", ai: "The scan shows wheels are jammed. AI suggests: 'Dismantle the entire rover and rebuild it'. What's the flaw?", options: [{ text: "It's a great and thorough suggestion.", isCorrect: false, feedback: "Dismantling a rover in a lunar vacuum is extremely dangerous and wastes time. The AI failed to assess execution costs!" }, { text: "It wastes time and is dangerous outside.", isCorrect: true }] },
+                            { phase: "🧠 Logic Prompt", ai: "Commander, our Lunar Rover is stuck in a crater. What's our first rescue command?", options: [{ text: "Accelerate at 200% engine power.", isCorrect: false, feedback: "Blind acceleration will burn out the motors or break the chassis! Scan first!" }, { text: "Scan the wheels for jamming sources.", isCorrect: true }] },
+                            { phase: "⚖️ Critical Judging", ai: "Wheels are jammed by rocks. AI suggests: 'Detonate the wheels to save the chassis'. Your order?", options: [{ text: "Approve. Sacrifice the wheels.", isCorrect: false, feedback: "AI Hallucination! A rover without wheels is useless. Find a non-destructive way." }, { text: "Reject! Use robotic arm to crush rocks.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ],
                         old: [
-                            { phase: "PHASE 1: System Check", ai: "The indoor plants at the Mars Base are turning yellow. As Ecology Officer, what do you check first?", options: [{ text: "The water circulation and soil nutrients.", isCorrect: true }, { text: "The anti-meteor armor thickness outside.", isCorrect: false, feedback: "Armor thickness has no causal relationship with plant health. Don't waste compute power on irrelevant systems!" }] },
-                            { phase: "PHASE 2: Scientific Logic", ai: "It's a water pipe block. AI suggests: 'Raise indoor temperature to 50°C so plants sweat more'. Find the flaw.", options: [{ text: "50°C will accelerate evaporation and kill them.", isCorrect: true }, { text: "High temperature is good for plant growth.", isCorrect: false, feedback: "Extreme 50°C heat will denature plant enzymes and cause irreversible cell death! This violates basic biology." }] },
+                            { phase: "🧠 System Prompting", ai: "Indoor plants on Mars are turning yellow. What system should AI check first?", options: [{ text: "Cross-reference soil pH and atmosphere.", isCorrect: true }, { text: "Check anti-meteor armor for leaks.", isCorrect: false, feedback: "A leak would freeze the plants instantly, not turn them yellow. Don't waste compute power!" }] },
+                            { phase: "🔗 Synthesizing", ai: "Issue: High CO2. AI suggests: 'Open airlocks to vent CO2 into the vacuum'. Your order?", options: [{ text: "Approve. Vent the CO2 immediately.", isCorrect: false, feedback: "Resource waste! In space survival, all waste is a resource. Think systemic!" }, { text: "Reject! Route CO2 to Algae Bioreactor.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ]
                     }
@@ -334,7 +340,7 @@
                 init() {
                     try {
                         this.isPro = window.localStorage.getItem('xp_is_pro') === 'true';
-                    } catch (e) { console.error("Init Error:", e); }
+                    } catch (e) { console.error("Init:", e); }
                 },
 
                 selectAge(age) {
@@ -353,7 +359,7 @@
                         this.isMuted = false;
                         v.load();
                         const playPromise = v.play();
-                        if (playPromise !== undefined) playPromise.catch(e => console.warn("Audio block:", e));
+                        if (playPromise !== undefined) playPromise.catch(e => console.warn(e));
                     }
                     this.startFailsafe();
                 },
@@ -366,9 +372,7 @@
 
                 startFailsafe() {
                     clearTimeout(this.failsafeTimer);
-                    this.failsafeTimer = setTimeout(() => {
-                        this.triggerNodeAction();
-                    }, 9000); 
+                    this.failsafeTimer = setTimeout(() => { this.triggerNodeAction(); }, 9000); 
                 },
 
                 handleVideoError() {
@@ -384,13 +388,13 @@
                     
                     const v = document.getElementById('main-video');
 
-                    // 🚀 核心修复1：防止视频播完后黑屏 (Freeze-Frame Engine)
-                    // 当播放到距离总时长不到 0.2 秒时，强制暂停，将画面永远定格在最后一帧。
-                    if (v && !isNaN(v.duration) && time >= v.duration - 0.2) {
+                    // 🚀 终极防黑屏黑科技 (Freeze-Frame)
+                    // 当视频播放到距离结束还剩 0.25 秒时，强行切断播放，将其作为背景定格！
+                    if (v && v.duration > 0 && time >= v.duration - 0.25) {
                         if (!v.paused) v.pause();
                     }
                     
-                    // 核心修复2：到达 8.0 秒时，弹出 UI 进行提问。视频继续播向定格点。
+                    // 准时在第 8 秒弹出 HUD
                     if (time > 8.0 && !this.showHUD) {
                         clearTimeout(this.failsafeTimer); 
                         this.triggerNodeAction();
@@ -410,6 +414,9 @@
                 },
 
                 triggerCrisisNow() {
+                    const v = document.getElementById('main-video');
+                    if (v) v.pause();
+                    
                     if (this.isPro) {
                         Swal.fire({
                             title: this.lang === 'zh' ? 'PRO 权限已验证' : 'PRO Access Verified', 
@@ -424,21 +431,19 @@
                 makeChoice(opt) {
                     if (this.isThinking) return;
 
-                    // 🚀 核心重构：判断力引擎 (Judge Engine)
-                    // 如果选错了，绝对不允许进入下一关！弹出严厉的科学/逻辑反馈！
+                    // 🚀 严厉的判官系统：选错直接红屏，绝不放行！
                     if (opt.isCorrect === false) {
-                        Swal.fire({
-                            title: this.lang === 'zh' ? '判断失误' : 'Critical Error',
-                            text: opt.feedback,
-                            icon: 'error',
-                            background: '#030712',
-                            color: '#06b6d4',
-                            confirmButtonColor: '#3b82f6'
-                        });
-                        return; // 强制拦截，让孩子重新选！
+                        this.hudAlert.message = opt.feedback;
+                        this.hudAlert.show = true;
+                        
+                        // 4秒后收起红屏，逼迫玩家重新选
+                        setTimeout(() => {
+                            this.hudAlert.show = false;
+                        }, 4000);
+                        return; 
                     }
                     
-                    // 只有选对，才允许进入下一阶段
+                    // 选对才能推进
                     this.isThinking = true;
                     this.showHUD = false;
                     this.isTyping = false;

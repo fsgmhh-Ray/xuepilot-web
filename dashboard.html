@@ -66,92 +66,93 @@
 <body x-data="dashboardApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
 
     <!-- 侧边导航栏 -->
-    <aside class="w-[18rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative">
+    <aside class="w-[20rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest">XUEPILOT</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.6</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.9</div>
                 </div>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">🚀 我的宇宙飞船</div>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col scrollbar-hide">
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">🚀 核心知识宇宙</div>
             
             <button @click="view = 'classroom'" class="btn-nav py-3 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
                 <span class="mr-3 text-2xl">🌌</span> 
                 <div class="flex flex-col">
-                    <span class="text-sm font-black text-white">启航！3D 星球</span>
-                    <span class="text-[10px] text-emerald-600 font-normal mt-0.5">漫游我的专属知识宇宙</span>
+                    <span class="text-sm font-black text-white">启航！3D 知识星球</span>
+                    <span class="text-[10px] text-emerald-600 font-normal mt-0.5 leading-snug">一键同步全球顶尖教学大纲与资源的沉浸式教室</span>
                 </div>
             </button>
             
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">💡 魔法训练营</div>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">💡 魔法专项训练营</div>
             
-            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400">
+            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400 py-3">
                 <span class="mr-3 text-xl">🎮</span>
                 <div class="flex flex-col">
-                    <span class="text-sm">危机救援演习</span>
-                    <span class="text-[10px] text-slate-500 font-normal mt-0.5">科幻实景演练，锻炼逻辑与大局观</span>
+                    <span class="text-sm">AI 危机救援演习</span>
+                    <span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">告别刷题！在科幻实战中练就顶级逻辑与大局观</span>
                 </div>
             </a>
             
-            <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'">
+            <button @click="view = 'writing'" class="btn-nav py-3" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">✍️</span>
                 <div class="flex flex-col">
-                    <span class="text-sm">灵感写作舱</span>
-                    <span class="text-[10px] font-normal mt-0.5" :class="view==='writing'?'text-orange-500':'text-slate-500'">苏格拉底式提问，引导独立思考</span>
+                    <span class="text-sm">AI 启发写作舱</span>
+                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='writing'?'text-orange-500':'text-slate-500'">不代写答案！苏格拉底提问专治流水账，重塑逻辑链</span>
                 </div>
             </button>
             
-            <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
+            <!-- 🌟 升级文案：英文伴读 -->
+            <button @click="openReading('en')" class="btn-nav py-3" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">🔤</span>
                 <div class="flex flex-col">
-                    <span class="text-sm">英语伴读小精灵</span>
-                    <span class="text-[10px] font-normal mt-0.5" :class="view==='reading-en'?'text-indigo-500':'text-slate-500'">沉浸式外教，发掘词汇与文化彩蛋</span>
+                    <span class="text-sm">英文语境透视镜</span>
+                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='reading-en'?'text-indigo-500':'text-slate-500'">构建母语级思维脉络，像语言学家一样解构跨文化隐喻</span>
                 </div>
             </button>
             
-            <button @click="openReading('zh')" class="btn-nav" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
+            <!-- 🌟 升级文案：大语文伴读 -->
+            <button @click="openReading('zh')" class="btn-nav py-3" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">📜</span>
                 <div class="flex flex-col">
-                    <span class="text-sm">国学伴读小导师</span>
-                    <span class="text-[10px] font-normal mt-0.5" :class="view==='reading-zh'?'text-emerald-500':'text-slate-500'">场景重构，与古人展开跨时空对话</span>
+                    <span class="text-sm">大语文时空伴读</span>
+                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='reading-zh'?'text-emerald-500':'text-slate-500'">唤醒跨时空共情力，以大师级视角重塑古典与现代审美</span>
                 </div>
             </button>
 
             <!-- 家长后台 -->
             <div class="mt-auto pt-4 border-t border-slate-800/50">
-                <button @click="promptParentLock()" class="btn-nav w-full justify-between group" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
+                <button @click="promptParentLock()" class="btn-nav w-full justify-between group py-3" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
                     <div class="flex items-center">
                         <span class="mr-3 text-xl">🎛️</span>
                         <div class="flex flex-col">
-                            <span class="text-sm">家长控制台 (Parent)</span>
-                            <span class="text-[10px] font-normal mt-0.5" :class="isParentUnlocked ? 'text-slate-400' : 'text-slate-500'">密码保护，管理大纲与雷达</span>
+                            <span class="text-sm">家长/教师主控台</span>
+                            <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="isParentUnlocked ? 'text-slate-400' : 'text-slate-500'">密码锁定：配置专属大纲与查看六维学情雷达</span>
                         </div>
                     </div>
                     <span x-text="isParentUnlocked ? '🔓' : '🔒'"></span>
                 </button>
                 
-                <!-- 家长子菜单也加上极简说明 -->
-                <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1">
+                <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1 pb-4">
                     <button @click="view = 'students'" class="btn-nav py-2" :class="view==='students'?'text-blue-400':'text-slate-400'">
                         <span class="mr-2">👨‍👩‍👧‍👦</span>
-                        <div class="flex flex-col"><span class="text-xs">学员管理</span><span class="text-[9px] font-normal" :class="view==='students'?'text-blue-500':'text-slate-500'">多学员进度隔离</span></div>
+                        <div class="flex flex-col"><span class="text-xs">学员档案管理</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='students'?'text-blue-500':'text-slate-500'">多孩家庭专属，学习进度与宇宙物理隔离</span></div>
                     </button>
                     <button @click="view = 'forge'" class="btn-nav py-2" :class="view==='forge'?'text-purple-400':'text-slate-400'">
                         <span class="mr-2">🪐</span>
-                        <div class="flex flex-col"><span class="text-xs">星系与大纲规划</span><span class="text-[9px] font-normal" :class="view==='forge'?'text-purple-500':'text-slate-500'">部署专属知识体系</span></div>
+                        <div class="flex flex-col"><span class="text-xs">云端大纲排课引擎</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='forge'?'text-purple-500':'text-slate-500'">一键抓取并生成符合国际标准的学期排课</span></div>
                     </button>
                     <button @click="view = 'radar'" class="btn-nav py-2" :class="view==='radar'?'text-emerald-400':'text-slate-400'">
                         <span class="mr-2">📡</span>
-                        <div class="flex flex-col"><span class="text-xs">学情分析雷达</span><span class="text-[9px] font-normal" :class="view==='radar'?'text-emerald-500':'text-slate-500'">六维素养智能监测</span></div>
+                        <div class="flex flex-col"><span class="text-xs">全息学情分析雷达</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='radar'?'text-emerald-500':'text-slate-500'">告别唯分数论，多维监控孩子真实认知成长</span></div>
                     </button>
                     <button @click="view = 'config'" class="btn-nav py-2" :class="view==='config'?'text-slate-300':'text-slate-500'">
                         <span class="mr-2">⚙️</span>
-                        <div class="flex flex-col"><span class="text-xs">引擎配置</span><span class="text-[9px] font-normal" :class="view==='config'?'text-slate-400':'text-slate-500'">API与云端算力调度</span></div>
+                        <div class="flex flex-col"><span class="text-xs">大模型算力配置</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='config'?'text-slate-400':'text-slate-500'">自主绑定 API 密钥，保障隐私与无限算力</span></div>
                     </button>
                 </div>
             </div>
@@ -232,6 +233,7 @@
 
         <!-- ================= 🚀 视图：双语智能伴读舱 ================= -->
         <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
+            <!-- 左侧：素材区与差异化工具 -->
             <div class="w-1/2 glass-panel rounded-3xl flex flex-col border relative overflow-hidden" :class="view==='reading-en' ? 'border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'🔤 英语魔法书':'📜 大语文时光机'"></h3>
@@ -240,6 +242,7 @@
                 <div class="flex-1 p-5 flex flex-col relative">
                     <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? '在这里贴上你想读的英文小故事...\nNOVA 小精灵不会直接给你翻译，而是会带你去发现里面的秘密！' : '在这里贴上你想读的古诗、童话或者历史故事...\nNOVA 会带你穿越时空，去看看那些好玩的画面。'"></textarea>
                     
+                    <!-- 动态导师工具箱 -->
                     <div class="absolute bottom-8 left-6 right-6 flex flex-wrap justify-center gap-2">
                         <template x-if="view === 'reading-en'">
                             <div class="flex gap-2 w-full justify-center">
@@ -259,6 +262,7 @@
                 </div>
             </div>
 
+            <!-- 右侧：导师聊天流 -->
             <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
                 <div class="h-16 border-b flex items-center justify-center bg-slate-900" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
                     <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
@@ -515,10 +519,10 @@
 
                 // 物理渲染引擎
                 getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
-                initNetworkCanvas() { this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d'); const res = () => { this.canvas.width = window.innerWidth - 288; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res(); for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); } for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); },
+                initNetworkCanvas() { this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d'); const res = () => { this.canvas.width = window.innerWidth - 320; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res(); for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); } for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); },
                 drawNetwork() {
                     if(this.view !== 'classroom' || !this.ctx) return;
-                    const w = this.canvas.width; const h = this.canvas.height; this.ctx.clearRect(0, 0, w, h); let mx = this.mouseX - 288;
+                    const w = this.canvas.width; const h = this.canvas.height; this.ctx.clearRect(0, 0, w, h); let mx = this.mouseX - 320;
                     this.ctx.fillStyle = "#fff";
                     this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
                     this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<150) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.1*(1-d/150)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-this.mouseY); if(dm<200) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/200)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,this.mouseY); this.ctx.stroke(); } } });

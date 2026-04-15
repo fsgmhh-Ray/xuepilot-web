@@ -47,7 +47,6 @@
         <div x-show="!sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden">
             <div class="scan-line"></div>
             
-            <!-- 模式切换标签 -->
             <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
                 <button @click="authMode = 'login'" class="flex-1 py-3 text-sm font-bold rounded-xl transition" :class="authMode === 'login' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'">身份验证登录</button>
                 <button @click="authMode = 'register'" class="flex-1 py-3 text-sm font-bold rounded-xl transition" :class="authMode === 'register' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'">建立新档案</button>
@@ -69,7 +68,6 @@
                 </button>
             </form>
 
-            <!-- 物理应急通道 -->
             <div class="mt-6 text-center">
                 <button @click="bypassAuth()" class="text-xs text-slate-500 hover:text-blue-400 underline decoration-slate-700 underline-offset-4 transition">
                     [Debug] 绕过鉴权，进入本地体验模式 ➔
@@ -77,12 +75,12 @@
             </div>
         </div>
 
-        <!-- 登录成功：短暂动画后自动跳转 -->
+        <!-- 🚀 纯粹的跳转动画 -->
         <div x-show="sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden text-center fade-in">
             <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-pulse">✓</div>
             <h2 class="text-2xl font-black text-white mb-2">身份链接成功</h2>
             <p class="text-slate-400 text-sm mb-6 truncate px-4 font-mono" x-text="sessionUser?.email"></p>
-            <div class="text-blue-400 font-mono text-xs tracking-widest uppercase animate-pulse">正在进入主控中枢...</div>
+            <div class="text-blue-400 font-mono text-sm tracking-widest uppercase animate-pulse font-bold mt-8">正在驶入应用大厅...</div>
         </div>
 
     </div>
@@ -90,16 +88,11 @@
     <script>
         function authApp() {
             return {
-                authMode: 'login', // 'login' or 'register'
-                email: '', password: '', loading: false,
-                sessionUser: null,
-                isPro: false,
-                supaClient: null,
+                authMode: 'login', email: '', password: '', loading: false, sessionUser: null, isPro: false, supaClient: null,
 
                 async initAuth() {
                     this.isPro = localStorage.getItem('xp_is_pro') === 'true';
 
-                    // 🎯 核心修复：将数据库凭证直接硬编码到前端
                     const DEFAULT_SUPA_URL = 'https://cywslfalbedraeeggryj.supabase.co'; 
                     const DEFAULT_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0'; 
 
@@ -114,34 +107,22 @@
                                 this.sessionUser = session.user;
                                 this.checkProStatusFromDB(session.user.id);
                                 this.injectDemoDataIfEmpty();
-                                // 如果一打开网页就已经登录，直接秒切到 dashboard
+                                // ✅ 登录状态下，直接无感跳转大厅
                                 window.location.href = 'dashboard.html';
                             }
-                        } catch(e) { console.error("Supabase init failed", e); }
+                        } catch(e) {}
                     }
                 },
 
-                // 智能数据拓荒引擎 (防卡死、防没星球)
                 injectDemoDataIfEmpty() {
                     const existingGalaxies = localStorage.getItem('xp_galaxies');
                     if (!existingGalaxies || existingGalaxies === '[]' || existingGalaxies.length < 10) {
-                        console.log("检测到空数据，正在注入默认演示星系...");
                         const defaultStudents = [{ id: 'stu_default', name: '探索者一号', avatar: '👨‍🚀' }];
                         localStorage.setItem('xp_students', JSON.stringify(defaultStudents));
-
                         const demoGalaxies = [{
-                            id: `gal_demo_${Date.now()}`,
-                            title: '太阳系探索先遣营',
-                            region: 'CN',
-                            baseStandard: 'custom',
-                            studentId: 'stu_default',
-                            overview: '欢迎来到 XuePilot！这是一个为您自动生成的演示星系，您可以点击星球体验智能伴学，或前往主控舱编辑它。',
-                            bgX: 50, bgY: 50,
-                            subjects: [
-                                { id: 'sub_demo_1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, referenceText: '了解基本重力概念。', units: [] },
-                                { id: 'sub_demo_2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5, referenceText: '火星土壤成分分析。', units: [] },
-                                { id: 'sub_demo_3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0, referenceText: '控制机器人的基础代码。', units: [] }
-                            ]
+                            id: `gal_demo_${Date.now()}`, title: '太阳系探索先遣营', region: 'CN', baseStandard: 'custom', studentId: 'stu_default',
+                            overview: '欢迎来到 XuePilot！这是一个为您自动生成的演示星系。', bgX: 50, bgY: 50,
+                            subjects: [ { id: 'sub_1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, referenceText: '了解基本重力概念。', units: [] } ]
                         }];
                         localStorage.setItem('xp_galaxies', JSON.stringify(demoGalaxies));
                     }
@@ -151,15 +132,13 @@
                     this.loading = true;
                     try {
                         if (!this.supaClient) throw new Error("数据库未连接！");
-
                         let res;
                         if (this.authMode === 'register') {
                             res = await this.supaClient.auth.signUp({ email: this.email, password: this.password });
                             if (res.error) throw res.error;
-                            Swal.fire({icon:'success', title:'注册成功', text:'身份已记录，系统正在为您跳转...', background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
+                            Swal.fire({icon:'success', title:'注册成功', text:'身份已记录，系统正在为您跳转...', background:'#0f172a', color:'#fff', timer: 1500, showConfirmButton: false});
                             this.authMode = 'login';
-                            // 注册后自动登录
-                            setTimeout(() => this.handleAuth(), 2000);
+                            setTimeout(() => this.handleAuth(), 1500);
                         } else {
                             res = await this.supaClient.auth.signInWithPassword({ email: this.email, password: this.password });
                             if (res.error) throw res.error;
@@ -167,32 +146,26 @@
                             this.checkProStatusFromDB(res.data.user.id);
                             this.injectDemoDataIfEmpty();
                             
-                            // 登录成功后，延迟 1.5 秒自动跳转到主控台
-                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                            // ✅ 登录成功后，直接跳转大厅
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
                         }
                     } catch (err) {
                         Swal.fire({icon:'error', title:'验证失败', text: err.message, background:'#0f172a', color:'#fff'});
-                    } finally {
-                        this.loading = false;
-                    }
+                    } finally { this.loading = false; }
                 },
 
                 async checkProStatusFromDB(userId) {
                     if(!this.supaClient) return;
                     try {
                         const { data } = await this.supaClient.from('user_data').select('data').eq('id', userId).single();
-                        if (data && data.data && data.data.isPro) {
-                            this.isPro = true;
-                            localStorage.setItem('xp_is_pro', 'true');
-                        }
+                        if (data && data.data && data.data.isPro) { this.isPro = true; localStorage.setItem('xp_is_pro', 'true'); }
                     } catch(e) {}
                 },
 
                 bypassAuth() {
                     this.sessionUser = { email: 'guest_commander@local.env' };
                     this.injectDemoDataIfEmpty();
-                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'已切换至本地演示模式', showConfirmButton:false, timer:1500});
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
                 }
             }
         }

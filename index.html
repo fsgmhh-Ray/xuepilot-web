@@ -69,7 +69,7 @@
                 </button>
             </form>
 
-            <!-- 物理应急通道：如果您还没配好 Supabase，点这里强制进入本地体验模式 -->
+            <!-- 物理应急通道 -->
             <div class="mt-6 text-center">
                 <button @click="bypassAuth()" class="text-xs text-slate-500 hover:text-blue-400 underline decoration-slate-700 underline-offset-4 transition">
                     [Debug] 绕过鉴权，进入本地体验模式 ➔
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <!-- 登录成功后的分发大门 (身份墙与收费墙判定) -->
+        <!-- 登录成功后的分发大门 -->
         <div x-show="sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden text-center">
             <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">✓</div>
             <h2 class="text-2xl font-black text-white mb-2">身份链接成功</h2>
@@ -128,14 +128,20 @@
                 supaClient: null,
 
                 async initAuth() {
-                    // 初始化 PRO 状态 (从本地缓存读取，真实情况应该从数据库 user_data 读)
+                    // 读取本地是否已激活 PRO 的缓存
                     this.isPro = localStorage.getItem('xp_is_pro') === 'true';
 
-                    // 尝试连接 Supabase (需家长在 dashboard 里配置好，或者在这里写死环境变量)
-                    const supaUrl = localStorage.getItem('xp_supa_url');
-                    const supaKey = localStorage.getItem('xp_supa_key');
+                    // 🎯 核心修复：将数据库凭证直接硬编码到前端！
+                    // 这是标准的 Serverless 纯前端应用连接 Supabase 的做法
+                    const DEFAULT_SUPA_URL = 'https://cywslfalbedraeeggryj.supabase.co'; // 您的专属 URL
+                    const DEFAULT_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0'; // 👉 真实 Anon Key 已完美注入！
 
-                    if (supaUrl && supaKey && window.supabase) {
+                    // 优先读取本地缓存（为了兼容您以后在 Dashboard 里改配置），如果没有就用上面的硬编码默认值
+                    const supaUrl = localStorage.getItem('xp_supa_url') || DEFAULT_SUPA_URL;
+                    const supaKey = localStorage.getItem('xp_supa_key') || DEFAULT_SUPA_KEY;
+
+                    // 只要 Key 被替换成了真实的值，就会自动初始化连接
+                    if (supaUrl && supaKey && supaKey !== 'YOUR_SUPABASE_ANON_KEY' && window.supabase) {
                         try {
                             this.supaClient = window.supabase.createClient(supaUrl, supaKey);
                             const { data: { session } } = await this.supaClient.auth.getSession();
@@ -150,14 +156,16 @@
                 async handleAuth() {
                     this.loading = true;
                     try {
-                        if (!this.supaClient) throw new Error("数据库未连接！请点击下方 [Debug] 通道进入本地体验。");
+                        if (!this.supaClient) throw new Error("数据库未连接！请检查代码第 152 行是否已替换真实的 Anon Key。");
 
                         let res;
                         if (this.authMode === 'register') {
                             res = await this.supaClient.auth.signUp({ email: this.email, password: this.password });
                             if (res.error) throw res.error;
-                            Swal.fire({icon:'success', title:'注册成功', text:'请查收邮箱验证码，或直接登录', background:'#0f172a', color:'#fff'});
+                            Swal.fire({icon:'success', title:'注册成功', text:'身份已记录，系统正在为您跳转...', background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
                             this.authMode = 'login';
+                            // 注册后自动尝试登录
+                            setTimeout(() => this.handleAuth(), 2000);
                         } else {
                             res = await this.supaClient.auth.signInWithPassword({ email: this.email, password: this.password });
                             if (res.error) throw res.error;

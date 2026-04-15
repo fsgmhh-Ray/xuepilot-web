@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +10,8 @@
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* 究極の表示：不透明度やフィルターをすべて削除し、ビデオを100%クリアに表示します */
-        .video-container { position: fixed; inset: 0; z-index: 0; background: #222; }
+        /* 极致裸露：保证视频毫无遮挡 */
+        .video-container { position: fixed; inset: 0; z-index: 0; background: #111; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 1 !important; }
         
         .glitch-fx { animation: shake 0.15s infinite; filter: hue-rotate(90deg) brightness(1.5); }
@@ -25,15 +25,22 @@
         .terminal-font { font-family: 'Courier New', Courier, monospace; }
     </style>
 </head>
-<body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
+<body x-data="shipApp()" x-init="init()" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- デバッグ用：現在リクエストしているビデオURLを直接表示します -->
-    <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-xs font-mono p-2 border border-green-500/50" x-text="`ロード中: ${videoUrl}`"></div>
+    <!-- 🚀 终极诊断雷达 -->
+    <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-[10px] font-mono p-4 border border-green-500/50 space-y-1">
+        <div><strong>URL:</strong> <span x-text="videoUrl"></span></div>
+        <div><strong>时间戳 (Time):</strong> <span id="debug-time">0.00</span> 秒</div>
+        <div><strong>缓冲状态 (ReadyState):</strong> <span id="debug-state">0</span> 
+            <span class="text-slate-400 ml-2">(4代表完全加载，如果到了4还黑屏，绝对是视频 H.265 编码问题！)</span>
+        </div>
+    </div>
 
+    <!-- 视频容器：回归最纯粹的 HTML5 自动播放，杜绝 JS 打断 -->
     <div class="video-container">
-        <!-- 修正点：crossorigin="anonymous"を削除し、CORSのサイレントブロックを回避。preload="auto"を追加 -->
         <video id="main-video" class="scene-video" 
-               muted loop playsinline preload="auto"
+               autoplay muted loop playsinline crossorigin="anonymous"
+               :src="videoUrl"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
         </video>
@@ -43,13 +50,13 @@
     <div class="hud-border"></div>
     
     <div x-show="isLocking" x-transition.opacity.duration.1000ms class="target-lock">
-        <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-blue-400 font-black tracking-widest bg-black/40 px-2 py-0.5" x-text="i18n[lang].target"></div>
+        <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-blue-400 font-black tracking-widest bg-black/40 px-2 py-0.5">TARGET_LOCKED</div>
     </div>
 
     <main class="fixed inset-0 z-30 flex flex-col items-center justify-end pb-20 px-10 pointer-events-none">
         <div class="w-full max-w-4xl mb-12 transition-all duration-1000" :class="isThinking ? 'opacity-30 blur-sm' : 'opacity-100'">
             <div class="bg-black/60 backdrop-blur-2xl border-l-4 border-blue-600 p-8 rounded-r-3xl shadow-2xl relative">
-                <div class="absolute -top-3 left-6 bg-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white shadow-lg" x-text="i18n[lang].advisor"></div>
+                <div class="absolute -top-3 left-6 bg-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white shadow-lg">A.I. 战术顾问</div>
                 <p class="text-xl md:text-2xl font-bold leading-relaxed text-blue-100 italic terminal-font" x-html="currentStoryText"></p>
             </div>
         </div>
@@ -58,7 +65,7 @@
              :class="showOptions ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'">
             <template x-for="(opt, idx) in currentOptions" :key="idx">
                 <button @click="makeChoice(opt)" class="quantum-btn px-10 py-6 rounded-2xl flex flex-col items-start gap-1 group relative">
-                    <span class="text-[8px] text-blue-500 font-mono uppercase" x-text="`${i18n[lang].inst} 0x0${idx+1}`"></span>
+                    <span class="text-[8px] text-blue-500 font-mono uppercase" x-text="`指令集 0x0${idx+1}`"></span>
                     <span class="text-base font-black text-white group-hover:text-blue-300 transition-colors uppercase tracking-tight" x-text="opt.text"></span>
                 </button>
             </template>
@@ -69,109 +76,44 @@
         <div class="w-24 h-24 bg-rose-600 rounded-full flex items-center justify-center mb-8 shadow-[0_0_100px_#ef4444] animate-pulse">
             <span class="text-5xl">🚫</span>
         </div>
-        <h2 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase" x-text="i18n[lang].haltedTitle"></h2>
-        <p class="text-rose-200 text-lg max-w-2xl mb-12 font-bold leading-relaxed" x-html="i18n[lang].haltedDesc"></p>
-        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 rounded-full font-black text-xl hover:scale-105 transition-all shadow-2xl" x-text="i18n[lang].proBtn"></button>
+        <h2 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase">算力维度封锁</h2>
+        <p class="text-rose-200 text-lg max-w-2xl mb-12 font-bold leading-relaxed">
+            预制维度的算力已耗尽。前方区域需要解锁<br><span class="text-white underline underline-offset-8">量子 Pro 密钥</span> 才能继续。
+        </p>
+        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 rounded-full font-black text-xl hover:scale-105 transition-all shadow-2xl">
+            获取 Pro 能量补给 ➔
+        </button>
     </div>
 
     <script>
         function shipApp() {
             return {
-                lang: window.localStorage.getItem('xp_lang') || 'ja',
                 step: 0, ageGroup: 'mid',
                 isGlitching: false, isLocking: false, showOptions: false,
-                currentStoryText: '初期化中...', currentOptions: [],
+                currentStoryText: 'Initializing...', currentOptions: [],
                 isPro: false, showCrisis: false, isThinking: false,
                 failsafeTimer: null,
-
-                i18n: {
-                    ja: {
-                        target: 'ターゲットロック',
-                        advisor: 'A.I. 戦術アドバイザー', inst: 'コマンドセット',
-                        haltedTitle: '演算次元ブロック',
-                        haltedDesc: '事前構築された次元の演算能力が枯渇しました。前方のエリアに進むには<br><span class="text-white underline underline-offset-8">量子Proキー</span>が必要です。',
-                        proBtn: 'Proエネルギーを補給する ➔'
-                    },
-                    zh: {
-                        target: 'TARGET_LOCKED',
-                        advisor: 'A.I. 战术顾问', inst: '指令集',
-                        haltedTitle: '算力维度封锁',
-                        haltedDesc: '预制维度的算力已耗尽。前方区域需要解锁<br><span class="text-white underline underline-offset-8">量子 Pro 密钥</span> 才能继续。',
-                        proBtn: '获取 Pro 能量补给 ➔'
-                    },
-                    en: {
-                        target: 'TARGET_LOCKED',
-                        advisor: 'A.I. Tactical Advisor', inst: 'Instruction Set',
-                        haltedTitle: 'Engine Halted',
-                        haltedDesc: 'Compute power for this dimension depleted. The sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.',
-                        proBtn: 'Acquire PRO Energy ➔'
-                    }
-                },
 
                 get videoUrl() {
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
                 scripts: {
-                    ja: {
-                        young: [
-                            { ai: "コマンダー、前方にバブルの壁があります。「賢い質問」をして壁を破りましょう。何を聞きますか？", options: [{ text: "バブルは何でできているの？" }, { text: "なぜ行く手を阻むの？" }] },
-                            { ai: "素晴らしい！バブルが割れました。しかし虹の橋が壊れています。橋を直す目的は何ですか？", options: [{ text: "データストリームを通すため" }, { text: "星が落ちないようにするため" }] },
-                            { triggerCrisis: true }
-                        ],
-                        mid: [
-                            { ai: "コマンダー、論理アウトポストに接近中。ガードが「疑われた時のみ真実を見せる」と言って侵入を拒否しています。最初の指令を：", options: [{ text: "ガードの論理的欠陥を分析" }, { text: "パラドックスパルスを送信" }] },
-                            { ai: "論理の衝突によりガードが再起動中です。中継キャビンに入りました。データ断片が流出しています！質問で固定してください。", options: [{ text: "因果が逆転した場合、今は過去ですか？" }, { text: "断片と全体の関係は？" }] },
-                            { triggerCrisis: true }
-                        ],
-                        old: [
-                            { ai: "コマンダー、事象の地平線の境界にいます。ダイソン球のコアに重力変動が発生。安定化のための論理的特異点を確立してください。", options: [{ text: "非ユークリッド探査プロトコルを確立" }, { text: "高次元演算の摂動周波数を同期" }] },
-                            { ai: "エネルギー場は一時的に安定。しかし、基盤コードの冗長性により空間プレートに幾何学的エラーが発生しています。処理の優先順位は？", options: [{ text: "第一原理プロトコルのリファクタリング" }, { text: "冗長ソースの隔離と分析" }] },
-                            { triggerCrisis: true }
-                        ]
-                    },
-                    zh: {
-                        young: [
-                            { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
-                            { ai: "精彩！气泡破了。但里面的彩虹桥断了，你需要用逻辑修补它。告诉我，修桥的目的是什么？", options: [{ text: "为了让数据流过去" }, { text: "为了不让星星掉下来" }] },
-                            { triggerCrisis: true }
-                        ],
-                        mid: [
-                            { ai: "指挥官，飞船已进入逻辑哨所范围。哨所守卫拒绝泊入，它说：‘我只在被质疑时展示真相’。请下达第一条指令：", options: [{ text: "分析守卫的逻辑漏洞" }, { text: "发射‘悖论’通信脉冲" }] },
-                            { ai: "守卫由于逻辑冲突重启中。我们已进入中转舱。这里的数据碎片正在流失！你需要用一个问题固定它。你的问题是？", options: [{ text: "如果因果倒置，现在是过去吗？" }, { text: "碎片与整体的关系是什么？" }] },
-                            { triggerCrisis: true }
-                        ],
-                        old: [
-                            { ai: "指挥官，我们正处于事件视界边缘。戴森球核心出现了引力动荡。为了稳定结构，我们需要确立逻辑奇点。你的决策是？", options: [{ text: "建立非欧几里得探测协议" }, { text: "同步高维算力扰动频率" }] },
-                            { ai: "能量场暂时稳定。但空间板块出现了几何错误。这是由于底层代码的逻辑冗余造成的。请指出处理优先级：", options: [{ text: "重构第一性原理协议" }, { text: "隔离并分析冗余来源" }] },
-                            { triggerCrisis: true }
-                        ]
-                    },
-                    en: {
-                        young: [
-                            { ai: "Commander, there's a bubble wall ahead. Ask a smart question to break it.", options: [{ text: "What is the bubble made of?" }, { text: "Why is it blocking us?" }] },
-                            { ai: "Brilliant! Bubble shattered. But the rainbow bridge is broken. What is the logical purpose of repairing it?", options: [{ text: "To allow data stream flow" }, { text: "To prevent stars from falling" }] },
-                            { triggerCrisis: true }
-                        ],
-                        mid: [
-                            { ai: "Commander, approaching logic outpost. The guard denies entry, stating: 'I only reveal truth when questioned.' Your orders?", options: [{ text: "Analyze logical flaws" }, { text: "Emit paradox pulse" }] },
-                            { ai: "Guard is rebooting. We're inside. Data fragments are leaking! Ask a conceptual question to anchor them.", options: [{ text: "If causality inverts, is now the past?" }, { text: "How do fragments relate to the whole?" }] },
-                            { triggerCrisis: true }
-                        ],
-                        old: [
-                            { ai: "Commander, we are at the event horizon. The Dyson sphere core is unstable. We must establish a logic singularity to stabilize it.", options: [{ text: "Init non-Euclidean protocol" }, { text: "Sync hyper-dimensional freq" }] },
-                            { ai: "Energy field stable. However, spatial plates show geometric errors due to redundant base code. Priority?", options: [{ text: "Refactor first principles" }, { text: "Isolate redundant sources" }] },
-                            { triggerCrisis: true }
-                        ]
-                    }
-                },
-
-                updateLang() {
-                    const scene = this.scripts[this.lang][this.ageGroup][this.step];
-                    if (scene && !scene.triggerCrisis) {
-                        this.currentStoryText = scene.ai;
-                        this.currentOptions = scene.options;
-                    }
+                    young: [
+                        { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
+                        { ai: "精彩！气泡破了。但里面的彩虹桥断了，你需要用逻辑修补它。告诉我，修桥的目的是什么？", options: [{ text: "为了让数据流过去" }, { text: "为了不让星星掉下来" }] },
+                        { triggerCrisis: true }
+                    ],
+                    mid: [
+                        { ai: "指挥官，飞船已进入逻辑哨所范围。哨所守卫拒绝泊入，它说：‘我只在被质疑时展示真相’。请下达第一条指令：", options: [{ text: "分析守卫的逻辑漏洞" }, { text: "发射‘悖论’通信脉冲" }] },
+                        { ai: "守卫由于逻辑冲突重启中。我们已进入中转舱。这里的数据碎片正在流失！你需要用一个问题固定它。你的问题是？", options: [{ text: "如果因果倒置，现在是过去吗？" }, { text: "碎片与整体的关系是什么？" }] },
+                        { triggerCrisis: true }
+                    ],
+                    old: [
+                        { ai: "指挥官，我们正处于事件视界边缘。戴森球核心出现了引力动荡。为了稳定结构，我们需要确立逻辑奇点。你的决策是？", options: [{ text: "建立非欧几里得探测协议" }, { text: "同步高维算力扰动频率" }] },
+                        { ai: "能量场暂时稳定。但空间板块出现了几何错误。这是由于底层代码的逻辑冗余造成的。请指出处理优先级：", options: [{ text: "重构第一性原理协议" }, { text: "隔离并分析冗余来源" }] },
+                        { triggerCrisis: true }
+                    ]
                 },
 
                 startFailsafe() {
@@ -179,52 +121,32 @@
                     this.failsafeTimer = setTimeout(() => {
                         this.isLocking = true;
                         this.showOptions = true;
-                        console.warn("Failsafe triggered UI display.");
+                        console.warn("由于视频一直没播到 8.0 秒，UI 强制弹出。");
                     }, 8500); 
                 },
 
                 handleVideoError() {
-                    console.error("ビデオの読み込みに失敗しました (Video load failed).");
+                    console.error("视频遭遇网络或解码错误！");
                     clearTimeout(this.failsafeTimer);
-                    setTimeout(() => {
-                        this.isLocking = true;
-                        this.showOptions = true;
-                    }, 3000);
+                    setTimeout(() => { this.isLocking = true; this.showOptions = true; }, 3000);
                 },
 
                 handleTimeSync(time) {
+                    // 更新诊断雷达
+                    const v = document.getElementById('main-video');
+                    if(v) {
+                        const timeEl = document.getElementById('debug-time');
+                        if(timeEl) timeEl.innerText = time.toFixed(2);
+                        
+                        const stateEl = document.getElementById('debug-state');
+                        if(stateEl) stateEl.innerText = v.readyState;
+                    }
+
                     if (time > 2.5 && time < 2.7) this.isGlitching = true; else this.isGlitching = false;
                     if (time > 5.0) this.isLocking = true; else this.isLocking = false;
                     if (time > 8.0) {
                         this.showOptions = true;
                         clearTimeout(this.failsafeTimer); 
-                    }
-                },
-
-                // 究極の安全再生エンジン：キャッシュ状態（readyState）を先に確認します
-                playVideoSafely(url) {
-                    const v = document.getElementById('main-video');
-                    if (!v) return;
-                    
-                    v.pause();
-                    v.removeAttribute('src'); // 以前のソースをクリア
-                    v.load();
-                    v.src = url;
-                    
-                    // すでにバッファリングされている場合（キャッシュヒット時）、直ちに再生
-                    if (v.readyState >= 3) {
-                        const playPromise = v.play();
-                        if (playPromise !== undefined) {
-                            playPromise.catch(e => console.warn('Play prevented:', e));
-                        }
-                    } else {
-                        // それ以外の場合、canplayを待ってから再生
-                        v.addEventListener('canplay', () => {
-                            const playPromise = v.play();
-                            if (playPromise !== undefined) {
-                                playPromise.catch(e => console.warn('Play prevented:', e));
-                            }
-                        }, { once: true });
                     }
                 },
 
@@ -234,15 +156,19 @@
                         this.ageGroup = params.get('age') || 'mid';
                         this.isPro = window.localStorage.getItem('xp_is_pro') === 'true';
                         
-                        if (!this.scripts[this.lang][this.ageGroup]) this.ageGroup = 'mid';
-                        const scene = this.scripts[this.lang][this.ageGroup][0];
+                        if (!this.scripts[this.ageGroup]) this.ageGroup = 'mid';
+                        const scene = this.scripts[this.ageGroup][0];
                         this.currentStoryText = scene.ai;
                         this.currentOptions = scene.options;
                         
                         this.startFailsafe(); 
                         
-                        // 安全な再生エンジンを呼び出し
-                        this.playVideoSafely(this.videoUrl);
+                        // 启动一个定时器专门更新雷达的 ReadyState（因为即使卡住，状态也可能改变）
+                        setInterval(() => {
+                            const v = document.getElementById('main-video');
+                            const stateEl = document.getElementById('debug-state');
+                            if(v && stateEl) stateEl.innerText = v.readyState;
+                        }, 500);
 
                     } catch (e) {
                         console.error("Init Error:", e);
@@ -259,17 +185,20 @@
                         this.isThinking = false;
                         this.step++;
                         
-                        const nextScene = this.scripts[this.lang][this.ageGroup][this.step];
+                        const nextScene = this.scripts[this.ageGroup][this.step];
                         if (nextScene && nextScene.triggerCrisis) {
-                            if (this.isPro) Swal.fire('PRO Access Verified', 'Generating real-time universe...', 'success');
+                            if (this.isPro) Swal.fire('PRO 权限已验证', '正在为您生成实时宇宙...', 'success');
                             else this.showCrisis = true;
                         } else if (nextScene) {
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
                             
-                            // 安全な再生エンジンを呼び出し
-                            this.playVideoSafely(this.videoUrl);
-                            this.startFailsafe(); 
+                            // 仅通知浏览器重新加载视频源，不进行强行播放打断
+                            this.$nextTick(() => {
+                                const v = document.getElementById('main-video');
+                                if(v) v.load(); 
+                                this.startFailsafe(); 
+                            });
                         }
                     }, 1200);
                 }

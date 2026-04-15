@@ -10,8 +10,11 @@
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         .video-container { position: fixed; inset: 0; z-index: 1; background: #000; }
+        
+        /* 🚀 移除 opacity: 0 的生硬控制，改用更加平滑的过渡，并加上 !important 确保生效 */
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease; filter: brightness(0.7) contrast(1.2); }
-        .video-active { opacity: 1; }
+        .video-active { opacity: 1 !important; }
+        
         .glitch-fx { animation: shake 0.15s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 2px); } }
         .hud-border { position: fixed; inset: 0; z-index: 10; pointer-events: none; border: 30px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M10 0 L0 0 L0 10 M90 0 L100 0 L100 10 M10 100 L0 100 L0 90 M90 100 L100 100 L100 90' fill='none' stroke='%233b82f6' stroke-width='1.5'/%3E%3C/svg%3E") 30 stretch; opacity: 0.4; }
@@ -44,10 +47,9 @@
 
     <!-- 视频容器 -->
     <div class="video-container">
-        <!-- 🚀 修复：增加 :src 绑定，加上 @canplay 开关，彻底解除隐形状态 -->
+        <!-- 🚀 核心大改：去掉内部的 source 和绑定的 src，加上 loop，全部交由纯原生 JS 强制加载 -->
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''" 
-               autoplay muted playsinline 
-               :src="videoUrl"
+               autoplay muted loop playsinline crossorigin="anonymous"
                @canplay="videoReady = true"
                @playing="videoReady = true"
                @timeupdate="handleTimeSync($event.target.currentTime)"
@@ -119,8 +121,9 @@
                     }
                 },
 
+                // 🚀 彻底去掉 ?t= 时间戳，防止 Supabase CDN 拒绝服务
                 get videoUrl() {
-                    return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4?t=${Date.now()}`;
+                    return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
                 scripts: {
@@ -207,8 +210,16 @@
                         setTimeout(() => {
                             hideMasterLoader();
                             this.startFailsafe(); 
+                            
+                            // 🚀 核心强行加载逻辑：用原生 JS 狠狠把视频塞进去并启动
                             const v = document.getElementById('main-video');
-                            if(v) v.play().catch(e => console.warn('Autoplay prevented', e));
+                            if(v) {
+                                v.src = this.videoUrl;
+                                v.load();
+                                v.play().catch(e => console.warn('Autoplay prevented', e));
+                                // 保底开灯：如果 1 秒后还是没收到 canplay 信号，强行显示（哪怕是一块黑布，也好过卡死）
+                                setTimeout(() => { this.videoReady = true; }, 1000);
+                            }
                         }, 500);
                     } catch (e) {
                         console.error("Init Error:", e);
@@ -233,11 +244,15 @@
                         } else if (nextScene) {
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
+                            
+                            // 🚀 同样的原生强制加载
                             const v = document.getElementById('main-video');
                             if(v) {
+                                v.src = this.videoUrl;
                                 v.load();
                                 v.play().catch(e => console.warn('Autoplay prevented', e));
                                 this.startFailsafe(); 
+                                setTimeout(() => { this.videoReady = true; }, 1000);
                             }
                         }
                     }, 1200);

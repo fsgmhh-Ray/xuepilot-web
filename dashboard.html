@@ -53,6 +53,11 @@
         .ai-message { font-size: 0.9rem; line-height: 1.6; }
         .ai-message strong { color: #cbd5e1; }
         .ai-message p { margin-bottom: 0.75rem; }
+        
+        /* 童趣化按钮特效 */
+        .magic-btn { position: relative; overflow: hidden; }
+        .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
+        .magic-btn:hover::after { opacity: 1; transform: scale(1); }
     </style>
     <script>
         window.safeStorage = { memory: {}, get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } }, set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} } };
@@ -67,27 +72,27 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest">XUEPILOT</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.0</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.5</div>
                 </div>
             </div>
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">星际学习空间</div>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">🚀 我的宇宙飞船</div>
             <button @click="view = 'classroom'" class="btn-nav py-4 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
                 <span class="mr-3 text-2xl">🌌</span> 
-                <div class="flex flex-col"><span class="text-base font-black text-white">进入学生探索舱</span><span class="text-[10px] text-emerald-600 font-normal">3D 沉浸式知识星系</span></div>
+                <div class="flex flex-col"><span class="text-base font-black text-white">启航！3D 星球</span><span class="text-[10px] text-emerald-600 font-normal">探索我的知识宇宙</span></div>
             </button>
             
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项智能研习舱</div>
-            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400"><span class="mr-3 text-xl">🎮</span> AI 指挥官模拟舱</a>
-            <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'"><span class="mr-3 text-xl">✍️</span> AI 启发写作舱</button>
-            <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'"><span class="mr-3 text-xl">📘</span> 英文智能伴读</button>
-            <button @click="openReading('zh')" class="btn-nav" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'"><span class="mr-3 text-xl">📙</span> 大语文智能伴读</button>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">💡 魔法训练营</div>
+            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400"><span class="mr-3 text-xl">🎮</span> 危机救援演习</a>
+            <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'"><span class="mr-3 text-xl">✍️</span> 灵感写作舱</button>
+            <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'"><span class="mr-3 text-xl">🔤</span> 英语伴读小精灵</button>
+            <button @click="openReading('zh')" class="btn-nav" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'"><span class="mr-3 text-xl">📜</span> 国学伴读小导师</button>
 
             <div class="mt-auto pt-4 border-t border-slate-800/50">
                 <button @click="promptParentLock()" class="btn-nav w-full justify-between group" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
-                    <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span> 家长/教师主控后台</div>
+                    <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span> 家长控制台 (Parent)</div>
                     <span x-text="isParentUnlocked ? '🔓' : '🔒'"></span>
                 </button>
                 <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1">
@@ -134,28 +139,31 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：AI 启发写作舱 ================= -->
+        <!-- ================= 🚀 视图：AI 灵感写作舱 (童趣版) ================= -->
         <div x-show="view === 'writing'" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
             <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 border border-orange-500/20 shadow-2xl">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <div>
-                        <h3 class="font-black text-2xl text-orange-400 flex items-center gap-3"><span class="text-3xl">✍️</span> AI 启发写作舱</h3>
-                        <p class="text-xs text-slate-400 mt-1">拒绝代写。通过苏格拉底提问，逼迫大脑长出新的逻辑触角。</p>
+                        <h3 class="font-black text-2xl text-orange-400 flex items-center gap-3"><span class="text-3xl">✍️</span> 灵感写作舱</h3>
+                        <p class="text-xs text-slate-400 mt-1">NOVA 小助手不会帮你直接写完，但会像侦探一样带你找到最酷的点子！</p>
                     </div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col relative">
-                    <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="在此输入你的作文草稿、日记，哪怕是几个不知道怎么串起来的词语..."></textarea>
+                    <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="把你的小脑袋里想到的词语、句子，或者一篇小日记写在这里吧..."></textarea>
                     
-                    <!-- 核心差异化工具栏 -->
-                    <div class="absolute bottom-10 left-10 right-10 flex justify-center gap-4">
-                        <button @click="runWritingTool('brainstorm')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing">
-                            <span x-show="critiqueMode === 'brainstorm' && isCritiquing" class="animate-spin text-orange-400">↻</span> 🧊 破冰脑暴
+                    <!-- 核心差异化工具栏 (童趣化) -->
+                    <div class="absolute bottom-10 left-6 right-6 flex flex-wrap justify-center gap-3">
+                        <button @click="runWritingTool('brainstorm')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing">
+                            <span x-show="critiqueMode === 'brainstorm' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
+                            <span x-show="!(critiqueMode === 'brainstorm' && isCritiquing)">💡</span> 我没灵感了 (帮我开头)
                         </button>
-                        <button @click="runWritingTool('logic')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
-                            <span x-show="critiqueMode === 'logic' && isCritiquing" class="animate-spin text-orange-400">↻</span> 🔗 逻辑重构
+                        <button @click="runWritingTool('logic')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="critiqueMode === 'logic' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
+                            <span x-show="!(critiqueMode === 'logic' && isCritiquing)">🕵️</span> 侦探找茬 (检查逻辑)
                         </button>
-                        <button @click="runWritingTool('polish')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
-                            <span x-show="critiqueMode === 'polish' && isCritiquing" class="animate-spin text-orange-400">↻</span> ✨ 意境升华
+                        <button @click="runWritingTool('polish')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="critiqueMode === 'polish' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
+                            <span x-show="!(critiqueMode === 'polish' && isCritiquing)">✨</span> 施展魔法 (让句子变美)
                         </button>
                     </div>
                 </div>
@@ -164,37 +172,37 @@
             <div class="w-1/3 glass-panel rounded-3xl flex flex-col border border-orange-500/20 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-orange-600/10 blur-3xl rounded-full pointer-events-none"></div>
                 <div class="p-6 bg-slate-900 border-b border-slate-800 font-bold text-orange-300 flex items-center gap-2">
-                    <span class="text-xl">💡</span> 苏格拉底导师反馈
+                    <span class="text-xl">🎒</span> NOVA 小助手的悄悄话
                 </div>
-                <div class="flex-1 p-6 overflow-y-auto text-base text-slate-300 ai-message font-serif" id="writing-feedback-panel" x-html="writingFeedback || `<div class='text-center text-slate-600 mt-32'><div class='text-6xl mb-4 opacity-50'>💭</div>等待提交诊断...</div>`"></div>
+                <div class="flex-1 p-6 overflow-y-auto text-base text-slate-300 ai-message font-serif" id="writing-feedback-panel" x-html="writingFeedback || `<div class='text-center text-slate-600 mt-32'><div class='text-6xl mb-4 opacity-50'>💭</div>写点什么，或者直接点左边的小灯泡找灵感吧！</div>`"></div>
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：双语智能伴读舱 ================= -->
+        <!-- ================= 🚀 视图：双语智能伴读舱 (童趣版) ================= -->
         <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
             <!-- 左侧：素材区与差异化工具 -->
             <div class="w-1/2 glass-panel rounded-3xl flex flex-col border relative overflow-hidden" :class="view==='reading-en' ? 'border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                    <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'📘 English Active Reading':'📙 大语文沉浸式精读'"></h3>
+                    <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'🔤 英语魔法书':'📜 大语文时光机'"></h3>
                 </div>
                 
                 <div class="flex-1 p-5 flex flex-col relative">
-                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? 'Paste an English article, essay, or book excerpt here...\nOur AI won\'t translate it for you; it will help you dissect it.' : '在此粘贴中文素材、古诗词或名著片段...\n系统不会直接给翻译，而是带你重构古人的思维画面。'"></textarea>
+                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? '在这里贴上你想读的英文小故事...\nNOVA 小精灵不会直接给你翻译，而是会带你去发现里面的秘密！' : '在这里贴上你想读的古诗、童话或者历史故事...\nNOVA 会带你穿越时空，去看看那些好玩的画面。'"></textarea>
                     
-                    <!-- 动态导师工具箱 -->
-                    <div class="absolute bottom-8 left-8 right-8 flex flex-wrap justify-center gap-3">
+                    <!-- 动态导师工具箱 (童趣化卡牌) -->
+                    <div class="absolute bottom-8 left-6 right-6 flex flex-wrap justify-center gap-2">
                         <template x-if="view === 'reading-en'">
-                            <div class="flex gap-3 w-full justify-center">
-                                <button @click="triggerReadingTool('en_vocab')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🔍 核心词汇透视</button>
-                                <button @click="triggerReadingTool('en_context')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🎭 语境与隐喻解析</button>
-                                <button @click="triggerReadingTool('en_critical')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🧠 批判性连环问</button>
+                            <div class="flex gap-2 w-full justify-center">
+                                <button @click="triggerReadingTool('en_vocab')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🔍 找找魔法单词</button>
+                                <button @click="triggerReadingTool('en_context')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🎭 发现故事彩蛋</button>
+                                <button @click="triggerReadingTool('en_critical')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🧠 终极脑力挑战</button>
                             </div>
                         </template>
                         <template x-if="view === 'reading-zh'">
-                            <div class="flex gap-3 w-full justify-center">
-                                <button @click="triggerReadingTool('zh_visual')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🖼️ 意境白描重现</button>
-                                <button @click="triggerReadingTool('zh_history')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">⏳ 历史时空对话</button>
-                                <button @click="triggerReadingTool('zh_core')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🎯 核心文眼剖析</button>
+                            <div class="flex gap-2 w-full justify-center">
+                                <button @click="triggerReadingTool('zh_visual')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🖼️ 把文字变成画</button>
+                                <button @click="triggerReadingTool('zh_history')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">⏳ 和古人聊聊天</button>
+                                <button @click="triggerReadingTool('zh_core')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🎯 抓住最厉害的字</button>
                             </div>
                         </template>
                     </div>
@@ -205,14 +213,14 @@
             <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
                 <div class="h-16 border-b flex items-center justify-center bg-slate-900" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
                     <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
-                        <span class="text-xl">🤖</span> <span x-text="view==='reading-en'?'NOVA Socratic English Coach':'NOVA 大语文共鸣导师'"></span>
+                        <span class="text-2xl">🧸</span> <span x-text="view==='reading-en'?'NOVA 英语小精灵':'NOVA 国学小导师'"></span>
                     </span>
                 </div>
                 
                 <div class="flex-1 p-6 overflow-y-auto space-y-6 scrollbar-hide" id="nova-reading-chat">
                     <template x-for="(msg,i) in readingChatLog" :key="i">
                         <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
-                            <span class="text-[10px] text-slate-500 font-bold mb-1 ml-1 mr-1" x-text="msg.role==='user'? '指挥官' : 'NOVA'"></span>
+                            <span class="text-[10px] text-slate-500 font-bold mb-1 ml-1 mr-1" x-text="msg.role==='user'? '小指挥官' : 'NOVA'"></span>
                             <div class="max-w-[85%] p-4 rounded-2xl text-[15px] ai-message shadow-md" 
                                  :class="msg.role==='user' 
                                  ? (view==='reading-en' ? 'bg-indigo-600 text-indigo-50 border border-indigo-500 rounded-tr-none' : 'bg-emerald-600 text-emerald-50 border border-emerald-500 rounded-tr-none') 
@@ -223,12 +231,12 @@
                     </template>
                     <div x-show="readingLoading" class="flex items-center gap-2 text-slate-500 font-mono text-xs">
                         <div class="w-3 h-3 rounded-full animate-bounce" :class="view==='reading-en'?'bg-indigo-500':'bg-emerald-500'"></div>
-                        <span x-text="view==='reading-en' ? 'Analyzing cognitive vectors...' : '正在推演苏格拉底逻辑树...'"></span>
+                        <span x-text="view==='reading-en' ? 'NOVA is thinking...' : 'NOVA 正在思考...' "></span>
                     </div>
                 </div>
 
                 <div class="p-4 bg-slate-900 border-t flex gap-3" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
-                    <input type="text" x-model="readingInput" @keyup.enter="sendReadingText()" class="flex-1 input-dark px-5 py-3.5 rounded-xl text-sm" :placeholder="view==='reading-en' ? 'Answer the tutor or ask a question...' : '回答导师的问题，或提出你的疑惑...'">
+                    <input type="text" x-model="readingInput" @keyup.enter="sendReadingText()" class="flex-1 input-dark px-5 py-3.5 rounded-xl text-sm" :placeholder="view==='reading-en' ? 'Tell NOVA what you think...' : '跟 NOVA 说说你的想法...'">
                     <button @click="sendReadingText()" class="px-8 py-3 hover:brightness-110 rounded-xl font-black transition text-lg shadow-lg" :class="view==='reading-en'?'bg-indigo-600 text-white':'bg-emerald-600 text-white'" :disabled="readingLoading || !readingInput.trim()">
                         ➤
                     </button>
@@ -297,7 +305,7 @@
                     this.initNetworkCanvas();
                 },
 
-                // ================= 🚀 核心差异化工具：AI API 调用与 Prompt 设计 =================
+                // ================= 🚀 AI API 调用与 Prompt =================
 
                 async callAI(prompt, type='nova') {
                     const key = localStorage.getItem(`xp_${type}_key`);
@@ -307,7 +315,7 @@
                     const model = localStorage.getItem(`xp_${type}_model`) || 'llama-3.3-70b-versatile';
                     
                     if(!key) {
-                        Swal.fire({toast:true, position:'top-end', icon:'warning', title:'请先在 [引擎配置] 中录入 API Key', showConfirmButton:false, timer:3000});
+                        Swal.fire({toast:true, position:'top-end', icon:'warning', title:'请先在家长后台录入 API Key 哦', showConfirmButton:false, timer:3000});
                         return null; 
                     }
                     try {
@@ -315,7 +323,7 @@
                         if(!res.ok) throw new Error();
                         const d = await res.json(); return d.choices[0].message.content;
                     } catch(e) { 
-                        Swal.fire({toast:true, position:'top-end', icon:'error', title:'大模型链路请求失败', showConfirmButton:false, timer:3000});
+                        Swal.fire({toast:true, position:'top-end', icon:'error', title:'网络连接断开了，请检查后侧配置', showConfirmButton:false, timer:3000});
                         return null; 
                     }
                 },
@@ -329,32 +337,30 @@
 
                     if (mode === 'brainstorm') {
                         prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
-                        You are an inspiring Socratic writing coach. The student hasn't written much, or is stuck. 
+                        You are a friendly and inspiring cartoon tutor for kids. The student hasn't written much, or is stuck. 
                         Draft provided: "${draft || '学生不知道写什么'}".
                         1. Do NOT write an outline for them.
                         2. Do NOT write the essay for them.
-                        3. Provide 3 highly specific, sensory-based WH-questions (Who, what, when, where, why, how) to help them dig out their own memories or arguments related to the topic.
-                        Keep the tone incredibly encouraging and adventurous.`;
+                        3. Provide 3 fun, highly specific, sensory-based questions to help them dig out their own memories. Talk to them like a supportive friend.`;
                     } else if (mode === 'logic') {
                         prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
-                        You are a strict but helpful logic editor. Analyze this draft: "${draft}".
-                        1. Find 1 or 2 logical leaps, contradictions, or lack of evidence in the text.
-                        2. Point them out gently but firmly.
-                        3. Ask 2 Socratic questions forcing the student to clarify their causal relationships (e.g., "You said X causes Y, but what about Z?").
-                        DO NOT rewrite the text for them.`;
+                        You are a friendly cartoon detective. Analyze this kid's draft: "${draft}".
+                        1. Find 1 or 2 logical leaps, contradictions, or missing details.
+                        2. Point them out gently, calling them "小漏洞" (little bugs).
+                        3. Ask 2 questions forcing the student to clarify their causal relationships. DO NOT rewrite the text.`;
                     } else if (mode === 'polish') {
                         prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
-                        You are a master of literature. The student wants to elevate this draft: "${draft}".
+                        You are a magic fairy of literature. The kid wants to elevate this draft: "${draft}".
                         1. Select ONE flat or boring sentence from their draft.
                         2. Ask them how they could use the 5 senses (sight, sound, smell, touch, taste) or a specific metaphor to rewrite just that one sentence.
-                        3. Do NOT rewrite the whole essay. Only guide them to polish one specific spot.`;
+                        3. Do NOT rewrite the whole essay. Only guide them to polish one specific spot and encourage them.`;
                     }
 
                     const res = await this.callAI(prompt, 'nova');
                     if(res) {
                         this.writingFeedback = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
                     } else {
-                        this.writingFeedback = "<p class='text-rose-400'>API 链路阻塞，请检查网络或后侧配置。</p>";
+                        this.writingFeedback = "<p class='text-rose-400'>哎呀，NOVA 的魔法信号断了，请去后台检查一下哦。</p>";
                     }
                     this.isCritiquing = false;
                     this.critiqueMode = '';
@@ -367,8 +373,8 @@
                     this.readingChatLog = [{
                         role: 'nova', 
                         text: lang === 'en' 
-                            ? '<h3>Hello, Commander!</h3><p>Paste an English text on the left. You can use the <b>Quick Tools</b> to dissect the text, or just chat with me about your thoughts.</p>' 
-                            : '<h3>你好，指挥官！</h3><p>请在左侧粘贴一段古文、现代文或历史故事。你可以点击下方的<b>智能工具</b>，或者直接在对话框里告诉我你的见解。</p>'
+                            ? '<h3>Hello, little Commander! 🌟</h3><p>Paste an English story on the left. You can click the <b>Magic Cards</b> below to discover secrets, or just chat with me!</p>' 
+                            : '<h3>你好呀，小指挥官！🌟</h3><p>请在左边贴上你想读的古诗或者小故事。你可以点击下方的<b>魔法技能卡片</b>，或者直接在下面跟我说话哦！</p>'
                     }]; 
                 },
 
@@ -378,33 +384,29 @@
                     this.readingLoading = true;
                     let prompt = '';
 
-                    const contextLimit = material.substring(0, 1500); // 截断防止 token 爆炸
+                    const contextLimit = material.substring(0, 1500); 
 
-                    // 英文伴读工具
                     if (tool === 'en_vocab') {
-                        prompt = `[CONSTRAINT: English/Chinese bilingual]. Text: "${contextLimit}". Act as an expert linguist. Identify 2-3 high-level or idiomatically used words in this text. Do NOT just give a dictionary definition. Explain *why* the author chose this specific word in this context instead of a simpler synonym. End by asking the student to create a new sentence using one of the words.`;
+                        prompt = `[CONSTRAINT: English/Chinese bilingual. Talk like a friendly cartoon character]. Text: "${contextLimit}". Act as a magic English tutor. Identify 2-3 cool or interesting words in this text. Explain them playfully. End by asking the kid to try using one of the words.`;
                     } else if (tool === 'en_context') {
-                        prompt = `[CONSTRAINT: Output in Chinese]. Text: "${contextLimit}". Act as a cultural historian. Analyze any cultural references, historical context, or deep metaphors in this text. Explain the "iceberg" beneath the surface words. End with a Socratic question to the student about how this context changes their understanding.`;
+                        prompt = `[CONSTRAINT: Output in Chinese. Talk like a friendly guide]. Text: "${contextLimit}". Find a fun "Easter Egg" (cultural reference or hidden meaning) in the text. Explain it simply like a story. End with a question about it.`;
                     } else if (tool === 'en_critical') {
-                        prompt = `[CONSTRAINT: Output in English]. Text: "${contextLimit}". Act as a critical thinking professor. Do not summarize. Pose 2 extremely challenging questions about the author's hidden biases, logical flaws, or unstated assumptions in this text. Force the student to think deeply.`;
+                        prompt = `[CONSTRAINT: Output in English. Talk like a playful challenger]. Text: "${contextLimit}". Pose 1 or 2 fun but challenging questions about why the character did something, or what would happen if something changed. Encourage them to guess!`;
                     } 
-                    // 大语文伴读工具
                     else if (tool === 'zh_visual') {
-                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为古典文学大师，不要翻译文本。请用电影导演的视角，将这段文字的“画面感、声音、色彩、温度”白描出来。最后反问学生：“如果你身处这个画面中，你最强烈的感受是什么？”`;
+                        prompt = `[强制要求：中文输出。语气要像亲切的故事姐姐]。文本："${contextLimit}"。把这段文字里的某个画面生动地描绘出来（声音、颜色）。然后问小朋友：“如果你站在那里，你看到了什么？”`;
                     } else if (tool === 'zh_history') {
-                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为历史学家，剥开这段文字表面的华丽，讲述作者写下这段话时的真实处境（是被贬、得意、还是绝望？）。最后向学生提问：“如果你在今天遇到他一样的困境，你会做出和他一样的选择吗？”`;
+                        prompt = `[强制要求：中文输出。语气要像时间旅行导游]。文本："${contextLimit}"。告诉小朋友作者写下这段话时的真实好玩或有趣的处境。然后问：“如果你是作者的好朋友，你会怎么对他说？”`;
                     } else if (tool === 'zh_core') {
-                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为文学评论家，找出这段话的“文眼”（最核心的一个字或一个词）。剖析这个字精妙在哪里。最后反问学生：“如果让你把这个字换掉，你会换成什么？为什么？”`;
+                        prompt = `[强制要求：中文输出。语气像侦探]。文本："${contextLimit}"。找出这段话里最绝妙的一个字或词。夸张地解释它为什么厉害。反问：“如果你来当小作家，你会换成哪个字？”`;
                     }
 
-                    // 发送一条系统消息提示用户触发了什么工具
-                    const toolNames = { 'en_vocab':'Triggered: Vocab Radar', 'en_context':'Triggered: Cultural Context', 'en_critical':'Triggered: Critical Probe', 'zh_visual':'启动：意境重现', 'zh_history':'启动：时空对话', 'zh_core':'启动：文眼剖析' };
+                    const toolNames = { 'en_vocab':'使用了技能：🔍 找找魔法单词', 'en_context':'使用了技能：🎭 发现故事彩蛋', 'en_critical':'使用了技能：🧠 终极脑力挑战', 'zh_visual':'使用了技能：🖼️ 把文字变成画', 'zh_history':'使用了技能：⏳ 和古人聊聊天', 'zh_core':'使用了技能：🎯 抓住最厉害的字' };
                     this.readingChatLog.push({ role: 'user', text: `<i>[${toolNames[tool]}]</i>` });
                     this.scrollToBottom();
 
                     const res = await this.callAI(prompt, 'nova');
                     if(res) {
-                        // 清理 Markdown 标记并转换为 HTML
                         let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
                         cleanRes = cleanRes.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
                         if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
@@ -420,8 +422,8 @@
                     this.scrollToBottom();
                     
                     let context = this.readingMaterial ? `[Reference Material]:\n${this.readingMaterial.substring(0, 1000)}\n\n` : '';
-                    const langReq = this.view === 'reading-en' ? 'Reply mostly in English unless explaining complex concepts. Act as an inspiring Socratic English tutor.' : '用中文回复。扮演启发式的大语文导师。';
-                    const prompt = `${context}Student says: "${t}"\nTask: Use the Socratic method to respond. Do NOT spoon-feed answers. Ask follow-up questions to guide them to the answer based on the reference material. ${langReq}`;
+                    const langReq = this.view === 'reading-en' ? 'Reply in simple English. Act as an inspiring friendly cartoon English tutor.' : '用中文回复。扮演亲切的大语文老师。';
+                    const prompt = `${context}Student says: "${t}"\nTask: Use the Socratic method to respond gently. Do NOT spoon-feed answers. Ask a simple follow-up question. ${langReq}`;
                     
                     const res = await this.callAI(prompt, 'nova');
                     if(res) { 
@@ -433,9 +435,7 @@
                     this.scrollToBottom();
                 },
 
-                scrollToBottom() {
-                    setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
-                },
+                scrollToBottom() { setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100); },
 
                 // ================= 通用系统逻辑 =================
 
@@ -453,18 +453,18 @@
 
                 saveConfig() {
                     Object.keys(this.config).forEach(k => { localStorage.setItem(`xp_${k}_key`, this.config[k].key); localStorage.setItem(`xp_${k}_url`, this.config[k].url); localStorage.setItem(`xp_${k}_model`, this.config[k].model); });
-                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已烧录', showConfirmButton:false, timer:1500});
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已保存', showConfirmButton:false, timer:1500});
                 },
 
-                triggerForgePaywall() { Swal.fire({ title: '资产铸造墙', html: '<p class="text-sm">需要 <b>PRO 核心算力</b> 解锁无限星系铸造权。</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看方案', cancelButtonText: '稍后' }); },
+                triggerForgePaywall() { Swal.fire({ title: '魔法拦截！', html: '<p class="text-sm">这个功能需要 <b>家长的超级权限</b> 才能解锁哦。</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看方案', cancelButtonText: '稍后' }); },
                 
                 async promptParentLock() {
                     if (this.isParentUnlocked) { this.isParentUnlocked = false; this.view = 'classroom'; return; }
-                    const { value: pin } = await Swal.fire({ title: '安全验证', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', confirmButtonText: '进入中枢' });
+                    const { value: pin } = await Swal.fire({ title: '家长验证', text: '输入 4 位数字密码', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', confirmButtonText: '进入中枢' });
                     if (pin === (this.parentPin || '0000')) { this.isParentUnlocked = true; this.view = 'forge'; }
                 },
 
-                // 物理渲染引擎 (保持纯净)
+                // 物理渲染引擎
                 getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
                 initNetworkCanvas() { this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d'); const res = () => { this.canvas.width = window.innerWidth - 288; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res(); for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); } for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); },
                 drawNetwork() {

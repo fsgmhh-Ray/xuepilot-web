@@ -1,25 +1,19 @@
-const CACHE_NAME = 'xuepilot-v2'; // 🚀 升级版本，强制弃用旧缓存
+const CACHE_NAME = 'xuepilot-v4'; // 升级缓存版本
 const urlsToCache = [
   '/',
   '/classroom.html',
   '/index.html',
   '/simulator.html',
-  '/dashboard.html',
-  'https://cdn.tailwindcss.com',
-  'https://cdn.jsdelivr.net/npm/sweetalert2@11',
-  'https://cdn.quilljs.com/1.3.6/quill.snow.css',
-  'https://cdn.quilljs.com/1.3.6/quill.min.js',
-  'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js'
+  '/dashboard.html'
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting(); // 强制立即接管
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// 🚀 清理旧版本拦截，破除卡死
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -34,7 +28,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // 🚀 核心修复：绝对不拦截 Supabase 视频流和带参数的请求
+  // 核心规则：不拦截带有 supabase 或带有时间戳的请求
   if (event.request.url.includes('supabase.co') || event.request.url.includes('?t=')) {
       return; 
   }

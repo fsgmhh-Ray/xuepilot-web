@@ -34,7 +34,6 @@
         </div>
     </div>
     <script>
-        // 物理级保底与后退缓存解锁
         function hideMasterLoader() {
             const loader = document.getElementById('master-loader');
             if(loader) { loader.style.opacity = '0'; setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500); }
@@ -45,11 +44,14 @@
 
     <!-- 视频容器 -->
     <div class="video-container">
+        <!-- 🚀 修复：增加 :src 绑定，加上 @canplay 开关，彻底解除隐形状态 -->
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''" 
                autoplay muted playsinline 
+               :src="videoUrl"
+               @canplay="videoReady = true"
+               @playing="videoReady = true"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
-            <source :src="videoUrl" type="video/mp4">
         </video>
     </div>
 

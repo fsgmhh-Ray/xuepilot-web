@@ -10,7 +10,7 @@
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* 🚀 极致裸露：去掉了所有的 opacity 渐变和滤镜，让视频百分百清晰显示 */
+        /* 极致裸露：去掉了所有的 opacity 渐变和滤镜，让视频百分百清晰显示 */
         .video-container { position: fixed; inset: 0; z-index: 0; background: #222; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 1 !important; }
         
@@ -27,12 +27,13 @@
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 🚀 移除了所有加载遮罩层，直接展示视频容器 -->
+    <!-- 🚀 用于调试：直接显示当前正在请求的视频网址 -->
+    <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-xs font-mono p-2 border border-green-500/50" x-text="`正在加载: ${videoUrl}`"></div>
+
     <div class="video-container">
-        <!-- 直接绑定 src，去掉了所有多余的伪装 class -->
+        <!-- 🚀 核心修复：去掉了 :src="videoUrl"，杜绝 Alpine 框架和原生 JS 发生加载冲突 -->
         <video id="main-video" class="scene-video" 
                autoplay muted loop playsinline crossorigin="anonymous"
-               :src="videoUrl"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
         </video>
@@ -45,7 +46,6 @@
         <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-blue-400 font-black tracking-widest bg-black/40 px-2 py-0.5" x-text="i18n[lang].target"></div>
     </div>
 
-    <!-- 交互UI层 -->
     <main class="fixed inset-0 z-30 flex flex-col items-center justify-end pb-20 px-10 pointer-events-none">
         <div class="w-full max-w-4xl mb-12 transition-all duration-1000" :class="isThinking ? 'opacity-30 blur-sm' : 'opacity-100'">
             <div class="bg-black/60 backdrop-blur-2xl border-l-4 border-blue-600 p-8 rounded-r-3xl shadow-2xl relative">
@@ -65,7 +65,6 @@
         </div>
     </main>
 
-    <!-- 报错/收费弹窗 -->
     <div x-show="showCrisis" x-cloak class="fixed inset-0 z-[120] bg-rose-950/90 backdrop-blur-3xl flex flex-col items-center justify-center p-10 text-center">
         <div class="w-24 h-24 bg-rose-600 rounded-full flex items-center justify-center mb-8 shadow-[0_0_100px_#ef4444] animate-pulse">
             <span class="text-5xl">🚫</span>
@@ -156,12 +155,10 @@
                     this.failsafeTimer = setTimeout(() => {
                         this.isLocking = true;
                         this.showOptions = true;
-                        console.warn("Failsafe triggered UI display.");
                     }, 8500); 
                 },
 
                 handleVideoError() {
-                    console.error("Video failed to load completely.");
                     clearTimeout(this.failsafeTimer);
                     setTimeout(() => {
                         this.isLocking = true;
@@ -189,13 +186,15 @@
                         this.currentStoryText = scene.ai;
                         this.currentOptions = scene.options;
                         
-                        // 直接启动保底定时器和强制视频加载
                         this.startFailsafe(); 
                         const v = document.getElementById('main-video');
                         if(v) {
+                            // 🚀 单一赋值，去掉了 v.load() 以防止打断 play
                             v.src = this.videoUrl;
-                            v.load();
-                            v.play().catch(e => console.warn('Autoplay prevented', e));
+                            const playPromise = v.play();
+                            if (playPromise !== undefined) {
+                                playPromise.catch(e => console.warn('Autoplay prevented', e));
+                            }
                         }
                     } catch (e) {
                         console.error("Init Error:", e);
@@ -223,8 +222,10 @@
                             const v = document.getElementById('main-video');
                             if(v) {
                                 v.src = this.videoUrl;
-                                v.load();
-                                v.play().catch(e => console.warn('Autoplay prevented', e));
+                                const playPromise = v.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.catch(e => console.warn('Autoplay prevented', e));
+                                }
                                 this.startFailsafe(); 
                             }
                         }

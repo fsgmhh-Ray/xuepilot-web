@@ -27,13 +27,13 @@
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 🚀 用于调试：直接显示当前正在请求的视频网址 -->
+    <!-- 用于调试：直接显示当前正在请求的视频网址 -->
     <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-xs font-mono p-2 border border-green-500/50" x-text="`正在加载: ${videoUrl}`"></div>
 
     <div class="video-container">
-        <!-- 🚀 核心修复：去掉了 :src="videoUrl"，杜绝 Alpine 框架和原生 JS 发生加载冲突 -->
+        <!-- 🚀 终极修复：去掉了 HTML 上的 autoplay，全权交由 JS 的 playVideoSafely 方法接管，杜绝竞态条件 -->
         <video id="main-video" class="scene-video" 
-               autoplay muted loop playsinline crossorigin="anonymous"
+               muted loop playsinline crossorigin="anonymous"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
         </video>
@@ -175,6 +175,24 @@
                     }
                 },
 
+                // 🚀 终极安全播放封装函数
+                playVideoSafely(url) {
+                    const v = document.getElementById('main-video');
+                    if (!v) return;
+                    
+                    v.pause();
+                    v.src = url;
+                    v.load();
+                    
+                    // 仅当浏览器确认视频已经缓冲并准备好时，才调用 play()
+                    v.addEventListener('canplay', () => {
+                        const playPromise = v.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(e => console.warn('Play prevented:', e));
+                        }
+                    }, { once: true }); // once: true 确保监听器触发一次后自动销毁，避免内存泄漏
+                },
+
                 init() {
                     try {
                         const params = new URLSearchParams(window.location.search);
@@ -187,15 +205,10 @@
                         this.currentOptions = scene.options;
                         
                         this.startFailsafe(); 
-                        const v = document.getElementById('main-video');
-                        if(v) {
-                            // 🚀 单一赋值，去掉了 v.load() 以防止打断 play
-                            v.src = this.videoUrl;
-                            const playPromise = v.play();
-                            if (playPromise !== undefined) {
-                                playPromise.catch(e => console.warn('Autoplay prevented', e));
-                            }
-                        }
+                        
+                        // 🚀 调用安全播放引擎
+                        this.playVideoSafely(this.videoUrl);
+
                     } catch (e) {
                         console.error("Init Error:", e);
                     }
@@ -219,15 +232,9 @@
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
                             
-                            const v = document.getElementById('main-video');
-                            if(v) {
-                                v.src = this.videoUrl;
-                                const playPromise = v.play();
-                                if (playPromise !== undefined) {
-                                    playPromise.catch(e => console.warn('Autoplay prevented', e));
-                                }
-                                this.startFailsafe(); 
-                            }
+                            // 🚀 调用安全播放引擎
+                            this.playVideoSafely(this.videoUrl);
+                            this.startFailsafe(); 
                         }
                     }, 1200);
                 }

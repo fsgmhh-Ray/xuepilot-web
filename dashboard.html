@@ -72,34 +72,87 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest">XUEPILOT</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.5</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.6</div>
                 </div>
             </div>
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">🚀 我的宇宙飞船</div>
-            <button @click="view = 'classroom'" class="btn-nav py-4 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
+            
+            <button @click="view = 'classroom'" class="btn-nav py-3 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
                 <span class="mr-3 text-2xl">🌌</span> 
-                <div class="flex flex-col"><span class="text-base font-black text-white">启航！3D 星球</span><span class="text-[10px] text-emerald-600 font-normal">探索我的知识宇宙</span></div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-black text-white">启航！3D 星球</span>
+                    <span class="text-[10px] text-emerald-600 font-normal mt-0.5">漫游我的专属知识宇宙</span>
+                </div>
             </button>
             
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">💡 魔法训练营</div>
-            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400"><span class="mr-3 text-xl">🎮</span> 危机救援演习</a>
-            <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'"><span class="mr-3 text-xl">✍️</span> 灵感写作舱</button>
-            <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'"><span class="mr-3 text-xl">🔤</span> 英语伴读小精灵</button>
-            <button @click="openReading('zh')" class="btn-nav" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'"><span class="mr-3 text-xl">📜</span> 国学伴读小导师</button>
+            
+            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400">
+                <span class="mr-3 text-xl">🎮</span>
+                <div class="flex flex-col">
+                    <span class="text-sm">危机救援演习</span>
+                    <span class="text-[10px] text-slate-500 font-normal mt-0.5">科幻实景演练，锻炼逻辑与大局观</span>
+                </div>
+            </a>
+            
+            <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'">
+                <span class="mr-3 text-xl">✍️</span>
+                <div class="flex flex-col">
+                    <span class="text-sm">灵感写作舱</span>
+                    <span class="text-[10px] font-normal mt-0.5" :class="view==='writing'?'text-orange-500':'text-slate-500'">苏格拉底式提问，引导独立思考</span>
+                </div>
+            </button>
+            
+            <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
+                <span class="mr-3 text-xl">🔤</span>
+                <div class="flex flex-col">
+                    <span class="text-sm">英语伴读小精灵</span>
+                    <span class="text-[10px] font-normal mt-0.5" :class="view==='reading-en'?'text-indigo-500':'text-slate-500'">沉浸式外教，发掘词汇与文化彩蛋</span>
+                </div>
+            </button>
+            
+            <button @click="openReading('zh')" class="btn-nav" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
+                <span class="mr-3 text-xl">📜</span>
+                <div class="flex flex-col">
+                    <span class="text-sm">国学伴读小导师</span>
+                    <span class="text-[10px] font-normal mt-0.5" :class="view==='reading-zh'?'text-emerald-500':'text-slate-500'">场景重构，与古人展开跨时空对话</span>
+                </div>
+            </button>
 
+            <!-- 家长后台 -->
             <div class="mt-auto pt-4 border-t border-slate-800/50">
                 <button @click="promptParentLock()" class="btn-nav w-full justify-between group" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
-                    <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span> 家长控制台 (Parent)</div>
+                    <div class="flex items-center">
+                        <span class="mr-3 text-xl">🎛️</span>
+                        <div class="flex flex-col">
+                            <span class="text-sm">家长控制台 (Parent)</span>
+                            <span class="text-[10px] font-normal mt-0.5" :class="isParentUnlocked ? 'text-slate-400' : 'text-slate-500'">密码保护，管理大纲与雷达</span>
+                        </div>
+                    </div>
                     <span x-text="isParentUnlocked ? '🔓' : '🔒'"></span>
                 </button>
+                
+                <!-- 家长子菜单也加上极简说明 -->
                 <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1">
-                    <button @click="view = 'students'" class="btn-nav text-xs py-2" :class="view==='students'?'text-blue-400':'text-slate-400'">👨‍👩‍👧‍👦 学员管理</button>
-                    <button @click="view = 'forge'" class="btn-nav text-xs py-2" :class="view==='forge'?'text-purple-400':'text-slate-400'">🪐 星系与大纲规划</button>
-                    <button @click="view = 'radar'" class="btn-nav text-xs py-2" :class="view==='radar'?'text-emerald-400':'text-slate-400'">📡 学情分析雷达</button>
-                    <button @click="view = 'config'" class="btn-nav text-xs py-2" :class="view==='config'?'text-slate-300':'text-slate-500'">⚙️ 引擎配置</button>
+                    <button @click="view = 'students'" class="btn-nav py-2" :class="view==='students'?'text-blue-400':'text-slate-400'">
+                        <span class="mr-2">👨‍👩‍👧‍👦</span>
+                        <div class="flex flex-col"><span class="text-xs">学员管理</span><span class="text-[9px] font-normal" :class="view==='students'?'text-blue-500':'text-slate-500'">多学员进度隔离</span></div>
+                    </button>
+                    <button @click="view = 'forge'" class="btn-nav py-2" :class="view==='forge'?'text-purple-400':'text-slate-400'">
+                        <span class="mr-2">🪐</span>
+                        <div class="flex flex-col"><span class="text-xs">星系与大纲规划</span><span class="text-[9px] font-normal" :class="view==='forge'?'text-purple-500':'text-slate-500'">部署专属知识体系</span></div>
+                    </button>
+                    <button @click="view = 'radar'" class="btn-nav py-2" :class="view==='radar'?'text-emerald-400':'text-slate-400'">
+                        <span class="mr-2">📡</span>
+                        <div class="flex flex-col"><span class="text-xs">学情分析雷达</span><span class="text-[9px] font-normal" :class="view==='radar'?'text-emerald-500':'text-slate-500'">六维素养智能监测</span></div>
+                    </button>
+                    <button @click="view = 'config'" class="btn-nav py-2" :class="view==='config'?'text-slate-300':'text-slate-500'">
+                        <span class="mr-2">⚙️</span>
+                        <div class="flex flex-col"><span class="text-xs">引擎配置</span><span class="text-[9px] font-normal" :class="view==='config'?'text-slate-400':'text-slate-500'">API与云端算力调度</span></div>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -139,7 +192,7 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：AI 灵感写作舱 (童趣版) ================= -->
+        <!-- ================= 🚀 视图：AI 灵感写作舱 ================= -->
         <div x-show="view === 'writing'" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
             <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 border border-orange-500/20 shadow-2xl">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
@@ -151,7 +204,6 @@
                 <div class="flex-1 p-6 flex flex-col relative">
                     <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="把你的小脑袋里想到的词语、句子，或者一篇小日记写在这里吧..."></textarea>
                     
-                    <!-- 核心差异化工具栏 (童趣化) -->
                     <div class="absolute bottom-10 left-6 right-6 flex flex-wrap justify-center gap-3">
                         <button @click="runWritingTool('brainstorm')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing">
                             <span x-show="critiqueMode === 'brainstorm' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
@@ -178,9 +230,8 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：双语智能伴读舱 (童趣版) ================= -->
+        <!-- ================= 🚀 视图：双语智能伴读舱 ================= -->
         <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
-            <!-- 左侧：素材区与差异化工具 -->
             <div class="w-1/2 glass-panel rounded-3xl flex flex-col border relative overflow-hidden" :class="view==='reading-en' ? 'border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'🔤 英语魔法书':'📜 大语文时光机'"></h3>
@@ -189,7 +240,6 @@
                 <div class="flex-1 p-5 flex flex-col relative">
                     <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? '在这里贴上你想读的英文小故事...\nNOVA 小精灵不会直接给你翻译，而是会带你去发现里面的秘密！' : '在这里贴上你想读的古诗、童话或者历史故事...\nNOVA 会带你穿越时空，去看看那些好玩的画面。'"></textarea>
                     
-                    <!-- 动态导师工具箱 (童趣化卡牌) -->
                     <div class="absolute bottom-8 left-6 right-6 flex flex-wrap justify-center gap-2">
                         <template x-if="view === 'reading-en'">
                             <div class="flex gap-2 w-full justify-center">
@@ -209,7 +259,6 @@
                 </div>
             </div>
 
-            <!-- 右侧：导师聊天流 -->
             <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
                 <div class="h-16 border-b flex items-center justify-center bg-slate-900" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
                     <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
@@ -244,7 +293,7 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 其他后台视图 (配置与测试功能已完美保留) ================= -->
+        <!-- ================= 🚀 其他后台视图 ================= -->
         <div x-show="view === 'config'" x-cloak class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 relative">
                 <h2 class="text-3xl font-black text-white mb-2">引擎算力与配置</h2>

@@ -6,6 +6,8 @@
     <title>XuePilot COMMAND OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- 🚀 补全：Supabase SDK，确保设置页面的“测试连接”功能有效 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
@@ -19,7 +21,6 @@
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
 
-        /* 🚀 跃迁载入屏样式 (同步自学生端) */
         .warp-overlay { position: fixed; inset: 0; z-index: 100; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
         .warp-spinner { width: 50px; height: 50px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -49,8 +50,8 @@
 </head>
 <body x-data="portalApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
 
-    <!-- 🚀 门户加载/跃迁缓冲层 -->
-    <div x-show="isWarping" x-transition.opacity.duration.500ms class="warp-overlay">
+    <!-- 🚀 载入缓冲层 -->
+    <div x-show="isWarping" x-transition.opacity class="warp-overlay">
         <div class="warp-spinner mb-6"></div>
         <div class="text-blue-400 font-mono tracking-[0.4em] animate-pulse text-[10px] uppercase">Connecting to Matrix...</div>
     </div>
@@ -72,9 +73,15 @@
         <div class="flex-1 py-8 px-4 space-y-4 overflow-y-auto">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2" x-text="dict.coreMod"></div>
             
-            <!-- 🚀 C端：学生探索舱 -->
-            <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-4 py-5 rounded-2xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/50 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform">
-                <div class="flex items-center"><span class="text-3xl mr-4 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">👨‍🚀</span> <span class="font-black text-lg text-emerald-50" x-text="dict.explorer"></span></div>
+            <!-- 🚀 C端学生入口：作为唯一的高亮主按钮 -->
+            <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-5 py-6 rounded-2xl bg-gradient-to-br from-blue-600/30 to-emerald-600/20 border border-blue-500/50 cursor-pointer shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:scale-[1.03] transition-all group">
+                <div class="flex items-center">
+                    <span class="text-4xl mr-4 filter drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] group-hover:rotate-12 transition-transform">👨‍🚀</span> 
+                    <div>
+                        <span class="font-black text-lg text-white block" x-text="dict.explorer"></span>
+                        <span class="text-[9px] text-blue-400 font-mono tracking-tighter uppercase">Launch Explorer Deck</span>
+                    </div>
+                </div>
             </a>
             
             <div class="h-px bg-slate-800/50 my-6 mx-2"></div>
@@ -88,12 +95,13 @@
             </a>
         </div>
 
-        <div class="p-4 border-t border-slate-800/50 bg-slate-900/20 flex flex-col gap-2">
+        <!-- 🚀 B端管理入口：低调隐藏于底部 -->
+        <div class="p-4 border-t border-slate-800/50 bg-slate-900/40 flex flex-col gap-2">
             <button @click.prevent="goTo('dashboard.html', true)" class="w-full py-2.5 hover:bg-slate-800/60 rounded-xl text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-2 border border-transparent hover:border-slate-700">
                 <span>🎛️</span> <span x-text="dict.commander"></span>
                 <span x-show="!isPro" class="text-[8px] font-black border border-amber-500/50 text-amber-500 px-1 rounded opacity-50">PRO</span>
             </button>
-            <button @click="modals.settings = true" class="w-full py-3.5 bg-slate-800/40 hover:bg-blue-900/40 rounded-xl text-[10px] font-bold text-slate-400 hover:text-blue-300 transition shadow-sm border border-slate-800 hover:border-blue-500/50" x-text="dict.settingsBtn"></button>
+            <button @click="modals.settings = true" class="w-full py-2 bg-slate-800/40 hover:bg-blue-900/40 rounded-lg text-[9px] font-bold text-slate-500 hover:text-blue-300 transition border border-slate-800" x-text="dict.settingsBtn"></button>
         </div>
     </aside>
 
@@ -196,7 +204,7 @@
                 lang: window.safeStorage.get('xp_lang') || 'zh',
                 isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
                 view: 'welcome', modals: { upgrade: false, settings: false },
-                isWarping: true, // 🚀 页面初始化加载状态
+                isWarping: true,
 
                 config: {
                     sys: { key: window.safeStorage.get('xp_sys_key')||'', url: window.safeStorage.get('xp_sys_url')||'/proxy/groq', model: window.safeStorage.get('xp_sys_model')||'llama-3.3-70b-versatile' },
@@ -210,36 +218,36 @@
                 ],
                 i18n: {
                     zh: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.3', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
+                        brand: 'XuePilot', ver: 'Blueprint V7.4', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
                         commander: '家长/教师主控后台', explorer: '进入学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
                         welcome: '欢迎登舰', welcomeDesc: '准备好开启全新的知识宇宙探索之旅。',
                         tools: '全球教育资源矩阵', toolsDesc: '精选全球顶尖免费教育资源网站。',
-                        settingsBtn: '🎛️ 引擎与云端配置 (设置)', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
+                        settingsBtn: '⚙️ 系统设置', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
                         upgTitle: '获取领航员通行证', upgDesc: '解锁双端物理隔离舱室、云端教研资产同步与学情分析雷达。', upgBtn: '获取 PRO 权限', upgHint: '请先升级以解锁核心教育引擎。'
                     },
                     en: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.3', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
-                        commander: 'Parent / Teacher Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
+                        brand: 'XuePilot', ver: 'Blueprint V7.4', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
+                        commander: 'Parent Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
                         welcome: 'Welcome Aboard', welcomeDesc: 'Get ready to explore the new knowledge universe.',
                         tools: 'Global Matrix', toolsDesc: 'Curated world-class free educational resources.',
-                        settingsBtn: '🎛️ Global Engine & Cloud Config', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
+                        settingsBtn: '⚙️ Settings', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
                         upgTitle: 'Get Commander Access', upgDesc: 'Unlock dual-deck architecture, cloud asset sync, and insight radar.', upgBtn: 'Unlock Pro', upgHint: 'Core engines are locked.'
                     }
                 },
                 get dict() { return this.i18n[this.lang]; },
                 
                 init() {
-                    // 🚀 模拟数据就绪，消除初始化白屏
-                    setTimeout(() => { this.isWarping = false; }, 800);
+                    // 🚀 确保载入屏最终会关闭，无论初始化是否异常
+                    setTimeout(() => { this.isWarping = false; }, 1000);
                 },
 
                 toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; window.safeStorage.set('xp_lang', this.lang); },
                 
-                // 🚀 增强版跳转逻辑：在跳转前显示“曲率启动”动画
                 goTo(url, requiresPro) { 
                     if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; } 
                     this.isWarping = true;
-                    setTimeout(() => { window.location.href = url; }, 400); 
+                    // 给转圈圈动画留一点反应时间再跳转
+                    setTimeout(() => { window.location.href = url; }, 300); 
                 },
 
                 executeUpgrade() { this.isPro = true; window.safeStorage.set('xp_is_pro', 'true'); this.modals.upgrade = false; },
@@ -271,5 +279,21 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        // 🚀 解决浏览器“后退”按钮(BFCache)导致的无限转圈死锁
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                // 如果是从缓存恢复的，强行隐藏所有遮罩
+                const overlay = document.querySelector('.warp-overlay');
+                if (overlay) overlay.style.display = 'none';
+                // 安全重置 Alpine 状态
+                if (window.Alpine) {
+                    document.querySelectorAll('[x-data]').forEach(el => {
+                        if(el.__x && el.__x.$data) el.__x.$data.isWarping = false;
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>

@@ -18,7 +18,7 @@
         .tech-panel {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.95) 100%);
             border-top: 2px solid #06b6d4; border-bottom: 1px solid rgba(6, 182, 212, 0.3);
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 15px);
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
         
@@ -44,17 +44,35 @@
 
         .glitch-fx { animation: shake 0.2s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 75% { transform: translate(1px, 2px); } }
-        .target-lock { position: absolute; width: 180px; height: 180px; border: 2px dashed #06b6d4; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 12; animation: rotateLock 6s linear infinite; border-radius: 50%; }
-        @keyframes rotateLock { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
         
         .terminal-font { font-family: 'Courier New', Courier, monospace; }
         .fade-in { animation: fadeIn 0.8s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🚀 隐形呼吸态 UI 特效 */
+        .stealth-btn {
+            opacity: 0.15; filter: grayscale(1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stealth-btn:hover {
+            opacity: 1; filter: grayscale(0);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+            background: rgba(15, 23, 42, 0.9);
+            border-color: #06b6d4;
+        }
     </style>
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
     <div class="space-bg"></div>
+
+    <!-- 🚀 隐形返回大厅舱门 (悬浮于最高层，平时半隐形，鼠标靠近瞬间显形) -->
+    <a href="dashboard.html" class="fixed top-6 left-6 z-[250] flex items-center gap-3 px-5 py-2.5 rounded-full border border-slate-600 bg-slate-900/50 stealth-btn group cursor-pointer backdrop-blur-md">
+        <span class="text-2xl text-cyan-400 group-hover:-translate-x-1 transition-transform">⬅</span>
+        <div class="flex flex-col">
+            <span class="text-xs font-black tracking-widest text-white uppercase" x-text="i18n[lang].returnOS"></span>
+        </div>
+    </a>
 
     <!-- 阶段 0：大厅 -->
     <div x-show="inLobby" x-cloak class="start-overlay fade-in">
@@ -97,8 +115,8 @@
         </div>
     </div>
 
-    <!-- 声控台 -->
-    <button x-show="missionStarted" @click="toggleSound()" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center hover:bg-blue-900/80 hover:border-blue-500 transition shadow-[0_0_20px_rgba(0,0,0,0.5)] text-xl cursor-pointer">
+    <!-- 声控台 (同样采用隐形设计，位于右上角) -->
+    <button x-show="missionStarted" @click="toggleSound()" class="fixed top-6 right-6 z-[250] w-12 h-12 rounded-full border border-slate-600 bg-slate-900/50 flex items-center justify-center stealth-btn cursor-pointer backdrop-blur-md text-xl">
         <span x-text="isMuted ? '🔇' : '🔊'"></span>
     </button>
 
@@ -153,15 +171,12 @@
         </div>
         <h2 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase" x-text="i18n[lang].haltedTitle"></h2>
         <p class="text-rose-200 text-lg max-w-2xl mb-12 font-bold leading-relaxed" x-html="i18n[lang].haltedDesc"></p>
-        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 font-black text-xl hover:bg-rose-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.5)] cursor-pointer pointer-events-auto" style="clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);" x-text="i18n[lang].proBtn"></button>
+        <button @click="window.location.href='dashboard.html'" class="px-12 py-5 bg-white text-rose-900 font-black text-xl hover:bg-rose-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.5)] cursor-pointer pointer-events-auto" style="clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);" x-text="i18n[lang].proBtn"></button>
     </div>
 
     <!-- 🚀 PRO 用户：无限 AI 关卡过渡屏 -->
     <div x-show="showAIEngine" x-cloak class="fixed inset-0 z-[120] bg-[#020617] flex flex-col items-center justify-center p-10 text-center fade-in">
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSg2LCAxODIsIDIxMiwgMC4yKSIvPjwvc3ZnPg==')] opacity-10"></div>
         <div class="absolute inset-0 bg-cyan-600/10 blur-[100px] rounded-full pointer-events-none"></div>
-        
-        <!-- 酷炫的数据加载动画 -->
         <div class="relative w-32 h-32 mb-10 flex items-center justify-center">
             <div class="absolute inset-0 border-4 border-dashed border-cyan-500 rounded-full animate-[spin_4s_linear_infinite] opacity-50"></div>
             <div class="absolute inset-2 border-4 border-solid border-blue-500 rounded-full border-t-transparent animate-[spin_2s_linear_infinite]"></div>
@@ -177,7 +192,7 @@
             <div class="flex items-center gap-4 text-xs font-mono text-cyan-400"><div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div> [SYS] Connecting to Infinite AI Engine...</div>
         </div>
 
-        <button @click="window.location.href='index.html'" class="px-10 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-lg transition-all shadow-[0_0_30px_rgba(6,182,212,0.4)] cursor-pointer pointer-events-auto relative z-10" style="clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);" x-text="i18n[lang].aiBtn"></button>
+        <button @click="window.location.href='dashboard.html'" class="px-10 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-lg transition-all shadow-[0_0_30px_rgba(6,182,212,0.4)] cursor-pointer pointer-events-auto relative z-10" style="clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);" x-text="i18n[lang].aiBtn"></button>
     </div>
 
     <script>
@@ -194,24 +209,26 @@
 
                 i18n: {
                     zh: {
+                        returnOS: '返回主控中枢',
                         lobbyTitle: '欢迎登舰，指挥官', lobbyDesc: '请选择您的战术难度',
                         a1Title: '棉花糖星云 (6-8岁)', a1Desc: '探索彩色力场，保护糖果城堡。',
                         a2Title: '星港破袭战 (9-12岁)', a2Desc: '应对基地红锁，解除电磁脉冲危机。',
                         a3Title: '视界漫游者 (13-15岁)', a3Desc: '穿越黑洞奇点，解析高维几何密码。',
                         sysName: 'XUEPILOT 神经链路', sysDesc: '音频系统与战术模块待命', startBtn: '⚡ 授权音轨并切入战场', linking: '核心模块加载中...',
                         target: 'TARGET_LOCKED', inst: '执行指令', sysOverride: 'SYSTEM OVERRIDE: 逻辑拦截',
-                        haltedTitle: '危机：算力不足', haltedDesc: '前方高危区域需要连接<br><span class="text-white underline underline-offset-8">量子 Pro 算力</span> 才能继续重构防线。', proBtn: '解锁 Pro 级核心算力 ➔',
-                        aiTitle: 'PRO 量子算力已接入', aiDesc: '新手模拟教程已结束。AI 引擎正在接管战局，准备为您实时生成无限宇宙与动态危机剧本。', aiBtn: '进入 AI 无限推演舱 ➔'
+                        haltedTitle: '危机：算力不足', haltedDesc: '前方高危区域需要连接<br><span class="text-white underline underline-offset-8">量子 Pro 算力</span> 才能继续重构防线。', proBtn: '返回大厅配置算力 ➔',
+                        aiTitle: 'PRO 量子算力已接入', aiDesc: '新手模拟教程已结束。AI 引擎正在接管战局，准备为您实时生成无限宇宙与动态危机剧本。', aiBtn: '返回大厅开启部署 ➔'
                     },
                     en: {
+                        returnOS: 'Return to OS',
                         lobbyTitle: 'Welcome, Commander', lobbyDesc: 'Select your tactical difficulty',
                         a1Title: 'Candy Nebula (6-8)', a1Desc: 'Explore forcefields, save Candy Castle.',
                         a2Title: 'Starport Breach (9-12)', a2Desc: 'Bypass red locks, resolve EMP crisis.',
                         a3Title: 'Horizon Walker (13-15)', a3Desc: 'Navigate singularities, solve 4D puzzles.',
                         sysName: 'NEURAL LINK', sysDesc: 'Audio & Tactical Modules Standby', startBtn: '⚡ ENGAGE LINK & AUDIO', linking: 'Loading modules...',
                         target: 'TARGET_LOCKED', inst: 'EXECUTE', sysOverride: 'SYSTEM OVERRIDE',
-                        haltedTitle: 'Crisis: Low Compute', haltedDesc: 'The hazardous sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Unlock PRO Access ➔',
-                        aiTitle: 'PRO COMPUTE ENGAGED', aiDesc: 'Simulation tutorial complete. AI Engine is taking over to generate infinite universes and dynamic scenarios in real-time.', aiBtn: 'Enter Infinite AI Sandbox ➔'
+                        haltedTitle: 'Crisis: Low Compute', haltedDesc: 'The hazardous sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Return to Lobby ➔',
+                        aiTitle: 'PRO COMPUTE ENGAGED', aiDesc: 'Simulation tutorial complete. AI Engine is taking over to generate infinite universes and dynamic scenarios in real-time.', aiBtn: 'Return to Deploy ➔'
                     }
                 },
 

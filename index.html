@@ -77,43 +77,12 @@
             </div>
         </div>
 
-        <!-- 登录成功后的分发大门 -->
-        <div x-show="sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden text-center">
-            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">✓</div>
+        <!-- 登录成功：短暂动画后自动跳转 -->
+        <div x-show="sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden text-center fade-in">
+            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-pulse">✓</div>
             <h2 class="text-2xl font-black text-white mb-2">身份链接成功</h2>
             <p class="text-slate-400 text-sm mb-6 truncate px-4 font-mono" x-text="sessionUser?.email"></p>
-            
-            <!-- 收费墙状态展示 -->
-            <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl mb-8 flex justify-between items-center shadow-inner">
-                <div class="text-left">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">当前算力权限</div>
-                    <div class="text-sm font-black flex items-center gap-2" :class="isPro ? 'text-amber-400' : 'text-slate-300'">
-                        <span x-text="isPro ? '🌟 PRO 领航员版' : '基础探索版'"></span>
-                    </div>
-                </div>
-                <button x-show="!isPro" @click="upgradeToPro()" class="text-xs bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold shadow-md transition border border-amber-400/50">升级 PRO</button>
-            </div>
-
-            <!-- 双端分发通道 -->
-            <div class="grid grid-cols-1 gap-4">
-                <button @click="window.location.href='dashboard.html'" class="w-full py-4 bg-slate-800 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 rounded-xl text-left px-6 transition flex items-center justify-between group shadow-md">
-                    <div>
-                        <div class="font-bold text-white text-lg">🎛️ 进入家长主控舱</div>
-                        <div class="text-xs text-slate-400 mt-1">配置课程大纲与学情雷达</div>
-                    </div>
-                    <span class="text-2xl opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition">➔</span>
-                </button>
-                
-                <button @click="window.location.href='classroom.html'" class="w-full py-4 bg-slate-800 hover:bg-emerald-600 border border-slate-700 hover:border-emerald-500 rounded-xl text-left px-6 transition flex items-center justify-between group shadow-md">
-                    <div>
-                        <div class="font-bold text-white text-lg">🌌 进入学生探索舱</div>
-                        <div class="text-xs text-slate-400 mt-1">漫游 3D 星球与智能伴学</div>
-                    </div>
-                    <span class="text-2xl opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition">➔</span>
-                </button>
-            </div>
-
-            <button @click="signOut()" class="mt-8 text-xs text-rose-500 hover:text-rose-400 underline decoration-rose-900 underline-offset-4">注销并断开链接</button>
+            <div class="text-blue-400 font-mono text-xs tracking-widest uppercase animate-pulse">正在进入主控中枢...</div>
         </div>
 
     </div>
@@ -130,36 +99,36 @@
                 async initAuth() {
                     this.isPro = localStorage.getItem('xp_is_pro') === 'true';
 
+                    // 🎯 核心修复：将数据库凭证直接硬编码到前端
                     const DEFAULT_SUPA_URL = 'https://cywslfalbedraeeggryj.supabase.co'; 
                     const DEFAULT_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0'; 
 
                     const supaUrl = localStorage.getItem('xp_supa_url') || DEFAULT_SUPA_URL;
                     const supaKey = localStorage.getItem('xp_supa_key') || DEFAULT_SUPA_KEY;
 
-                    if (supaUrl && supaKey && supaKey !== 'YOUR_SUPABASE_ANON_KEY' && window.supabase) {
+                    if (supaUrl && supaKey && window.supabase) {
                         try {
                             this.supaClient = window.supabase.createClient(supaUrl, supaKey);
                             const { data: { session } } = await this.supaClient.auth.getSession();
                             if (session) {
                                 this.sessionUser = session.user;
                                 this.checkProStatusFromDB(session.user.id);
-                                this.injectDemoDataIfEmpty(); // 确保有兜底数据
+                                this.injectDemoDataIfEmpty();
+                                // 如果一打开网页就已经登录，直接秒切到 dashboard
+                                window.location.href = 'dashboard.html';
                             }
                         } catch(e) { console.error("Supabase init failed", e); }
                     }
                 },
 
-                // 🚀 核心修复：智能数据拓荒引擎 (防卡死、防没星球)
+                // 智能数据拓荒引擎 (防卡死、防没星球)
                 injectDemoDataIfEmpty() {
                     const existingGalaxies = localStorage.getItem('xp_galaxies');
                     if (!existingGalaxies || existingGalaxies === '[]' || existingGalaxies.length < 10) {
                         console.log("检测到空数据，正在注入默认演示星系...");
-                        
-                        // 注入默认学员
                         const defaultStudents = [{ id: 'stu_default', name: '探索者一号', avatar: '👨‍🚀' }];
                         localStorage.setItem('xp_students', JSON.stringify(defaultStudents));
 
-                        // 注入华丽的演示星系
                         const demoGalaxies = [{
                             id: `gal_demo_${Date.now()}`,
                             title: '太阳系探索先遣营',
@@ -181,7 +150,7 @@
                 async handleAuth() {
                     this.loading = true;
                     try {
-                        if (!this.supaClient) throw new Error("数据库未连接！请检查代码第 152 行是否已替换真实的 Anon Key。");
+                        if (!this.supaClient) throw new Error("数据库未连接！");
 
                         let res;
                         if (this.authMode === 'register') {
@@ -189,13 +158,17 @@
                             if (res.error) throw res.error;
                             Swal.fire({icon:'success', title:'注册成功', text:'身份已记录，系统正在为您跳转...', background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
                             this.authMode = 'login';
+                            // 注册后自动登录
                             setTimeout(() => this.handleAuth(), 2000);
                         } else {
                             res = await this.supaClient.auth.signInWithPassword({ email: this.email, password: this.password });
                             if (res.error) throw res.error;
                             this.sessionUser = res.data.user;
                             this.checkProStatusFromDB(res.data.user.id);
-                            this.injectDemoDataIfEmpty(); // 登录后注入兜底数据
+                            this.injectDemoDataIfEmpty();
+                            
+                            // 登录成功后，延迟 1.5 秒自动跳转到主控台
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
                         }
                     } catch (err) {
                         Swal.fire({icon:'error', title:'验证失败', text: err.message, background:'#0f172a', color:'#fff'});
@@ -215,30 +188,11 @@
                     } catch(e) {}
                 },
 
-                upgradeToPro() {
-                    Swal.fire({
-                        title: '解锁 PRO 领航员权限',
-                        html: '<p class="text-sm text-slate-300">此为演示系统，点击下方按钮免费为您开通无限算力权限！</p>',
-                        icon: 'info', background: '#0f172a', color: '#fff',
-                        confirmButtonText: '🚀 立即激活 PRO', confirmButtonColor: '#d97706'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.isPro = true;
-                            localStorage.setItem('xp_is_pro', 'true');
-                            Swal.fire({toast:true, position:'top-end', icon:'success', title:'PRO 权限已激活', showConfirmButton:false, timer:2000});
-                        }
-                    });
-                },
-
-                async signOut() {
-                    if (this.supaClient) await this.supaClient.auth.signOut();
-                    this.sessionUser = null;
-                },
-
                 bypassAuth() {
                     this.sessionUser = { email: 'guest_commander@local.env' };
-                    this.injectDemoDataIfEmpty(); // 游客模式也要注入数据！
-                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'已切换至本地演示模式', showConfirmButton:false, timer:2000});
+                    this.injectDemoDataIfEmpty();
+                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'已切换至本地演示模式', showConfirmButton:false, timer:1500});
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
                 }
             }
         }

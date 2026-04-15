@@ -3,297 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XuePilot COMMAND OS</title>
+    <title>XuePilot 派乐伴学 - 神经链路登入</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- 🚀 补全：Supabase SDK，确保设置页面的“测试连接”功能有效 -->
+    <!-- 引入 Supabase 官方 SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         [x-cloak] { display: none !important; }
-        body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
+        body { background-color: #030712; color: #f8fafc; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
         .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
-        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
-        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { transition: all 0.3s ease; cursor: pointer; }
-        .nav-item:hover { background: rgba(30, 41, 59, 0.6); }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
+        .grid-bg { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); animation: gridMove 20s linear infinite; }
+        @keyframes gridMove { 100% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } }
+        
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
-
-        .warp-overlay { position: fixed; inset: 0; z-index: 100; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
-        .warp-spinner { width: 50px; height: 50px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* 3D 翻牌特效 */
-        .flip-card { background-color: transparent; perspective: 1000px; height: 180px; }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
-        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
-        .flip-card-front, .flip-card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 1rem; }
-        .flip-card-front { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; justify-content: center; padding: 1.5rem; }
-        .flip-card-back { background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(79, 70, 229, 0.9)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; padding: 1.5rem; border: 1px solid rgba(96, 165, 250, 0.5); }
+        
+        .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-primary:hover { box-shadow: 0 0 20px rgba(79, 70, 229, 0.6); transform: translateY(-2px); }
+        
+        .scan-line { width: 100%; height: 2px; background: #3b82f6; position: absolute; top: 0; left: 0; opacity: 0.5; animation: scan 3s infinite linear; pointer-events: none; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-    
-    <script>
-        window.safeStorage = {
-            memory: {},
-            get(key) {
-                try { return window.localStorage.getItem(key) || this.memory[key] || null; } 
-                catch(e) { return this.memory[key] || null; }
-            },
-            set(key, value) {
-                this.memory[key] = value;
-                try { window.localStorage.setItem(key, value); } catch(e) {}
-            }
-        };
-    </script>
 </head>
-<body x-data="portalApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+<body x-data="authApp()" x-init="initAuth()" class="min-h-screen flex items-center justify-center relative">
 
-    <!-- 🚀 载入缓冲层 -->
-    <div x-show="isWarping" x-transition.opacity class="warp-overlay">
-        <div class="warp-spinner mb-6"></div>
-        <div class="text-blue-400 font-mono tracking-[0.4em] animate-pulse text-[10px] uppercase">Connecting to Matrix...</div>
+    <div class="space-bg"></div>
+    <div class="grid-bg"></div>
+
+    <div class="w-full max-w-md px-6 z-10 fade-in">
+        
+        <!-- Logo 区域 -->
+        <div class="text-center mb-10">
+            <div class="w-20 h-20 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white font-black text-4xl shadow-[0_0_30px_rgba(37,99,235,0.6)] mb-6 border border-blue-400/50">XP</div>
+            <h1 class="text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">XUEPILOT</h1>
+            <p class="text-blue-500/80 font-mono text-xs tracking-widest mt-2 uppercase">Neural Link Gateway</p>
+        </div>
+
+        <!-- 登录 / 注册表单 -->
+        <div x-show="!sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+            <div class="scan-line"></div>
+            
+            <!-- 模式切换标签 -->
+            <div class="flex bg-slate-900/50 p-1.5 rounded-2xl mb-8 border border-slate-800 shadow-inner">
+                <button @click="authMode = 'login'" class="flex-1 py-3 text-sm font-bold rounded-xl transition" :class="authMode === 'login' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'">身份验证登录</button>
+                <button @click="authMode = 'register'" class="flex-1 py-3 text-sm font-bold rounded-xl transition" :class="authMode === 'register' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'">建立新档案</button>
+            </div>
+
+            <form @submit.prevent="handleAuth()" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-2 tracking-widest uppercase">联系邮箱 (Email)</label>
+                    <input type="email" x-model="email" required class="w-full input-dark p-4 rounded-xl text-sm" placeholder="commander@xuepilot.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-2 tracking-widest uppercase">安保密钥 (Password)</label>
+                    <input type="password" x-model="password" required class="w-full input-dark p-4 rounded-xl text-sm" placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="w-full btn-primary py-4 rounded-xl font-bold text-white shadow-lg mt-4 flex justify-center items-center gap-2" :disabled="loading">
+                    <span x-show="loading" class="animate-spin">↻</span>
+                    <span x-text="authMode === 'login' ? '🔗 建立神经链接' : '✨ 注册并创建身份'"></span>
+                </button>
+            </form>
+
+            <!-- 物理应急通道：如果您还没配好 Supabase，点这里强制进入本地体验模式 -->
+            <div class="mt-6 text-center">
+                <button @click="bypassAuth()" class="text-xs text-slate-500 hover:text-blue-400 underline decoration-slate-700 underline-offset-4 transition">
+                    [Debug] 绕过鉴权，进入本地体验模式 ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- 登录成功后的分发大门 (身份墙与收费墙判定) -->
+        <div x-show="sessionUser" x-cloak class="glass-panel p-8 rounded-3xl relative overflow-hidden text-center">
+            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">✓</div>
+            <h2 class="text-2xl font-black text-white mb-2">身份链接成功</h2>
+            <p class="text-slate-400 text-sm mb-6 truncate px-4 font-mono" x-text="sessionUser?.email"></p>
+            
+            <!-- 收费墙状态展示 -->
+            <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl mb-8 flex justify-between items-center shadow-inner">
+                <div class="text-left">
+                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">当前算力权限</div>
+                    <div class="text-sm font-black flex items-center gap-2" :class="isPro ? 'text-amber-400' : 'text-slate-300'">
+                        <span x-text="isPro ? '🌟 PRO 领航员版' : '基础探索版'"></span>
+                    </div>
+                </div>
+                <button x-show="!isPro" @click="upgradeToPro()" class="text-xs bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold shadow-md transition border border-amber-400/50">升级 PRO</button>
+            </div>
+
+            <!-- 双端分发通道 -->
+            <div class="grid grid-cols-1 gap-4">
+                <button @click="window.location.href='dashboard.html'" class="w-full py-4 bg-slate-800 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 rounded-xl text-left px-6 transition flex items-center justify-between group shadow-md">
+                    <div>
+                        <div class="font-bold text-white text-lg">🎛️ 进入家长主控舱</div>
+                        <div class="text-xs text-slate-400 mt-1">配置课程大纲与学情雷达</div>
+                    </div>
+                    <span class="text-2xl opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition">➔</span>
+                </button>
+                
+                <button @click="window.location.href='classroom.html'" class="w-full py-4 bg-slate-800 hover:bg-emerald-600 border border-slate-700 hover:border-emerald-500 rounded-xl text-left px-6 transition flex items-center justify-between group shadow-md">
+                    <div>
+                        <div class="font-bold text-white text-lg">🌌 进入学生探索舱</div>
+                        <div class="text-xs text-slate-400 mt-1">漫游 3D 星球与智能伴学</div>
+                    </div>
+                    <span class="text-2xl opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition">➔</span>
+                </button>
+            </div>
+
+            <button @click="signOut()" class="mt-8 text-xs text-rose-500 hover:text-rose-400 underline decoration-rose-900 underline-offset-4">注销并断开链接</button>
+        </div>
+
     </div>
 
-    <div class="space-bg"></div><div class="grid-bg"></div>
-
-    <aside class="flex flex-col glass-panel border-r border-slate-800/50 w-[19rem] z-30 shrink-0 shadow-2xl relative">
-        <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
-            <div class="flex items-center">
-                <span class="text-3xl mr-3 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
-                <div>
-                    <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300" x-text="dict.brand"></h1>
-                    <div class="text-[9px] text-slate-500 font-mono mt-0.5 tracking-widest uppercase" x-text="dict.ver"></div>
-                </div>
-            </div>
-            <button @click="toggleLang()" class="text-xs text-slate-400 hover:text-white font-bold bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 transition" x-text="lang === 'zh' ? 'EN' : '中文'"></button>
-        </div>
-        
-        <div class="flex-1 py-8 px-4 space-y-4 overflow-y-auto">
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2" x-text="dict.coreMod"></div>
-            
-            <!-- 🚀 C端学生入口：作为唯一的高亮主按钮 -->
-            <a @click.prevent="goTo('classroom.html', false)" class="nav-item flex items-center justify-between px-5 py-6 rounded-2xl bg-gradient-to-br from-blue-600/30 to-emerald-600/20 border border-blue-500/50 cursor-pointer shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:scale-[1.03] transition-all group">
-                <div class="flex items-center">
-                    <span class="text-4xl mr-4 filter drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] group-hover:rotate-12 transition-transform">👨‍🚀</span> 
-                    <div>
-                        <span class="font-black text-lg text-white block" x-text="dict.explorer"></span>
-                        <span class="text-[9px] text-blue-400 font-mono tracking-tighter uppercase">Launch Explorer Deck</span>
-                    </div>
-                </div>
-            </a>
-            
-            <div class="h-px bg-slate-800/50 my-6 mx-2"></div>
-            
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2" x-text="dict.freeMod"></div>
-            <a @click.prevent="goTo('simulator.html', false)" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40">
-                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🎮</span> <span class="text-sm font-bold text-slate-300" x-text="dict.game"></span></div>
-            </a>
-            <a @click.prevent="view = 'tools'" class="nav-item flex items-center px-4 py-3.5 rounded-xl hover:bg-slate-800/40" :class="view === 'tools' ? 'bg-slate-800/60 shadow-inner' : ''">
-                <div class="flex items-center"><span class="text-xl mr-3 opacity-80">🌍</span> <span class="text-sm font-bold text-slate-300" x-text="dict.tools"></span></div>
-            </a>
-        </div>
-
-        <!-- 🚀 B端管理入口：低调隐藏于底部 -->
-        <div class="p-4 border-t border-slate-800/50 bg-slate-900/40 flex flex-col gap-2">
-            <button @click.prevent="goTo('dashboard.html', true)" class="w-full py-2.5 hover:bg-slate-800/60 rounded-xl text-[11px] font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-2 border border-transparent hover:border-slate-700">
-                <span>🎛️</span> <span x-text="dict.commander"></span>
-                <span x-show="!isPro" class="text-[8px] font-black border border-amber-500/50 text-amber-500 px-1 rounded opacity-50">PRO</span>
-            </button>
-            <button @click="modals.settings = true" class="w-full py-2 bg-slate-800/40 hover:bg-blue-900/40 rounded-lg text-[9px] font-bold text-slate-500 hover:text-blue-300 transition border border-slate-800" x-text="dict.settingsBtn"></button>
-        </div>
-    </aside>
-
-    <main class="flex-1 relative bg-transparent overflow-hidden flex items-start justify-center p-8 overflow-y-auto">
-        <div class="text-center glass-panel p-10 md:p-12 rounded-[2.5rem] shadow-2xl border border-blue-500/20 fade-in transition-all duration-500 my-auto"
-             :class="view === 'tools' ? 'max-w-5xl w-full' : 'max-w-2xl w-full'">
-            
-            <div class="text-7xl mb-6 drop-shadow-lg animate-bounce" x-text="view === 'tools' ? '🌍' : '🛸'"></div>
-            <h2 class="text-3xl font-black text-white mb-4 tracking-tight" x-text="view === 'tools' ? dict.tools : dict.welcome"></h2>
-            <p class="text-slate-400 text-sm leading-relaxed mb-10" x-text="view === 'tools' ? dict.toolsDesc : dict.welcomeDesc"></p>
-            
-            <div x-show="view === 'tools'" x-cloak class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left mb-4 fade-in">
-                <template x-for="tool in toolsList" :key="tool.id">
-                    <div class="flip-card cursor-pointer group" @click="window.open(tool.link, '_blank')">
-                        <div class="flip-card-inner shadow-lg">
-                            <div class="flip-card-front group-hover:border-emerald-400 transition-colors">
-                                <div class="text-4xl mb-3 drop-shadow-md" x-text="tool.icon"></div>
-                                <h3 class="font-bold text-emerald-300 text-lg mb-1 tracking-wide" x-text="tool.name"></h3>
-                                <p class="text-xs text-slate-400" x-text="lang === 'zh' ? tool.descZh : tool.descEn"></p>
-                            </div>
-                            <div class="flip-card-back !bg-gradient-to-br !from-emerald-700 !to-blue-800">
-                                <p class="text-xs text-emerald-50 leading-relaxed flex-1" x-text="lang === 'zh' ? tool.detailZh : tool.detailEn"></p>
-                                <div class="mt-4 flex items-center justify-between border-t border-emerald-400/30 pt-3">
-                                    <span class="text-[10px] font-mono tracking-widest opacity-80" x-text="tool.id"></span>
-                                    <span class="text-[10px] font-bold bg-white text-emerald-700 px-3 py-1.5 rounded-lg shadow-md">前往官网 ↗</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <div x-show="!isPro && view !== 'tools'" class="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-4">
-                <p class="text-amber-400 text-xs font-bold mb-3" x-text="dict.upgHint"></p>
-                <button @click="modals.upgrade = true" class="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl text-white text-sm font-bold shadow-lg hover:scale-105 transition" x-text="dict.upgBtn"></button>
-            </div>
-        </div>
-
-        <!-- 引擎配置面板 -->
-        <div x-show="modals.settings" x-cloak class="absolute inset-0 bg-black/95 z-[70] flex items-center justify-center p-8 backdrop-blur-xl overflow-y-auto">
-             <div class="w-full max-w-2xl bg-slate-900 border border-blue-500/30 p-8 rounded-3xl shadow-2xl my-auto fade-in">
-                 <h2 class="text-xl font-black mb-6 text-white tracking-wide" x-text="dict.setMenu"></h2>
-                 <div class="space-y-5">
-                     <div class="bg-blue-900/10 p-5 rounded-2xl border border-blue-500/20 relative">
-                         <div class="flex justify-between items-center mb-3">
-                             <div class="font-bold text-blue-400 text-sm tracking-widest uppercase">🌌 Main Planning Core (排课引擎)</div>
-                             <button @click="testNode('sys')" class="text-[10px] font-bold bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded-md transition shadow-md text-white">Test Connection</button>
-                         </div>
-                         <div class="space-y-3">
-                             <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                             <div class="grid grid-cols-2 gap-3">
-                                 <input type="text" x-model="config.sys.url" placeholder="Base URL (/proxy/groq)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                                 <input type="text" x-model="config.sys.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                             </div>
-                         </div>
-                     </div>
-                     <div class="bg-indigo-900/10 p-5 rounded-2xl border border-indigo-500/20">
-                         <div class="flex justify-between items-center mb-3">
-                             <div class="font-bold text-indigo-400 text-sm tracking-widest uppercase">🤖 NOVA Tutor Core (伴读导师)</div>
-                             <button @click="testNode('nova')" class="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded-md transition shadow-md text-white">Test Connection</button>
-                         </div>
-                         <div class="space-y-3">
-                             <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono shadow-inner">
-                             <div class="grid grid-cols-2 gap-3">
-                                 <input type="text" x-model="config.nova.url" placeholder="Base URL (/proxy/nvidia)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                                 <input type="text" x-model="config.nova.model" placeholder="Model ID" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                             </div>
-                         </div>
-                     </div>
-                     <div class="bg-emerald-900/10 p-5 rounded-2xl border border-emerald-500/20">
-                         <div class="font-bold text-emerald-400 mb-3 text-sm tracking-widest uppercase">🗄️ Supabase Cloud Storage</div>
-                         <div class="grid grid-cols-2 gap-3">
-                             <input type="text" x-model="config.supa.url" placeholder="Project URL (https://...)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                             <input type="password" x-model="config.supa.key" placeholder="Anon Key (eyJ...)" class="w-full input-dark p-3 rounded-xl text-sm font-mono shadow-inner">
-                         </div>
-                     </div>
-                 </div>
-                 <div class="mt-8 flex gap-4">
-                     <button @click="saveConfig()" class="flex-1 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-white transition shadow-lg text-sm tracking-widest uppercase" x-text="dict.setSave"></button>
-                     <button @click="modals.settings = false" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-white transition font-bold text-sm" x-text="dict.setCancel"></button>
-                 </div>
-             </div>
-        </div>
-
-        <!-- 弹窗：PRO 升级 -->
-        <div x-show="modals.upgrade" x-cloak class="absolute inset-0 bg-black/90 z-[70] flex items-center justify-center p-8 backdrop-blur-xl">
-             <div class="w-full max-w-md bg-slate-900 border border-amber-500/30 p-8 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.15)] fade-in relative">
-                 <button @click="modals.upgrade = false" class="absolute top-5 right-5 text-slate-500 hover:text-white transition text-2xl">✖</button>
-                 <div class="text-6xl mb-4 text-center drop-shadow-lg">✨</div>
-                 <h2 class="text-2xl font-black mb-3 text-amber-400 text-center tracking-tight" x-text="dict.upgTitle"></h2>
-                 <p class="text-slate-400 text-xs mb-6 text-center leading-relaxed" x-text="dict.upgDesc"></p>
-                 <button @click="executeUpgrade()" class="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-500 rounded-xl font-bold text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] text-base transition tracking-widest uppercase" x-text="dict.upgBtn"></button>
-             </div>
-        </div>
-    </main>
-
     <script>
-        function portalApp() {
+        function authApp() {
             return {
-                lang: window.safeStorage.get('xp_lang') || 'zh',
-                isPro: window.safeStorage.get('xp_is_pro') !== 'false', 
-                view: 'welcome', modals: { upgrade: false, settings: false },
-                isWarping: true,
+                authMode: 'login', // 'login' or 'register'
+                email: '', password: '', loading: false,
+                sessionUser: null,
+                isPro: false,
+                supaClient: null,
 
-                config: {
-                    sys: { key: window.safeStorage.get('xp_sys_key')||'', url: window.safeStorage.get('xp_sys_url')||'/proxy/groq', model: window.safeStorage.get('xp_sys_model')||'llama-3.3-70b-versatile' },
-                    nova: { key: window.safeStorage.get('xp_nova_key')||'', url: window.safeStorage.get('xp_nova_url')||'/proxy/nvidia', model: window.safeStorage.get('xp_nova_model')||'google/gemma-4-31b-it' },
-                    supa: { key: window.safeStorage.get('xp_supa_key')||'', url: window.safeStorage.get('xp_supa_url')||'' }
-                },
-                toolsList: [
-                    { id: 'anton', name: 'ANTON', icon: '🦉', descZh: '无广告全学科学习应用', descEn: 'Ad-free K-12 learning', detailZh: '极高质量的互动练习，适合低幼至初中阶段，完全免费且无广告。', detailEn: 'Interactive exercises for school. Ad-free and completely free.', link: 'https://anton.app/' },
-                    { id: 'khan', name: 'Khan Academy', icon: '🏛️', descZh: '免费教育基石', descEn: 'Foundation of free learning', detailZh: '涵盖数学、科学、编程等几乎所有学科。是构建知识地基的首选推荐库。', detailEn: 'World-class free education for anyone, anywhere.', link: 'https://www.khanacademy.org/' },
-                    { id: 'phet', name: 'PhET Simulations', icon: '🔬', descZh: '诺奖仿真实验室', descEn: 'Nobel-level Sims', detailZh: '极其生动的理科互动实验，让抽象的科学概念触手可及。', detailEn: 'Interactive simulations for physics, chemistry, and biology.', link: 'https://phet.colorado.edu/' }
-                ],
-                i18n: {
-                    zh: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.4', coreMod: '进入学习宇宙', freeMod: '开放探索域', 
-                        commander: '家长/教师主控后台', explorer: '进入学生探索舱', game: 'AI 指挥官模拟舱', tools: '教育宝藏矩阵',
-                        welcome: '欢迎登舰', welcomeDesc: '准备好开启全新的知识宇宙探索之旅。',
-                        tools: '全球教育资源矩阵', toolsDesc: '精选全球顶尖免费教育资源网站。',
-                        settingsBtn: '⚙️ 系统设置', setMenu: '🎛️ 算力与存储节点配置', setSave: '💾 烧录全局配置', setCancel: '取消',
-                        upgTitle: '获取领航员通行证', upgDesc: '解锁双端物理隔离舱室、云端教研资产同步与学情分析雷达。', upgBtn: '获取 PRO 权限', upgHint: '请先升级以解锁核心教育引擎。'
-                    },
-                    en: {
-                        brand: 'XuePilot', ver: 'Blueprint V7.4', coreMod: 'Learning Universe', freeMod: 'Open Domain', 
-                        commander: 'Parent Dashboard', explorer: 'Enter Explorer Deck', game: 'AI Simulator', tools: 'Education Matrix',
-                        welcome: 'Welcome Aboard', welcomeDesc: 'Get ready to explore the new knowledge universe.',
-                        tools: 'Global Matrix', toolsDesc: 'Curated world-class free educational resources.',
-                        settingsBtn: '⚙️ Settings', setMenu: '🎛️ Compute & Storage Config', setSave: '💾 Save Nodes', setCancel: 'Cancel',
-                        upgTitle: 'Get Commander Access', upgDesc: 'Unlock dual-deck architecture, cloud asset sync, and insight radar.', upgBtn: 'Unlock Pro', upgHint: 'Core engines are locked.'
+                async initAuth() {
+                    // 初始化 PRO 状态 (从本地缓存读取，真实情况应该从数据库 user_data 读)
+                    this.isPro = localStorage.getItem('xp_is_pro') === 'true';
+
+                    // 尝试连接 Supabase (需家长在 dashboard 里配置好，或者在这里写死环境变量)
+                    const supaUrl = localStorage.getItem('xp_supa_url');
+                    const supaKey = localStorage.getItem('xp_supa_key');
+
+                    if (supaUrl && supaKey && window.supabase) {
+                        try {
+                            this.supaClient = window.supabase.createClient(supaUrl, supaKey);
+                            const { data: { session } } = await this.supaClient.auth.getSession();
+                            if (session) {
+                                this.sessionUser = session.user;
+                                this.checkProStatusFromDB(session.user.id);
+                            }
+                        } catch(e) { console.error("Supabase init failed", e); }
                     }
                 },
-                get dict() { return this.i18n[this.lang]; },
-                
-                init() {
-                    // 🚀 确保载入屏最终会关闭，无论初始化是否异常
-                    setTimeout(() => { this.isWarping = false; }, 1000);
-                },
 
-                toggleLang() { this.lang = this.lang === 'zh' ? 'en' : 'zh'; window.safeStorage.set('xp_lang', this.lang); },
-                
-                goTo(url, requiresPro) { 
-                    if (requiresPro && !this.isPro) { this.modals.upgrade = true; return; } 
-                    this.isWarping = true;
-                    // 给转圈圈动画留一点反应时间再跳转
-                    setTimeout(() => { window.location.href = url; }, 300); 
-                },
-
-                executeUpgrade() { this.isPro = true; window.safeStorage.set('xp_is_pro', 'true'); this.modals.upgrade = false; },
-                
-                async testNode(type) {
-                    const conf = this.config[type];
-                    if(!conf.key || !conf.url) { Swal.fire('Error', 'Missing Key or URL', 'warning'); return; }
-                    Swal.fire({ title: 'Testing...', text: `Connecting to ${type} core`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                async handleAuth() {
+                    this.loading = true;
                     try {
-                        const res = await fetch(`${conf.url}/chat/completions`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${conf.key}` },
-                            body: JSON.stringify({ model: conf.model, messages: [{ role: 'user', content: 'say ping' }] })
-                        });
-                        if (res.ok) { Swal.fire('Success', `${type} node is online!`, 'success'); }
-                        else { throw new Error(res.status); }
-                    } catch (e) { Swal.fire('Failed', `Connection refused: ${e.message}`, 'error'); }
+                        if (!this.supaClient) throw new Error("数据库未连接！请点击下方 [Debug] 通道进入本地体验。");
+
+                        let res;
+                        if (this.authMode === 'register') {
+                            res = await this.supaClient.auth.signUp({ email: this.email, password: this.password });
+                            if (res.error) throw res.error;
+                            Swal.fire({icon:'success', title:'注册成功', text:'请查收邮箱验证码，或直接登录', background:'#0f172a', color:'#fff'});
+                            this.authMode = 'login';
+                        } else {
+                            res = await this.supaClient.auth.signInWithPassword({ email: this.email, password: this.password });
+                            if (res.error) throw res.error;
+                            this.sessionUser = res.data.user;
+                            this.checkProStatusFromDB(res.data.user.id);
+                        }
+                    } catch (err) {
+                        Swal.fire({icon:'error', title:'验证失败', text: err.message, background:'#0f172a', color:'#fff'});
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
-                saveConfig() { 
-                    Object.keys(this.config).forEach(k => { 
-                        Object.keys(this.config[k]).forEach(sub => { 
-                            window.safeStorage.set(`xp_${k}_${sub}`, this.config[k][sub]); 
-                        }); 
+                // 从数据库读取真实 PRO 状态
+                async checkProStatusFromDB(userId) {
+                    if(!this.supaClient) return;
+                    try {
+                        const { data } = await this.supaClient.from('user_data').select('data').eq('id', userId).single();
+                        if (data && data.data && data.data.isPro) {
+                            this.isPro = true;
+                            localStorage.setItem('xp_is_pro', 'true');
+                        }
+                    } catch(e) {}
+                },
+
+                // 演示用的：强制开启 PRO 权限
+                upgradeToPro() {
+                    Swal.fire({
+                        title: '解锁 PRO 领航员权限',
+                        html: '<p class="text-sm text-slate-300">此为演示系统，点击下方按钮免费为您开通无限算力权限！</p>',
+                        icon: 'info', background: '#0f172a', color: '#fff',
+                        confirmButtonText: '🚀 立即激活 PRO', confirmButtonColor: '#d97706'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.isPro = true;
+                            localStorage.setItem('xp_is_pro', 'true');
+                            Swal.fire({toast:true, position:'top-end', icon:'success', title:'PRO 权限已激活', showConfirmButton:false, timer:2000});
+                        }
                     });
-                    this.modals.settings = false; 
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.lang === 'zh' ? '配置已烧录' : 'Config Saved', showConfirmButton: false, timer: 1500 });
+                },
+
+                async signOut() {
+                    if (this.supaClient) await this.supaClient.auth.signOut();
+                    this.sessionUser = null;
+                },
+
+                // 物理应急通道：跳过所有验证，硬编码登入
+                bypassAuth() {
+                    this.sessionUser = { email: 'guest_commander@local.env' };
+                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'已切换至本地演示模式', showConfirmButton:false, timer:2000});
                 }
             }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script>
-        // 🚀 解决浏览器“后退”按钮(BFCache)导致的无限转圈死锁
-        window.addEventListener('pageshow', function (event) {
-            if (event.persisted) {
-                // 如果是从缓存恢复的，强行隐藏所有遮罩
-                const overlay = document.querySelector('.warp-overlay');
-                if (overlay) overlay.style.display = 'none';
-                // 安全重置 Alpine 状态
-                if (window.Alpine) {
-                    document.querySelectorAll('[x-data]').forEach(el => {
-                        if(el.__x && el.__x.$data) el.__x.$data.isWarping = false;
-                    });
-                }
-            }
-        });
-    </script>
 </body>
 </html>

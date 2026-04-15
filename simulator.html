@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* 极致裸露：去掉了所有的 opacity 渐变和滤镜，让视频百分百清晰显示 */
+        /* 究極の表示：不透明度やフィルターをすべて削除し、ビデオを100%クリアに表示します */
         .video-container { position: fixed; inset: 0; z-index: 0; background: #222; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 1 !important; }
         
@@ -27,13 +27,13 @@
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 用于调试：直接显示当前正在请求的视频网址 -->
-    <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-xs font-mono p-2 border border-green-500/50" x-text="`正在加载: ${videoUrl}`"></div>
+    <!-- デバッグ用：現在リクエストしているビデオURLを直接表示します -->
+    <div class="fixed top-0 left-0 z-50 bg-black/80 text-green-400 text-xs font-mono p-2 border border-green-500/50" x-text="`ロード中: ${videoUrl}`"></div>
 
     <div class="video-container">
-        <!-- 🚀 终极修复：去掉了 HTML 上的 autoplay，全权交由 JS 的 playVideoSafely 方法接管，杜绝竞态条件 -->
+        <!-- 修正点：crossorigin="anonymous"を削除し、CORSのサイレントブロックを回避。preload="auto"を追加 -->
         <video id="main-video" class="scene-video" 
-               muted loop playsinline crossorigin="anonymous"
+               muted loop playsinline preload="auto"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
         </video>
@@ -77,14 +77,21 @@
     <script>
         function shipApp() {
             return {
-                lang: window.localStorage.getItem('xp_lang') || 'zh',
+                lang: window.localStorage.getItem('xp_lang') || 'ja',
                 step: 0, ageGroup: 'mid',
                 isGlitching: false, isLocking: false, showOptions: false,
-                currentStoryText: 'Initializing...', currentOptions: [],
+                currentStoryText: '初期化中...', currentOptions: [],
                 isPro: false, showCrisis: false, isThinking: false,
                 failsafeTimer: null,
 
                 i18n: {
+                    ja: {
+                        target: 'ターゲットロック',
+                        advisor: 'A.I. 戦術アドバイザー', inst: 'コマンドセット',
+                        haltedTitle: '演算次元ブロック',
+                        haltedDesc: '事前構築された次元の演算能力が枯渇しました。前方のエリアに進むには<br><span class="text-white underline underline-offset-8">量子Proキー</span>が必要です。',
+                        proBtn: 'Proエネルギーを補給する ➔'
+                    },
                     zh: {
                         target: 'TARGET_LOCKED',
                         advisor: 'A.I. 战术顾问', inst: '指令集',
@@ -106,6 +113,23 @@
                 },
 
                 scripts: {
+                    ja: {
+                        young: [
+                            { ai: "コマンダー、前方にバブルの壁があります。「賢い質問」をして壁を破りましょう。何を聞きますか？", options: [{ text: "バブルは何でできているの？" }, { text: "なぜ行く手を阻むの？" }] },
+                            { ai: "素晴らしい！バブルが割れました。しかし虹の橋が壊れています。橋を直す目的は何ですか？", options: [{ text: "データストリームを通すため" }, { text: "星が落ちないようにするため" }] },
+                            { triggerCrisis: true }
+                        ],
+                        mid: [
+                            { ai: "コマンダー、論理アウトポストに接近中。ガードが「疑われた時のみ真実を見せる」と言って侵入を拒否しています。最初の指令を：", options: [{ text: "ガードの論理的欠陥を分析" }, { text: "パラドックスパルスを送信" }] },
+                            { ai: "論理の衝突によりガードが再起動中です。中継キャビンに入りました。データ断片が流出しています！質問で固定してください。", options: [{ text: "因果が逆転した場合、今は過去ですか？" }, { text: "断片と全体の関係は？" }] },
+                            { triggerCrisis: true }
+                        ],
+                        old: [
+                            { ai: "コマンダー、事象の地平線の境界にいます。ダイソン球のコアに重力変動が発生。安定化のための論理的特異点を確立してください。", options: [{ text: "非ユークリッド探査プロトコルを確立" }, { text: "高次元演算の摂動周波数を同期" }] },
+                            { ai: "エネルギー場は一時的に安定。しかし、基盤コードの冗長性により空間プレートに幾何学的エラーが発生しています。処理の優先順位は？", options: [{ text: "第一原理プロトコルのリファクタリング" }, { text: "冗長ソースの隔離と分析" }] },
+                            { triggerCrisis: true }
+                        ]
+                    },
                     zh: {
                         young: [
                             { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
@@ -155,10 +179,12 @@
                     this.failsafeTimer = setTimeout(() => {
                         this.isLocking = true;
                         this.showOptions = true;
+                        console.warn("Failsafe triggered UI display.");
                     }, 8500); 
                 },
 
                 handleVideoError() {
+                    console.error("ビデオの読み込みに失敗しました (Video load failed).");
                     clearTimeout(this.failsafeTimer);
                     setTimeout(() => {
                         this.isLocking = true;
@@ -175,22 +201,31 @@
                     }
                 },
 
-                // 🚀 终极安全播放封装函数
+                // 究極の安全再生エンジン：キャッシュ状態（readyState）を先に確認します
                 playVideoSafely(url) {
                     const v = document.getElementById('main-video');
                     if (!v) return;
                     
                     v.pause();
-                    v.src = url;
+                    v.removeAttribute('src'); // 以前のソースをクリア
                     v.load();
+                    v.src = url;
                     
-                    // 仅当浏览器确认视频已经缓冲并准备好时，才调用 play()
-                    v.addEventListener('canplay', () => {
+                    // すでにバッファリングされている場合（キャッシュヒット時）、直ちに再生
+                    if (v.readyState >= 3) {
                         const playPromise = v.play();
                         if (playPromise !== undefined) {
                             playPromise.catch(e => console.warn('Play prevented:', e));
                         }
-                    }, { once: true }); // once: true 确保监听器触发一次后自动销毁，避免内存泄漏
+                    } else {
+                        // それ以外の場合、canplayを待ってから再生
+                        v.addEventListener('canplay', () => {
+                            const playPromise = v.play();
+                            if (playPromise !== undefined) {
+                                playPromise.catch(e => console.warn('Play prevented:', e));
+                            }
+                        }, { once: true });
+                    }
                 },
 
                 init() {
@@ -206,7 +241,7 @@
                         
                         this.startFailsafe(); 
                         
-                        // 🚀 调用安全播放引擎
+                        // 安全な再生エンジンを呼び出し
                         this.playVideoSafely(this.videoUrl);
 
                     } catch (e) {
@@ -226,13 +261,13 @@
                         
                         const nextScene = this.scripts[this.lang][this.ageGroup][this.step];
                         if (nextScene && nextScene.triggerCrisis) {
-                            if (this.isPro) Swal.fire(this.lang === 'zh' ? 'PRO 权限已验证' : 'PRO Access Verified', this.lang === 'zh' ? '正在为您生成实时宇宙...' : 'Generating real-time universe...', 'success');
+                            if (this.isPro) Swal.fire('PRO Access Verified', 'Generating real-time universe...', 'success');
                             else this.showCrisis = true;
                         } else if (nextScene) {
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
                             
-                            // 🚀 调用安全播放引擎
+                            // 安全な再生エンジンを呼び出し
                             this.playVideoSafely(this.videoUrl);
                             this.startFailsafe(); 
                         }

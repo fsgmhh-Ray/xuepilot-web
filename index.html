@@ -128,19 +128,14 @@
                 supaClient: null,
 
                 async initAuth() {
-                    // 读取本地是否已激活 PRO 的缓存
                     this.isPro = localStorage.getItem('xp_is_pro') === 'true';
 
-                    // 🎯 核心修复：将数据库凭证直接硬编码到前端！
-                    // 这是标准的 Serverless 纯前端应用连接 Supabase 的做法
-                    const DEFAULT_SUPA_URL = 'https://cywslfalbedraeeggryj.supabase.co'; // 您的专属 URL
-                    const DEFAULT_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0'; // 👉 真实 Anon Key 已完美注入！
+                    const DEFAULT_SUPA_URL = 'https://cywslfalbedraeeggryj.supabase.co'; 
+                    const DEFAULT_SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0'; 
 
-                    // 优先读取本地缓存（为了兼容您以后在 Dashboard 里改配置），如果没有就用上面的硬编码默认值
                     const supaUrl = localStorage.getItem('xp_supa_url') || DEFAULT_SUPA_URL;
                     const supaKey = localStorage.getItem('xp_supa_key') || DEFAULT_SUPA_KEY;
 
-                    // 只要 Key 被替换成了真实的值，就会自动初始化连接
                     if (supaUrl && supaKey && supaKey !== 'YOUR_SUPABASE_ANON_KEY' && window.supabase) {
                         try {
                             this.supaClient = window.supabase.createClient(supaUrl, supaKey);
@@ -148,8 +143,38 @@
                             if (session) {
                                 this.sessionUser = session.user;
                                 this.checkProStatusFromDB(session.user.id);
+                                this.injectDemoDataIfEmpty(); // 确保有兜底数据
                             }
                         } catch(e) { console.error("Supabase init failed", e); }
+                    }
+                },
+
+                // 🚀 核心修复：智能数据拓荒引擎 (防卡死、防没星球)
+                injectDemoDataIfEmpty() {
+                    const existingGalaxies = localStorage.getItem('xp_galaxies');
+                    if (!existingGalaxies || existingGalaxies === '[]' || existingGalaxies.length < 10) {
+                        console.log("检测到空数据，正在注入默认演示星系...");
+                        
+                        // 注入默认学员
+                        const defaultStudents = [{ id: 'stu_default', name: '探索者一号', avatar: '👨‍🚀' }];
+                        localStorage.setItem('xp_students', JSON.stringify(defaultStudents));
+
+                        // 注入华丽的演示星系
+                        const demoGalaxies = [{
+                            id: `gal_demo_${Date.now()}`,
+                            title: '太阳系探索先遣营',
+                            region: 'CN',
+                            baseStandard: 'custom',
+                            studentId: 'stu_default',
+                            overview: '欢迎来到 XuePilot！这是一个为您自动生成的演示星系，您可以点击星球体验智能伴学，或前往主控舱编辑它。',
+                            bgX: 50, bgY: 50,
+                            subjects: [
+                                { id: 'sub_demo_1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, referenceText: '了解基本重力概念。', units: [] },
+                                { id: 'sub_demo_2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5, referenceText: '火星土壤成分分析。', units: [] },
+                                { id: 'sub_demo_3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0, referenceText: '控制机器人的基础代码。', units: [] }
+                            ]
+                        }];
+                        localStorage.setItem('xp_galaxies', JSON.stringify(demoGalaxies));
                     }
                 },
 
@@ -164,13 +189,13 @@
                             if (res.error) throw res.error;
                             Swal.fire({icon:'success', title:'注册成功', text:'身份已记录，系统正在为您跳转...', background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
                             this.authMode = 'login';
-                            // 注册后自动尝试登录
                             setTimeout(() => this.handleAuth(), 2000);
                         } else {
                             res = await this.supaClient.auth.signInWithPassword({ email: this.email, password: this.password });
                             if (res.error) throw res.error;
                             this.sessionUser = res.data.user;
                             this.checkProStatusFromDB(res.data.user.id);
+                            this.injectDemoDataIfEmpty(); // 登录后注入兜底数据
                         }
                     } catch (err) {
                         Swal.fire({icon:'error', title:'验证失败', text: err.message, background:'#0f172a', color:'#fff'});
@@ -179,7 +204,6 @@
                     }
                 },
 
-                // 从数据库读取真实 PRO 状态
                 async checkProStatusFromDB(userId) {
                     if(!this.supaClient) return;
                     try {
@@ -191,7 +215,6 @@
                     } catch(e) {}
                 },
 
-                // 演示用的：强制开启 PRO 权限
                 upgradeToPro() {
                     Swal.fire({
                         title: '解锁 PRO 领航员权限',
@@ -212,9 +235,9 @@
                     this.sessionUser = null;
                 },
 
-                // 物理应急通道：跳过所有验证，硬编码登入
                 bypassAuth() {
                     this.sessionUser = { email: 'guest_commander@local.env' };
+                    this.injectDemoDataIfEmpty(); // 游客模式也要注入数据！
                     Swal.fire({toast:true, position:'top-end', icon:'info', title:'已切换至本地演示模式', showConfirmButton:false, timer:2000});
                 }
             }

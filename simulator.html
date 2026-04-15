@@ -10,7 +10,6 @@
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* 🚀 恢复电影级平滑淡入效果 */
         .video-container { position: fixed; inset: 0; z-index: 0; background: #000; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease-in-out; filter: brightness(0.7) contrast(1.2); }
         .video-active { opacity: 1 !important; }
@@ -18,7 +17,6 @@
         .glitch-fx { animation: shake 0.15s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 2px); } }
         
-        /* 全息边框与扫描线 */
         .hud-border { position: fixed; inset: 0; z-index: 10; pointer-events: none; border: 30px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M10 0 L0 0 L0 10 M90 0 L100 0 L100 10 M10 100 L0 100 L0 90 M90 100 L100 100 L100 90' fill='none' stroke='%233b82f6' stroke-width='1.5'/%3E%3C/svg%3E") 30 stretch; opacity: 0.4; }
         .scanline { position: fixed; inset: 0; z-index: 15; background: linear-gradient(to bottom, transparent 50%, rgba(59, 130, 246, 0.05) 50%); background-size: 100% 4px; pointer-events: none; }
         .target-lock { position: absolute; width: 200px; height: 200px; border: 2px solid #3b82f6; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 12; animation: rotateLock 4s linear infinite; }
@@ -32,7 +30,7 @@
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 强制解锁层与物理保底 -->
+    <!-- 强制解锁层 -->
     <div id="master-loader" class="warp-overlay">
         <div class="text-center">
             <div class="w-12 h-12 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-6 mx-auto"></div>
@@ -48,11 +46,15 @@
         window.addEventListener('pageshow', function(e) { if(e.persisted) hideMasterLoader(); });
     </script>
 
-    <!-- 🚀 视频底座：完全使用测试成功的原生加载策略，并加回了视频就绪后的淡入特效 -->
+    <!-- 🚀 右上角物理声控台 -->
+    <button @click="toggleSound()" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center hover:bg-blue-900/80 hover:border-blue-500 transition shadow-[0_0_20px_rgba(0,0,0,0.5)] text-xl cursor-pointer">
+        <span x-text="isMuted ? '🔇' : '🔊'"></span>
+    </button>
+
+    <!-- 视频底座：移除 src 绑定，完全由 JS 安全接管 -->
     <div class="video-container">
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''"
-               autoplay muted loop playsinline crossorigin="anonymous"
-               :src="videoUrl"
+               autoplay loop playsinline preload="auto"
                @canplay="videoReady = true"
                @playing="videoReady = true"
                @timeupdate="handleTimeSync($event.target.currentTime)"
@@ -87,14 +89,14 @@
         </div>
     </main>
 
-    <!-- 报错/引导弹窗 -->
+    <!-- 熔断危机弹窗 -->
     <div x-show="showCrisis" x-cloak class="fixed inset-0 z-[120] bg-rose-950/90 backdrop-blur-3xl flex flex-col items-center justify-center p-10 text-center">
         <div class="w-24 h-24 bg-rose-600 rounded-full flex items-center justify-center mb-8 shadow-[0_0_100px_#ef4444] animate-pulse">
             <span class="text-5xl">🚫</span>
         </div>
         <h2 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase" x-text="i18n[lang].haltedTitle"></h2>
         <p class="text-rose-200 text-lg max-w-2xl mb-12 font-bold leading-relaxed" x-html="i18n[lang].haltedDesc"></p>
-        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 rounded-full font-black text-xl hover:scale-105 transition-all shadow-2xl" x-text="i18n[lang].proBtn"></button>
+        <button @click="window.location.href='index.html'" class="px-12 py-5 bg-white text-rose-900 rounded-full font-black text-xl hover:scale-105 transition-all shadow-2xl cursor-pointer pointer-events-auto" x-text="i18n[lang].proBtn"></button>
     </div>
 
     <script>
@@ -104,7 +106,7 @@
                 step: 0, ageGroup: 'mid',
                 videoReady: false, isGlitching: false, isLocking: false, showOptions: false,
                 currentStoryText: 'Initializing...', currentOptions: [],
-                isPro: false, showCrisis: false, isThinking: false,
+                isPro: false, showCrisis: false, isThinking: false, isMuted: true,
                 failsafeTimer: null,
 
                 i18n: {
@@ -128,57 +130,68 @@
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
-                // 🚀 双语全系剧本库
+                // 🚀 剧本终极重构：包含完整的 3 段视频逻辑映射
                 scripts: {
                     zh: {
                         young: [
                             { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
                             { ai: "精彩！气泡破了。但里面的彩虹桥断了，你需要用逻辑修补它。告诉我，修桥的目的是什么？", options: [{ text: "为了让数据流过去" }, { text: "为了不让星星掉下来" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 致命警报！前方算力空间坍缩，糖果星球正在解体！", isCrisisVideo: true }
                         ],
                         mid: [
                             { ai: "指挥官，飞船已进入逻辑哨所范围。哨所守卫拒绝泊入，它说：‘我只在被质疑时展示真相’。请下达第一条指令：", options: [{ text: "分析守卫的逻辑漏洞" }, { text: "发射‘悖论’通信脉冲" }] },
                             { ai: "守卫由于逻辑冲突重启中。我们已进入中转舱。这里的数据碎片正在流失！你需要用一个问题固定它。你的问题是？", options: [{ text: "如果因果倒置，现在是过去吗？" }, { text: "碎片与整体的关系是什么？" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 严重警告：算力引擎发生物理熔断！真实宇宙的因果律正在撕裂！", isCrisisVideo: true }
                         ],
                         old: [
                             { ai: "指挥官，我们正处于事件视界边缘。戴森球核心出现了引力动荡。为了稳定结构，我们需要确立逻辑奇点。你的决策是？", options: [{ text: "建立非欧几里得探测协议" }, { text: "同步高维算力扰动频率" }] },
                             { ai: "能量场暂时稳定。但空间板块出现了几何错误。这是由于底层代码的逻辑冗余造成的。请指出处理优先级：", options: [{ text: "重构第一性原理协议" }, { text: "隔离并分析冗余来源" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 严重警告：多维空间正在发生灾难性降解！物理法则已失效！", isCrisisVideo: true }
                         ]
                     },
                     en: {
                         young: [
                             { ai: "Commander, there's a bubble wall ahead. Ask a smart question to break it.", options: [{ text: "What is the bubble made of?" }, { text: "Why is it blocking us?" }] },
                             { ai: "Brilliant! Bubble shattered. But the rainbow bridge is broken. What is the logical purpose of repairing it?", options: [{ text: "To allow data stream flow" }, { text: "To prevent stars from falling" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 ALERT! Space collapsing, Candy Planet is disintegrating!", isCrisisVideo: true }
                         ],
                         mid: [
                             { ai: "Commander, approaching logic outpost. The guard denies entry, stating: 'I only reveal truth when questioned.' Your orders?", options: [{ text: "Analyze logical flaws" }, { text: "Emit paradox pulse" }] },
                             { ai: "Guard is rebooting. We're inside. Data fragments are leaking! Ask a conceptual question to anchor them.", options: [{ text: "If causality inverts, is now the past?" }, { text: "How do fragments relate to the whole?" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 CRITICAL WARNING: Engine meltdown! Causality is tearing apart!", isCrisisVideo: true }
                         ],
                         old: [
                             { ai: "Commander, we are at the event horizon. The Dyson sphere core is unstable. We must establish a logic singularity to stabilize it.", options: [{ text: "Init non-Euclidean protocol" }, { text: "Sync hyper-dimensional freq" }] },
                             { ai: "Energy field stable. However, spatial plates show geometric errors due to redundant base code. Priority?", options: [{ text: "Refactor first principles" }, { text: "Isolate redundant sources" }] },
-                            { triggerCrisis: true }
+                            { ai: "🚨 CRITICAL WARNING: Multi-dimensional degradation detected!", isCrisisVideo: true }
                         ]
                     }
                 },
 
                 updateLang() {
                     const scene = this.scripts[this.lang][this.ageGroup][this.step];
-                    if (scene && !scene.triggerCrisis) {
+                    if (scene) {
                         this.currentStoryText = scene.ai;
-                        this.currentOptions = scene.options;
+                        this.currentOptions = scene.options || [];
                     }
+                },
+
+                toggleSound() {
+                    this.isMuted = !this.isMuted;
+                    const v = document.getElementById('main-video');
+                    if (v) v.muted = this.isMuted;
                 },
 
                 startFailsafe() {
                     clearTimeout(this.failsafeTimer);
                     this.failsafeTimer = setTimeout(() => {
                         this.isLocking = true;
-                        this.showOptions = true;
+                        const currentScene = this.scripts[this.lang][this.ageGroup][this.step];
+                        if (currentScene && currentScene.isCrisisVideo) {
+                            if (!this.showCrisis) this.triggerCrisisNow();
+                        } else {
+                            this.showOptions = true;
+                        }
                     }, 8500); 
                 },
 
@@ -186,7 +199,12 @@
                     clearTimeout(this.failsafeTimer);
                     setTimeout(() => {
                         this.isLocking = true;
-                        this.showOptions = true;
+                        const currentScene = this.scripts[this.lang][this.ageGroup][this.step];
+                        if (currentScene && currentScene.isCrisisVideo) {
+                            if (!this.showCrisis) this.triggerCrisisNow();
+                        } else {
+                            this.showOptions = true;
+                        }
                     }, 3000);
                 },
 
@@ -194,8 +212,28 @@
                     if (time > 2.5 && time < 2.7) this.isGlitching = true; else this.isGlitching = false;
                     if (time > 5.0) this.isLocking = true; else this.isLocking = false;
                     if (time > 8.0) {
-                        this.showOptions = true;
                         clearTimeout(this.failsafeTimer); 
+                        const currentScene = this.scripts[this.lang][this.ageGroup][this.step];
+                        if (currentScene && currentScene.isCrisisVideo) {
+                            if (!this.showCrisis) this.triggerCrisisNow(); // 第3个视频播到8秒，强行拉闸！
+                        } else {
+                            this.showOptions = true;
+                        }
+                    }
+                },
+
+                triggerCrisisNow() {
+                    const v = document.getElementById('main-video');
+                    if (v) v.pause(); // 强行让旧宇宙静止
+                    
+                    if (this.isPro) {
+                        Swal.fire({
+                            title: this.lang === 'zh' ? 'PRO 权限已验证' : 'PRO Access Verified', 
+                            text: this.lang === 'zh' ? '正在为您生成实时宇宙...' : 'Generating real-time universe...', 
+                            icon: 'success', background: '#0f172a', color: '#fff'
+                        }).then(() => { window.location.href = 'index.html'; });
+                    } else {
+                        this.showCrisis = true;
                     }
                 },
 
@@ -208,14 +246,21 @@
                         if (!this.scripts[this.lang][this.ageGroup]) this.ageGroup = 'mid';
                         const scene = this.scripts[this.lang][this.ageGroup][0];
                         this.currentStoryText = scene.ai;
-                        this.currentOptions = scene.options;
+                        this.currentOptions = scene.options || [];
                         
                         setTimeout(() => {
                             hideMasterLoader();
                             this.startFailsafe(); 
                             
-                            // 保底显示控制，即便没有收到 canplay 事件，2秒后也强制显示，防止黑屏
-                            setTimeout(() => { this.videoReady = true; }, 2000);
+                            const v = document.getElementById('main-video');
+                            if(v) {
+                                v.muted = this.isMuted; // 初始为了过安全审查必须静音
+                                v.src = this.videoUrl;
+                                v.load();
+                                const playPromise = v.play();
+                                if (playPromise !== undefined) playPromise.catch(e => console.warn(e));
+                            }
+                            setTimeout(() => { this.videoReady = true; }, 1500);
                         }, 500);
 
                     } catch (e) {
@@ -230,23 +275,29 @@
                     this.videoReady = false; // 选项确认后黑屏，准备切换新视频
                     clearTimeout(this.failsafeTimer);
 
+                    // 🚀 神奇操作：用户产生点击交互后，浏览器解禁声音，自动播放声音！
+                    if (this.isMuted) this.toggleSound(); 
+
                     setTimeout(() => {
                         this.isThinking = false;
-                        this.step++;
+                        this.step++; // 真正推进剧本！
                         
                         const nextScene = this.scripts[this.lang][this.ageGroup][this.step];
-                        if (nextScene && nextScene.triggerCrisis) {
-                            if (this.isPro) Swal.fire(this.lang === 'zh' ? 'PRO 权限已验证' : 'PRO Access Verified', this.lang === 'zh' ? '正在为您生成实时宇宙...' : 'Generating real-time universe...', 'success');
-                            else this.showCrisis = true;
-                        } else if (nextScene) {
+                        if (nextScene) {
                             this.currentStoryText = nextScene.ai;
-                            this.currentOptions = nextScene.options;
+                            this.currentOptions = nextScene.options || [];
                             
                             this.$nextTick(() => {
                                 const v = document.getElementById('main-video');
-                                if(v) v.load(); 
-                                this.startFailsafe(); 
-                                setTimeout(() => { this.videoReady = true; }, 2000);
+                                if(v) {
+                                    v.src = this.videoUrl;
+                                    v.load(); 
+                                    const playPromise = v.play();
+                                    if (playPromise !== undefined) playPromise.catch(e => console.warn(e));
+                                    
+                                    this.startFailsafe(); 
+                                    setTimeout(() => { this.videoReady = true; }, 1500);
+                                }
                             });
                         }
                     }, 1200);

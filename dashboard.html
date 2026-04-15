@@ -16,21 +16,16 @@
         .btn-nav { display: flex; width: 100%; align-items: center; padding: 0.8rem 1rem; margin-bottom: 0.4rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: left; }
         .btn-nav:hover { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
 
-        /* 🚀 宪章 V 物理层：3D 星球与恒星 */
+        /* 3D 渲染层 */
         .planet-3d, .planet-core { will-change: transform; border-radius: 50%; position: relative; transition: transform 0.3s ease; }
         .planet-locked { filter: grayscale(1) opacity(0.4); cursor: not-allowed !important; }
-        
         .sun-core {
             border-radius: 50%; position: relative;
             background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%);
             box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5);
             animation: sunPulse 4s infinite ease-in-out;
         }
-        @keyframes sunPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3); }
-            50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(234, 88, 12, 0.8), 0 0 160px rgba(251, 191, 36, 0.5); }
-        }
-
+        @keyframes sunPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(234, 88, 12, 0.8), 0 0 160px rgba(251, 191, 36, 0.5); } }
         .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; animation: lockPulse 2s infinite; }
         .free-badge { position: absolute; top: -10px; right: -10px; background: #10b981; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 50; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
         @keyframes lockPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
@@ -40,6 +35,7 @@
         .input-dark:focus { border-color: #3b82f6; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
         
         /* 富文本编辑器 */
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; }
@@ -52,13 +48,14 @@
         .ping-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
         .ping-amber { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* AI 对话框美化 */
+        .ai-message { font-size: 0.9rem; line-height: 1.6; }
+        .ai-message strong { color: #cbd5e1; }
+        .ai-message p { margin-bottom: 0.75rem; }
     </style>
     <script>
-        window.safeStorage = {
-            memory: {},
-            get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } },
-            set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
-        };
+        window.safeStorage = { memory: {}, get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } }, set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} } };
     </script>
 </head>
 <body x-data="dashboardApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
@@ -70,19 +67,19 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest">XUEPILOT</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V10.5</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V11.0</div>
                 </div>
             </div>
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">星际学习空间</div>
-            <button @click="view = 'classroom'" class="btn-nav py-4 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50' : 'text-emerald-500 bg-emerald-900/10'">
+            <button @click="view = 'classroom'" class="btn-nav py-4 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
                 <span class="mr-3 text-2xl">🌌</span> 
                 <div class="flex flex-col"><span class="text-base font-black text-white">进入学生探索舱</span><span class="text-[10px] text-emerald-600 font-normal">3D 沉浸式知识星系</span></div>
             </button>
             
-            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项研习舱</div>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项智能研习舱</div>
             <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400"><span class="mr-3 text-xl">🎮</span> AI 指挥官模拟舱</a>
             <button @click="view = 'writing'" class="btn-nav" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'"><span class="mr-3 text-xl">✍️</span> AI 启发写作舱</button>
             <button @click="openReading('en')" class="btn-nav" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'"><span class="mr-3 text-xl">📘</span> 英文智能伴读</button>
@@ -104,35 +101,29 @@
     </aside>
 
     <main class="flex-1 relative bg-[#02040a] overflow-hidden flex flex-col">
+        <!-- 动态网格背景 -->
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
+
         <!-- ================= 🚀 视图：3D 学生探索舱 ================= -->
         <div x-show="view === 'classroom'" x-cloak class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full fade-in">
             <canvas id="network-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
-            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport"
-                 @mousedown="startPan" @touchstart="startPan" @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
+            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport" @mousedown="startPan" @touchstart="startPan" @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
                 <div class="absolute w-full h-full pointer-events-none">
                     <template x-for="g in galaxies" :key="g.id">
-                        <div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
-                             :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
-                             @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
-                            
+                        <div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]" :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`" @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
+                            <!-- 恒星核心 -->
                             <div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);">
-                                <div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none"
-                                     :style="g.id === activeGalaxyId ? 'width: 160px; height: 160px;' : 'width: 250px; height: 250px;'"
-                                     @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
+                                <div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" :style="g.id === activeGalaxyId ? 'width: 160px; height: 160px;' : 'width: 250px; height: 250px;'" @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
                                     <div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" :class="g.id === activeGalaxyId ? 'text-5xl' : 'text-8xl'">🔮</div>
                                     <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2" x-text="g.title"></div>
                                 </div>
                             </div>
-
+                            <!-- 行星 -->
                             <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
                                 <template x-for="(s, sIdx) in g.subjects" :key="s.id">
-                                    <div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" 
-                                         :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
-                                         @click.stop="tryOpenMission(g, s, sIdx)">
-                                        <div x-show="sIdx === 0 || isPro" class="free-badge">OPEN</div>
-                                        <div x-show="sIdx > 0 && !isPro" class="energy-lock">🔒</div>
-                                        <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl" 
-                                             :style="getPlanetStyle(sIdx)" :class="sIdx > 0 && !isPro ? 'planet-locked' : ''" x-text="s.icon"></div>
+                                    <div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" @click.stop="tryOpenMission(g, s, sIdx)">
+                                        <div x-show="sIdx === 0 || isPro" class="free-badge">OPEN</div><div x-show="sIdx > 0 && !isPro" class="energy-lock">🔒</div>
+                                        <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl" :style="getPlanetStyle(sIdx)" :class="sIdx > 0 && !isPro ? 'planet-locked' : ''" x-text="s.icon"></div>
                                         <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400 transition whitespace-nowrap" x-text="s.title"></span>
                                     </div>
                                 </template>
@@ -143,95 +134,144 @@
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：星系与大纲规划 (Forge) ================= -->
-        <div x-show="view === 'forge'" x-cloak class="flex-1 flex flex-col p-8 z-10 overflow-hidden fade-in">
-            <div class="flex justify-between items-end mb-6 shrink-0">
-                <div>
-                    <h2 class="text-3xl font-black text-white mb-2">星系与课程锻造中枢</h2>
-                    <p class="text-slate-400 text-sm">宪章 IV：基于云端资产库（standard_assets）的教研规划引擎。</p>
-                </div>
-                <button @click="triggerForgePaywall()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg transition">✨ 规划新星系</button>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-10">
-                <template x-for="g in galaxies" :key="g.id">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600">🔮</div>
-                            <div>
-                                <h3 class="font-bold text-lg text-white" x-text="g.title"></h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded" x-text="g.baseStandard || 'Custom'"></span>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-400 mb-6 flex-1" x-text="g.overview || '暂无全局目标概述'"></p>
-                        <button class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 rounded-xl text-sm font-bold transition border border-slate-700">⚙️ 配置大纲与排课</button>
+        <!-- ================= 🚀 视图：AI 启发写作舱 ================= -->
+        <div x-show="view === 'writing'" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
+            <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 border border-orange-500/20 shadow-2xl">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                    <div>
+                        <h3 class="font-black text-2xl text-orange-400 flex items-center gap-3"><span class="text-3xl">✍️</span> AI 启发写作舱</h3>
+                        <p class="text-xs text-slate-400 mt-1">拒绝代写。通过苏格拉底提问，逼迫大脑长出新的逻辑触角。</p>
                     </div>
-                </template>
+                </div>
+                <div class="flex-1 p-6 flex flex-col relative">
+                    <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="在此输入你的作文草稿、日记，哪怕是几个不知道怎么串起来的词语..."></textarea>
+                    
+                    <!-- 核心差异化工具栏 -->
+                    <div class="absolute bottom-10 left-10 right-10 flex justify-center gap-4">
+                        <button @click="runWritingTool('brainstorm')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing">
+                            <span x-show="critiqueMode === 'brainstorm' && isCritiquing" class="animate-spin text-orange-400">↻</span> 🧊 破冰脑暴
+                        </button>
+                        <button @click="runWritingTool('logic')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="critiqueMode === 'logic' && isCritiquing" class="animate-spin text-orange-400">↻</span> 🔗 逻辑重构
+                        </button>
+                        <button @click="runWritingTool('polish')" class="px-6 py-3 bg-slate-800 hover:bg-orange-600/30 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-full shadow-lg transition backdrop-blur-md flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
+                            <span x-show="critiqueMode === 'polish' && isCritiquing" class="animate-spin text-orange-400">↻</span> ✨ 意境升华
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- 反馈面板 -->
+            <div class="w-1/3 glass-panel rounded-3xl flex flex-col border border-orange-500/20 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-orange-600/10 blur-3xl rounded-full pointer-events-none"></div>
+                <div class="p-6 bg-slate-900 border-b border-slate-800 font-bold text-orange-300 flex items-center gap-2">
+                    <span class="text-xl">💡</span> 苏格拉底导师反馈
+                </div>
+                <div class="flex-1 p-6 overflow-y-auto text-base text-slate-300 ai-message font-serif" id="writing-feedback-panel" x-html="writingFeedback || `<div class='text-center text-slate-600 mt-32'><div class='text-6xl mb-4 opacity-50'>💭</div>等待提交诊断...</div>`"></div>
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：引擎与云端配置 (Config) ================= -->
+        <!-- ================= 🚀 视图：双语智能伴读舱 ================= -->
+        <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
+            <!-- 左侧：素材区与差异化工具 -->
+            <div class="w-1/2 glass-panel rounded-3xl flex flex-col border relative overflow-hidden" :class="view==='reading-en' ? 'border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'">
+                <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                    <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'📘 English Active Reading':'📙 大语文沉浸式精读'"></h3>
+                </div>
+                
+                <div class="flex-1 p-5 flex flex-col relative">
+                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? 'Paste an English article, essay, or book excerpt here...\nOur AI won\'t translate it for you; it will help you dissect it.' : '在此粘贴中文素材、古诗词或名著片段...\n系统不会直接给翻译，而是带你重构古人的思维画面。'"></textarea>
+                    
+                    <!-- 动态导师工具箱 -->
+                    <div class="absolute bottom-8 left-8 right-8 flex flex-wrap justify-center gap-3">
+                        <template x-if="view === 'reading-en'">
+                            <div class="flex gap-3 w-full justify-center">
+                                <button @click="triggerReadingTool('en_vocab')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🔍 核心词汇透视</button>
+                                <button @click="triggerReadingTool('en_context')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🎭 语境与隐喻解析</button>
+                                <button @click="triggerReadingTool('en_critical')" class="px-4 py-2 bg-indigo-900/60 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🧠 批判性连环问</button>
+                            </div>
+                        </template>
+                        <template x-if="view === 'reading-zh'">
+                            <div class="flex gap-3 w-full justify-center">
+                                <button @click="triggerReadingTool('zh_visual')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🖼️ 意境白描重现</button>
+                                <button @click="triggerReadingTool('zh_history')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">⏳ 历史时空对话</button>
+                                <button @click="triggerReadingTool('zh_core')" class="px-4 py-2 bg-emerald-900/60 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-xs font-bold rounded-xl shadow-lg transition backdrop-blur-md" :disabled="readingLoading || !readingMaterial.trim()">🎯 核心文眼剖析</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：导师聊天流 -->
+            <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
+                <div class="h-16 border-b flex items-center justify-center bg-slate-900" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
+                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
+                        <span class="text-xl">🤖</span> <span x-text="view==='reading-en'?'NOVA Socratic English Coach':'NOVA 大语文共鸣导师'"></span>
+                    </span>
+                </div>
+                
+                <div class="flex-1 p-6 overflow-y-auto space-y-6 scrollbar-hide" id="nova-reading-chat">
+                    <template x-for="(msg,i) in readingChatLog" :key="i">
+                        <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
+                            <span class="text-[10px] text-slate-500 font-bold mb-1 ml-1 mr-1" x-text="msg.role==='user'? '指挥官' : 'NOVA'"></span>
+                            <div class="max-w-[85%] p-4 rounded-2xl text-[15px] ai-message shadow-md" 
+                                 :class="msg.role==='user' 
+                                 ? (view==='reading-en' ? 'bg-indigo-600 text-indigo-50 border border-indigo-500 rounded-tr-none' : 'bg-emerald-600 text-emerald-50 border border-emerald-500 rounded-tr-none') 
+                                 : 'bg-slate-800 text-slate-300 border border-slate-700 rounded-tl-none'">
+                                 <span x-html="msg.text"></span>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="readingLoading" class="flex items-center gap-2 text-slate-500 font-mono text-xs">
+                        <div class="w-3 h-3 rounded-full animate-bounce" :class="view==='reading-en'?'bg-indigo-500':'bg-emerald-500'"></div>
+                        <span x-text="view==='reading-en' ? 'Analyzing cognitive vectors...' : '正在推演苏格拉底逻辑树...'"></span>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-900 border-t flex gap-3" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
+                    <input type="text" x-model="readingInput" @keyup.enter="sendReadingText()" class="flex-1 input-dark px-5 py-3.5 rounded-xl text-sm" :placeholder="view==='reading-en' ? 'Answer the tutor or ask a question...' : '回答导师的问题，或提出你的疑惑...'">
+                    <button @click="sendReadingText()" class="px-8 py-3 hover:brightness-110 rounded-xl font-black transition text-lg shadow-lg" :class="view==='reading-en'?'bg-indigo-600 text-white':'bg-emerald-600 text-white'" :disabled="readingLoading || !readingInput.trim()">
+                        ➤
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 🚀 其他后台视图 (配置与测试功能已完美保留) ================= -->
         <div x-show="view === 'config'" x-cloak class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 relative">
                 <h2 class="text-3xl font-black text-white mb-2">引擎算力与配置</h2>
                 <p class="text-slate-400 text-sm mb-8">在这里配置大模型 API 与数据库节点。建议在开始重度排课前执行【自检测试】。</p>
-                
                 <div class="space-y-6">
-                    <!-- SYS Engine Config -->
                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-blue-400 text-xs tracking-widest uppercase flex items-center gap-2">
-                                🌌 排课规划模型 (SYS Engine)
-                                <div x-show="apiStatus.sys !== 'idle'" class="status-pulse" :class="apiStatus.sys === 'testing' ? 'ping-amber' : (apiStatus.sys === 'ok' ? 'ping-green' : 'ping-red')"></div>
-                            </h3>
-                            <button @click="testApiConnection('sys')" class="text-[10px] font-bold px-3 py-1 bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-600 hover:text-white transition" :disabled="apiStatus.sys === 'testing'">
-                                <span x-text="apiStatus.sys === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span>
-                            </button>
+                            <h3 class="font-bold text-blue-400 text-xs tracking-widest uppercase flex items-center gap-2">🌌 排课规划模型 (SYS Engine)<div x-show="apiStatus.sys !== 'idle'" class="status-pulse" :class="apiStatus.sys === 'testing' ? 'ping-amber' : (apiStatus.sys === 'ok' ? 'ping-green' : 'ping-red')"></div></h3>
+                            <button @click="testApiConnection('sys')" class="text-[10px] font-bold px-3 py-1 bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-600 hover:text-white transition" :disabled="apiStatus.sys === 'testing'"><span x-text="apiStatus.sys === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span></button>
                         </div>
                         <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" x-model="config.sys.url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono">
-                            <input type="text" x-model="config.sys.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono">
-                        </div>
+                        <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.sys.url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
-
-                    <!-- NOVA Engine Config -->
                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-indigo-400 text-xs tracking-widest uppercase flex items-center gap-2">
-                                🤖 伴读导师模型 (NOVA Engine)
-                                <div x-show="apiStatus.nova !== 'idle'" class="status-pulse" :class="apiStatus.nova === 'testing' ? 'ping-amber' : (apiStatus.nova === 'ok' ? 'ping-green' : 'ping-red')"></div>
-                            </h3>
-                            <button @click="testApiConnection('nova')" class="text-[10px] font-bold px-3 py-1 bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded hover:bg-indigo-600 hover:text-white transition" :disabled="apiStatus.nova === 'testing'">
-                                <span x-text="apiStatus.nova === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span>
-                            </button>
+                            <h3 class="font-bold text-indigo-400 text-xs tracking-widest uppercase flex items-center gap-2">🤖 伴读导师模型 (NOVA Engine)<div x-show="apiStatus.nova !== 'idle'" class="status-pulse" :class="apiStatus.nova === 'testing' ? 'ping-amber' : (apiStatus.nova === 'ok' ? 'ping-green' : 'ping-red')"></div></h3>
+                            <button @click="testApiConnection('nova')" class="text-[10px] font-bold px-3 py-1 bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded hover:bg-indigo-600 hover:text-white transition" :disabled="apiStatus.nova === 'testing'"><span x-text="apiStatus.nova === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span></button>
                         </div>
                         <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" x-model="config.nova.url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono">
-                            <input type="text" x-model="config.nova.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono">
-                        </div>
+                        <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.nova.url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-end">
-                    <button @click="saveConfig()" class="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg transition tracking-widest">💾 烧录全局设定</button>
-                </div>
+                <div class="mt-8 flex justify-end"><button @click="saveConfig()" class="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg transition tracking-widest">💾 烧录全局设定</button></div>
             </div>
         </div>
 
-        <!-- 其他占位视图保留 -->
-        <div x-show="view === 'students'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">👨‍👩‍👧‍👦</div><h2 class="text-2xl font-black text-white">学员档案管理 (已解锁)</h2></div>
-        <div x-show="view === 'radar'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">📡</div><h2 class="text-2xl font-black text-white">学情分析雷达</h2></div>
-        <div x-show="view === 'writing'" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in"><div class="flex-1 glass-panel rounded-3xl p-8"><h3 class="font-black text-orange-400">✍️ 启发写作舱功能已就绪</h3><textarea x-model="writingDraft" class="w-full input-dark p-6 rounded-2xl h-80 mt-6"></textarea><button @click="runWritingCritique()" class="mt-4 px-8 py-3 bg-orange-600 rounded-xl font-bold">获取启发反馈</button></div><div class="w-1/3 glass-panel rounded-3xl p-6" x-html="writingFeedback || '等待输入...'"></div></div>
-        <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in"><div class="w-1/2 glass-panel p-8 rounded-3xl"><h3 class="font-bold text-lg mb-4 text-emerald-400">阅读素材载入</h3><textarea x-model="readingMaterial" class="w-full input-dark p-6 h-96 rounded-2xl"></textarea></div><div class="flex-1 glass-panel rounded-3xl flex flex-col"><div class="flex-1 p-6 overflow-y-auto" id="nova-reading-chat"><template x-for="msg in readingChatLog"><div class="mb-4" :class="msg.role==='user'?'text-right':'text-left'"><div class="inline-block p-4 rounded-2xl text-sm" :class="msg.role==='user'?'bg-blue-600/30':'bg-slate-800'" x-html="msg.text"></div></div></template></div><div class="p-4 flex gap-2 border-t border-slate-800"><input x-model="readingInput" @keyup.enter="sendReadingText()" class="flex-1 input-dark p-3 rounded-xl"><button @click="sendReadingText()" class="bg-emerald-600 px-6 py-3 rounded-xl">🚀</button></div></div></div>
-
+        <div x-show="view === 'forge'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">🪐</div><h2 class="text-2xl font-black text-white">大纲与星系锻造</h2><button @click="triggerForgePaywall()" class="mt-4 px-6 py-3 bg-blue-600 rounded-xl font-bold">✨ 规划新星系</button></div>
+        <div x-show="view === 'students'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">👨‍👩‍👧‍👦 学员管理</h2></div>
+        <div x-show="view === 'radar'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">📡 全息学情雷达</h2></div>
     </main>
 
     <script>
         function dashboardApp() {
             return {
-                view: 'classroom', 
-                isParentUnlocked: false, parentPin: null, isPro: false,
+                view: 'classroom', isParentUnlocked: false, parentPin: null, isPro: false,
                 apiStatus: { sys: 'idle', nova: 'idle' },
                 config: {
                     sys: { key: localStorage.getItem('xp_sys_key')||'', url: localStorage.getItem('xp_sys_url')||'/proxy/groq', model: localStorage.getItem('xp_sys_model')||'llama-3.3-70b-versatile' },
@@ -241,7 +281,8 @@
                 panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
                 mouseX: window.innerWidth / 2, mouseY: window.innerHeight / 2,
                 ctx: null, canvas: null, particles: [], stars: [], animationFrameId: null,
-                writingDraft: '', writingFeedback: '', isCritiquing: false,
+                
+                writingDraft: '', writingFeedback: '', isCritiquing: false, critiqueMode: '',
                 readingMaterial: '', readingInput: '', readingChatLog: [], readingLoading: false,
 
                 async init() {
@@ -256,129 +297,184 @@
                     this.initNetworkCanvas();
                 },
 
-                // 🚀 宪章新实装：API 神经链路测试功能
+                // ================= 🚀 核心差异化工具：AI API 调用与 Prompt 设计 =================
+
+                async callAI(prompt, type='nova') {
+                    const key = localStorage.getItem(`xp_${type}_key`);
+                    const rawUrl = localStorage.getItem(`xp_${type}_url`) || '/proxy/groq';
+                    const targetUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+                    const endpoint = targetUrl.endsWith('/chat/completions') ? targetUrl : targetUrl + '/chat/completions';
+                    const model = localStorage.getItem(`xp_${type}_model`) || 'llama-3.3-70b-versatile';
+                    
+                    if(!key) {
+                        Swal.fire({toast:true, position:'top-end', icon:'warning', title:'请先在 [引擎配置] 中录入 API Key', showConfirmButton:false, timer:3000});
+                        return null; 
+                    }
+                    try {
+                        const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`}, body:JSON.stringify({model:model, messages:[{role:'user', content:prompt}]}) });
+                        if(!res.ok) throw new Error();
+                        const d = await res.json(); return d.choices[0].message.content;
+                    } catch(e) { 
+                        Swal.fire({toast:true, position:'top-end', icon:'error', title:'大模型链路请求失败', showConfirmButton:false, timer:3000});
+                        return null; 
+                    }
+                },
+
+                // ---- ✍️ 写作舱专用逻辑 ----
+                async runWritingTool(mode) {
+                    this.isCritiquing = true;
+                    this.critiqueMode = mode;
+                    const draft = this.writingDraft.trim();
+                    let prompt = '';
+
+                    if (mode === 'brainstorm') {
+                        prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
+                        You are an inspiring Socratic writing coach. The student hasn't written much, or is stuck. 
+                        Draft provided: "${draft || '学生不知道写什么'}".
+                        1. Do NOT write an outline for them.
+                        2. Do NOT write the essay for them.
+                        3. Provide 3 highly specific, sensory-based WH-questions (Who, what, when, where, why, how) to help them dig out their own memories or arguments related to the topic.
+                        Keep the tone incredibly encouraging and adventurous.`;
+                    } else if (mode === 'logic') {
+                        prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
+                        You are a strict but helpful logic editor. Analyze this draft: "${draft}".
+                        1. Find 1 or 2 logical leaps, contradictions, or lack of evidence in the text.
+                        2. Point them out gently but firmly.
+                        3. Ask 2 Socratic questions forcing the student to clarify their causal relationships (e.g., "You said X causes Y, but what about Z?").
+                        DO NOT rewrite the text for them.`;
+                    } else if (mode === 'polish') {
+                        prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags (<h3>, <ul>, <p>, <strong>). NO markdown.
+                        You are a master of literature. The student wants to elevate this draft: "${draft}".
+                        1. Select ONE flat or boring sentence from their draft.
+                        2. Ask them how they could use the 5 senses (sight, sound, smell, touch, taste) or a specific metaphor to rewrite just that one sentence.
+                        3. Do NOT rewrite the whole essay. Only guide them to polish one specific spot.`;
+                    }
+
+                    const res = await this.callAI(prompt, 'nova');
+                    if(res) {
+                        this.writingFeedback = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
+                    } else {
+                        this.writingFeedback = "<p class='text-rose-400'>API 链路阻塞，请检查网络或后侧配置。</p>";
+                    }
+                    this.isCritiquing = false;
+                    this.critiqueMode = '';
+                },
+
+                // ---- 📘📙 伴读舱专用逻辑 ----
+                openReading(lang) { 
+                    this.view = 'reading-' + lang; 
+                    this.readingMaterial = '';
+                    this.readingChatLog = [{
+                        role: 'nova', 
+                        text: lang === 'en' 
+                            ? '<h3>Hello, Commander!</h3><p>Paste an English text on the left. You can use the <b>Quick Tools</b> to dissect the text, or just chat with me about your thoughts.</p>' 
+                            : '<h3>你好，指挥官！</h3><p>请在左侧粘贴一段古文、现代文或历史故事。你可以点击下方的<b>智能工具</b>，或者直接在对话框里告诉我你的见解。</p>'
+                    }]; 
+                },
+
+                async triggerReadingTool(tool) {
+                    const material = this.readingMaterial.trim();
+                    if (!material) return;
+                    this.readingLoading = true;
+                    let prompt = '';
+
+                    const contextLimit = material.substring(0, 1500); // 截断防止 token 爆炸
+
+                    // 英文伴读工具
+                    if (tool === 'en_vocab') {
+                        prompt = `[CONSTRAINT: English/Chinese bilingual]. Text: "${contextLimit}". Act as an expert linguist. Identify 2-3 high-level or idiomatically used words in this text. Do NOT just give a dictionary definition. Explain *why* the author chose this specific word in this context instead of a simpler synonym. End by asking the student to create a new sentence using one of the words.`;
+                    } else if (tool === 'en_context') {
+                        prompt = `[CONSTRAINT: Output in Chinese]. Text: "${contextLimit}". Act as a cultural historian. Analyze any cultural references, historical context, or deep metaphors in this text. Explain the "iceberg" beneath the surface words. End with a Socratic question to the student about how this context changes their understanding.`;
+                    } else if (tool === 'en_critical') {
+                        prompt = `[CONSTRAINT: Output in English]. Text: "${contextLimit}". Act as a critical thinking professor. Do not summarize. Pose 2 extremely challenging questions about the author's hidden biases, logical flaws, or unstated assumptions in this text. Force the student to think deeply.`;
+                    } 
+                    // 大语文伴读工具
+                    else if (tool === 'zh_visual') {
+                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为古典文学大师，不要翻译文本。请用电影导演的视角，将这段文字的“画面感、声音、色彩、温度”白描出来。最后反问学生：“如果你身处这个画面中，你最强烈的感受是什么？”`;
+                    } else if (tool === 'zh_history') {
+                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为历史学家，剥开这段文字表面的华丽，讲述作者写下这段话时的真实处境（是被贬、得意、还是绝望？）。最后向学生提问：“如果你在今天遇到他一样的困境，你会做出和他一样的选择吗？”`;
+                    } else if (tool === 'zh_core') {
+                        prompt = `[强制要求：中文输出]。文本："${contextLimit}"。作为文学评论家，找出这段话的“文眼”（最核心的一个字或一个词）。剖析这个字精妙在哪里。最后反问学生：“如果让你把这个字换掉，你会换成什么？为什么？”`;
+                    }
+
+                    // 发送一条系统消息提示用户触发了什么工具
+                    const toolNames = { 'en_vocab':'Triggered: Vocab Radar', 'en_context':'Triggered: Cultural Context', 'en_critical':'Triggered: Critical Probe', 'zh_visual':'启动：意境重现', 'zh_history':'启动：时空对话', 'zh_core':'启动：文眼剖析' };
+                    this.readingChatLog.push({ role: 'user', text: `<i>[${toolNames[tool]}]</i>` });
+                    this.scrollToBottom();
+
+                    const res = await this.callAI(prompt, 'nova');
+                    if(res) {
+                        // 清理 Markdown 标记并转换为 HTML
+                        let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
+                        cleanRes = cleanRes.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                        this.readingChatLog.push({role: 'nova', text: cleanRes});
+                    }
+                    this.readingLoading = false;
+                    this.scrollToBottom();
+                },
+
+                async sendReadingText() {
+                    const t = this.readingInput.trim(); if(!t) return;
+                    this.readingInput = ''; this.readingChatLog.push({role:'user', text:t}); this.readingLoading = true;
+                    this.scrollToBottom();
+                    
+                    let context = this.readingMaterial ? `[Reference Material]:\n${this.readingMaterial.substring(0, 1000)}\n\n` : '';
+                    const langReq = this.view === 'reading-en' ? 'Reply mostly in English unless explaining complex concepts. Act as an inspiring Socratic English tutor.' : '用中文回复。扮演启发式的大语文导师。';
+                    const prompt = `${context}Student says: "${t}"\nTask: Use the Socratic method to respond. Do NOT spoon-feed answers. Ask follow-up questions to guide them to the answer based on the reference material. ${langReq}`;
+                    
+                    const res = await this.callAI(prompt, 'nova');
+                    if(res) { 
+                        let cleanRes = res.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                        this.readingChatLog.push({role:'nova', text: cleanRes}); 
+                    }
+                    this.readingLoading = false;
+                    this.scrollToBottom();
+                },
+
+                scrollToBottom() {
+                    setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                },
+
+                // ================= 通用系统逻辑 =================
+
                 async testApiConnection(type) {
                     const cfg = this.config[type];
-                    if (!cfg.key || !cfg.url || !cfg.model) {
-                        Swal.fire({ title: '配置不完整', text: '请填写 API Key、URL 和 Model ID 后再进行测试。', icon: 'warning', background: '#0f172a', color: '#fff' });
-                        return;
-                    }
-
+                    if (!cfg.key || !cfg.url || !cfg.model) { Swal.fire({ title: '配置不完整', icon: 'warning', background: '#0f172a', color: '#fff' }); return; }
                     this.apiStatus[type] = 'testing';
-                    
                     try {
-                        const targetUrl = cfg.url.startsWith('/') ? cfg.url : washUrl(cfg.url);
-                        const endpoint = targetUrl.endsWith('/chat/completions') ? targetUrl : (targetUrl + '/chat/completions');
-
-                        const res = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.key}` },
-                            body: JSON.stringify({
-                                model: cfg.model,
-                                messages: [{ role: 'user', content: 'Ping' }],
-                                max_tokens: 5
-                            })
-                        });
-
-                        if (res.ok) {
-                            this.apiStatus[type] = 'ok';
-                            Swal.fire({ title: '握手成功', text: `${type.toUpperCase()} 引擎神经链路已激活！`, icon: 'success', background: '#0f172a', color: '#fff', timer: 1500 });
-                        } else {
-                            const err = await res.json();
-                            throw new Error(err.error?.message || '链路中断');
-                        }
-                    } catch (e) {
-                        this.apiStatus[type] = 'error';
-                        Swal.fire({ title: '测试失败', text: `原因: ${e.message}`, icon: 'error', background: '#0f172a', color: '#fff' });
-                    }
-
-                    function washUrl(u) {
-                        let r = u.trim();
-                        if (r.endsWith('/')) r = r.slice(0, -1);
-                        return r;
-                    }
+                        const t = cfg.url.trim(); const e = t.endsWith('/') ? t.slice(0,-1) : t; const endpoint = e.endsWith('/chat/completions') ? e : e+'/chat/completions';
+                        const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.key}` }, body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }) });
+                        if (res.ok) { this.apiStatus[type] = 'ok'; Swal.fire({ toast:true, position:'top-end', icon: 'success', title: '链路通畅', showConfirmButton: false, timer: 1500 }); } 
+                        else throw new Error('链路中断');
+                    } catch (e) { this.apiStatus[type] = 'error'; Swal.fire({ toast:true, position:'top-end', icon: 'error', title: '链路失败', showConfirmButton: false, timer: 1500 }); }
                 },
 
                 saveConfig() {
-                    Object.keys(this.config).forEach(k => {
-                        localStorage.setItem(`xp_${k}_key`, this.config[k].key);
-                        localStorage.setItem(`xp_${k}_url`, this.config[k].url);
-                        localStorage.setItem(`xp_${k}_model`, this.config[k].model);
-                    });
-                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已烧录至本地存储', showConfirmButton:false, timer:1500});
+                    Object.keys(this.config).forEach(k => { localStorage.setItem(`xp_${k}_key`, this.config[k].key); localStorage.setItem(`xp_${k}_url`, this.config[k].url); localStorage.setItem(`xp_${k}_model`, this.config[k].model); });
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已烧录', showConfirmButton:false, timer:1500});
                 },
 
-                triggerForgePaywall() {
-                    Swal.fire({ title: '资产铸造墙', html: '<p class="text-sm">需要 <b>PRO 核心算力</b> 解锁无限星系铸造权。</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看升级方案' });
-                },
-
-                tryOpenMission(g, s, i) {
-                    if (i === 0 || this.isPro) { window.location.href = `simulator.html?mission=${encodeURIComponent(s.title)}`; } 
-                    else { Swal.fire({ title: '量子引力场锁定', text: '指挥官，此星域需要 PRO 级算力。', icon: 'warning', background: '#0f172a', color: '#fff' }); }
-                },
-
-                getPlanetStyle(i) {
-                    const colors = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']];
-                    const c = colors[i % colors.length];
-                    return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`;
-                },
-
-                initNetworkCanvas() {
-                    this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return;
-                    this.ctx = this.canvas.getContext('2d');
-                    const res = () => { this.canvas.width = window.innerWidth - 288; this.canvas.height = window.innerHeight; };
-                    window.addEventListener('resize', res); res();
-                    for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); }
-                    for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); }
-                    const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim();
-                },
-
-                drawNetwork() {
-                    if(this.view !== 'classroom' || !this.ctx) return;
-                    const w = this.canvas.width; const h = this.canvas.height;
-                    this.ctx.clearRect(0, 0, w, h);
-                    let mx = this.mouseX - 288;
-
-                    this.ctx.fillStyle = "#fff";
-                    this.stars.forEach(s => {
-                        s.z -= 1.5; if(s.z <= 0) s.z = w;
-                        let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2;
-                        let r = (1 - s.z / w) * 1.5;
-                        if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); }
-                    });
-
-                    this.particles.forEach((p, i) => {
-                        p.x += p.vx; p.y += p.vy;
-                        if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1;
-                        this.particles.slice(i+1).forEach(p2 => {
-                            let d = Math.hypot(p.x-p2.x, p.y-p2.y);
-                            if(d<150) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.1*(1-d/150)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); }
-                        });
-                        if(mx>0) {
-                            let dm = Math.hypot(p.x-mx, p.y-this.mouseY);
-                            if(dm<200) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/200)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,this.mouseY); this.ctx.stroke(); }
-                        }
-                    });
-
-                    if (this.activeGalaxyId) {
-                        const ag = this.galaxies.find(g => g.id === this.activeGalaxyId);
-                        let cx = w/2 + this.panX; let cy = h/2 + this.panY;
-                        ag.subjects.forEach(s => {
-                            let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius;
-                            this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke();
-                        });
-                    }
-                },
-
-                openReading(l) { this.view = 'reading-' + l; this.readingChatLog = [{role:'nova', text:'指挥官，我已准备好开启伴读。'}]; },
+                triggerForgePaywall() { Swal.fire({ title: '资产铸造墙', html: '<p class="text-sm">需要 <b>PRO 核心算力</b> 解锁无限星系铸造权。</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看方案', cancelButtonText: '稍后' }); },
+                
                 async promptParentLock() {
                     if (this.isParentUnlocked) { this.isParentUnlocked = false; this.view = 'classroom'; return; }
                     const { value: pin } = await Swal.fire({ title: '安全验证', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', confirmButtonText: '进入中枢' });
                     if (pin === (this.parentPin || '0000')) { this.isParentUnlocked = true; this.view = 'forge'; }
                 },
-                async callAI(p) { return "【演示】API 模块已就绪。"; },
-                async runWritingCritique() { this.isCritiquing = true; setTimeout(() => { this.writingFeedback = "建议深挖论点。"; this.isCritiquing = false; }, 1000); },
-                async sendReadingText() { if(!this.readingInput.trim()) return; this.readingChatLog.push({role:'user', text:this.readingInput}); this.readingInput = ''; },
+
+                // 物理渲染引擎 (保持纯净)
+                getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
+                initNetworkCanvas() { this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d'); const res = () => { this.canvas.width = window.innerWidth - 288; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res(); for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); } for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); },
+                drawNetwork() {
+                    if(this.view !== 'classroom' || !this.ctx) return;
+                    const w = this.canvas.width; const h = this.canvas.height; this.ctx.clearRect(0, 0, w, h); let mx = this.mouseX - 288;
+                    this.ctx.fillStyle = "#fff";
+                    this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
+                    this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<150) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.1*(1-d/150)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-this.mouseY); if(dm<200) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/200)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,this.mouseY); this.ctx.stroke(); } } });
+                    if (this.activeGalaxyId) { const ag = this.galaxies.find(g => g.id === this.activeGalaxyId); let cx = w/2 + this.panX; let cy = h/2 + this.panY; ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
+                },
                 activateGalaxy(id) { this.activeGalaxyId = id; this.panX = 0; this.panY = 0; },
                 startPan(e) { if(e.target.closest('.planet-core, .planet-3d')) return; this.isPanning=true; const cx = e.type.includes('touch')?e.touches[0].clientX:e.clientX; this.startX = cx-this.panX; this.startY = (e.type.includes('touch')?e.touches[0].clientY:e.clientY)-this.panY; },
                 doPan(e) { const cx = e.type.includes('touch')?e.touches[0].clientX:e.clientX; const cy = e.type.includes('touch')?e.touches[0].clientY:e.clientY; this.mouseX=cx; this.mouseY=cy; if(!this.isPanning) return; this.panX=cx-this.startX; this.panY=cy-this.startY; },

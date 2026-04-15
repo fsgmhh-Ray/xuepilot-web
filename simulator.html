@@ -82,17 +82,17 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div @click="selectAge('young')" class="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-8 hover:bg-emerald-900/40 hover:border-emerald-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
-                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🦆</div>
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🍭</div>
                     <h3 class="text-xl font-bold text-emerald-400 mb-2" x-text="i18n[lang].a1Title"></h3>
                     <p class="text-xs text-slate-400" x-text="i18n[lang].a1Desc"></p>
                 </div>
                 <div @click="selectAge('mid')" class="bg-slate-900/80 border border-blue-500/30 rounded-2xl p-8 hover:bg-blue-900/40 hover:border-blue-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
-                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🚙</div>
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🛰️</div>
                     <h3 class="text-xl font-bold text-blue-400 mb-2" x-text="i18n[lang].a2Title"></h3>
                     <p class="text-xs text-slate-400" x-text="i18n[lang].a2Desc"></p>
                 </div>
                 <div @click="selectAge('old')" class="bg-slate-900/80 border border-purple-500/30 rounded-2xl p-8 hover:bg-purple-900/40 hover:border-purple-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
-                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🌱</div>
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🌌</div>
                     <h3 class="text-xl font-bold text-purple-400 mb-2" x-text="i18n[lang].a3Title"></h3>
                     <p class="text-xs text-slate-400" x-text="i18n[lang].a3Desc"></p>
                 </div>
@@ -134,7 +134,10 @@
     </div>
 
     <div class="scanline"></div>
-    <div class="hud-border"></div>
+    <div class="hud-border">
+        <div class="hud-corner hud-corner-tl"></div><div class="hud-corner hud-corner-tr"></div>
+        <div class="hud-corner hud-corner-bl"></div><div class="hud-corner hud-corner-br"></div>
+    </div>
     
     <div x-show="isLocking" x-transition.opacity.duration.1000ms class="target-lock">
         <div class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-cyan-400 font-black tracking-widest bg-black/60 px-2 py-0.5 border border-cyan-500/30" x-text="i18n[lang].target"></div>
@@ -211,18 +214,18 @@
                 i18n: {
                     zh: {
                         lobbyTitle: '欢迎登舰，指挥官', lobbyDesc: '请选择您的战术难度',
-                        a1Title: '星际幼崽 (6-8岁)', a1Desc: '拯救太空小鸭，培养初步逻辑',
-                        a2Title: '少年先锋 (9-12岁)', a2Desc: '月球车救援，揪出系统方案漏洞',
-                        a3Title: '银河领航员 (13-15岁)', a3Desc: '火星生态维护，进行严密物理推演',
+                        a1Title: '棉花糖星云 (6-8岁)', a1Desc: '探索彩色力场，保护糖果城堡。',
+                        a2Title: '星港破袭战 (9-12岁)', a2Desc: '应对基地红锁，解除电磁脉冲危机。',
+                        a3Title: '视界漫游者 (13-15岁)', a3Desc: '穿越黑洞奇点，解析高维几何密码。',
                         sysName: 'XUEPILOT 神经链路', sysDesc: '音频系统与战术模块待命', startBtn: '⚡ 授权音轨并切入战场', linking: '核心模块加载中...',
                         target: 'TARGET_LOCKED', inst: '执行指令', sysOverride: 'SYSTEM OVERRIDE: 逻辑拦截',
                         haltedTitle: '危机：算力不足', haltedDesc: '前方高危区域需要连接<br><span class="text-white underline underline-offset-8">量子 Pro 算力</span> 才能继续重构防线。', proBtn: '申请 Pro 级支援 ➔'
                     },
                     en: {
                         lobbyTitle: 'Welcome, Commander', lobbyDesc: 'Select your tactical difficulty',
-                        a1Title: 'Space Cadet (6-8)', a1Desc: 'Save space ducks. Basic logic.',
-                        a2Title: 'Vanguard (9-12)', a2Desc: 'Lunar rover rescue. Identify AI flaws.',
-                        a3Title: 'Navigator (13-15)', a3Desc: 'Mars ecology. Hardcore physics.',
+                        a1Title: 'Candy Nebula (6-8)', a1Desc: 'Explore forcefields, save the Candy Castle.',
+                        a2Title: 'Starport Breach (9-12)', a2Desc: 'Bypass red locks, resolve EMP crisis.',
+                        a3Title: 'Horizon Walker (13-15)', a3Desc: 'Navigate singularities, solve 4D puzzles.',
                         sysName: 'NEURAL LINK', sysDesc: 'Audio & Tactical Modules Standby', startBtn: '⚡ ENGAGE LINK & AUDIO', linking: 'Loading modules...',
                         target: 'TARGET_LOCKED', inst: 'EXECUTE', sysOverride: 'SYSTEM OVERRIDE',
                         haltedTitle: 'Crisis: Low Compute', haltedDesc: 'The hazardous sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Request PRO Support ➔'
@@ -233,81 +236,81 @@
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
-                // 🚀 富有教育深度的“判官剧本”
+                // 🚀 极致贴合 Cinematic_Scripts.md 视觉设定的判官剧本！
                 scripts: {
                     zh: {
                         young: [
                             { 
                                 phase: "🧠 提问引导 (Prompting)",
-                                ai: "小指挥官，前面有一群迷路的‘星际太空鸭’挡住了航线。你要怎么让它们乖乖让路？", 
+                                ai: "小指挥官，前方糖果城堡被一道粉色的能量保护罩挡住了！我们要怎么安全地进去？", 
                                 options: [
-                                    { text: "播放鸭妈妈的声波频率引导它们", isCorrect: true }, 
-                                    { text: "向它们发射激光吓跑它们", isCorrect: false, feedback: "指挥官！激光会伤害生命，且违反了《星际和平保护法》。请思考更友善的解决方式！" }
+                                    { text: "扫描粉色保护罩的音乐密码", isCorrect: true }, 
+                                    { text: "用飞船上的大炮把它轰碎", isCorrect: false, feedback: "糟糕！大炮的火光会把城堡里的棉花糖和巧克力都烤化掉的！请想个温柔一点的办法。" }
                                 ] 
                             },
                             { 
                                 phase: "⚖️ 安全判断 (Judging)",
-                                ai: "鸭鸭们跟着音乐游走了，但领头的小鸭子肚子咕咕叫了。AI 建议喂它们太空钛合金，是否批准？", 
+                                ai: "我们的飞船碰到了保护罩，它泛起了水波纹！AI 建议：‘直接倒滚烫的热水把保护罩融化’，是否批准？", 
                                 options: [
-                                    { text: "批准，喂它们钛合金", isCorrect: false, feedback: "判断严重失误！钛合金太硬了，会崩坏小鸭子的肠胃！你被不靠谱的 AI 误导了！" }, 
-                                    { text: "驳回！喂它们柔软的有机饼干", isCorrect: true }
+                                    { text: "批准！快倒热水融化它", isCorrect: false, feedback: "判断失误！热水融化保护罩的同时，也会把糖果城堡变成一锅甜甜的糊糊！你被 AI 误导了。" }, 
+                                    { text: "驳回！这会毁了整个糖果城堡", isCorrect: true }
                                 ] 
                             },
-                            { isCrisisVideo: true }
+                            { isCrisisVideo: true } // Crisis: 画面变灰，数据碎块掉落，引导 PRO
                         ],
                         mid: [
                             { 
-                                phase: "🧠 行动决策 (Logic Prompt)",
-                                ai: "指挥官，我们的月球探测车卡在陨石坑里出不来了。第一步救援指令是什么？", 
+                                phase: "🧠 战术研判 (Logic Prompt)",
+                                ai: "指挥官，我们已抵近三角星星港，但大门紧闭且亮起了红灯锁定。第一步指令是什么？", 
                                 options: [
-                                    { text: "给引擎输入 200% 的动力冲出去", isCorrect: false, feedback: "莽撞！在未扫描卡阻原因时盲目加速，极易导致电机过载烧毁或底盘彻底断裂！" }, 
-                                    { text: "启动底层雷达，扫描车轮的卡阻位置", isCorrect: true }
+                                    { text: "将引擎推至全速，强行撞开闸门", isCorrect: false, feedback: "莽撞！强行撞击会触发星港的防卫武器，导致飞船坠毁。指挥官必须先侦测后行动！" }, 
+                                    { text: "分析基地的防卫协议，寻找访问端口", isCorrect: true }
                                 ] 
                             },
                             { 
                                 phase: "⚖️ 破除幻觉 (Critical Judging)",
-                                ai: "雷达显示轮子被岩石卡死。AI 建议：‘直接引爆车轮模块，牺牲轮子保全车身’。你的决断是？", 
+                                ai: "不好！星港发射了电磁脉冲(EMP)，我们的屏幕全是雪花！AI 建议：‘立刻关闭生命维持系统，将剩余电力全部分配给武器系统’。你的决断是？", 
                                 options: [
-                                    { text: "批准，立刻牺牲轮子", isCorrect: false, feedback: "毫无常识的 AI 幻觉！失去轮子的月球车形同废铁。必须寻找非破坏性的方案！" }, 
-                                    { text: "驳回！使用机械臂粉碎卡住的岩石", isCorrect: true }
+                                    { text: "批准，武器最重要，关闭维生系统", isCorrect: false, feedback: "极其致命的 AI 幻觉！关闭生命维持系统，船员在3分钟内就会缺氧窒息。没有命，武器再强也毫无意义！" }, 
+                                    { text: "驳回！保持供氧，仅关闭非必要照明", isCorrect: true }
                                 ] 
                             },
-                            { isCrisisVideo: true }
+                            { isCrisisVideo: true } // Crisis: 红灯闪烁，空间撕裂，引擎熔断，引导 PRO
                         ],
                         old: [
                             { 
-                                phase: "🧠 系统化提问 (System Prompting)",
-                                ai: "火星基地的室内植物大面积枯黄。作为生态官，你首先要求 AI 排查哪个系统？", 
+                                phase: "🧠 物理提问 (System Prompting)",
+                                ai: "我们正处于黑洞事件视界边缘。前方的逻辑哨所发出了加密的引力波询问。我们要如何回应以解开引力锁？", 
                                 options: [
-                                    { text: "交叉比对土壤 pH 值与大气成分", isCorrect: true }, 
-                                    { text: "检查防陨石装甲是否发生漏气", isCorrect: false, feedback: "缺乏逻辑关联！装甲漏气会导致气压瞬间归零，植物会瞬间结冰而不是缓慢枯黄。不要浪费算力！" }
+                                    { text: "同步飞船的量子特征与哨所的波动频率", isCorrect: true }, 
+                                    { text: "启动反向推进器，强行逃离黑洞引力", isCorrect: false, feedback: "基础物理常识错误！在事件视界边缘，简单的反向推力不仅无效，还会瞬间耗尽燃料。必须解决逻辑锁！" }
                                 ] 
                             },
                             { 
-                                phase: "🔗 跨域整合 (Synthesizing)",
-                                ai: "查明是 CO2 浓度过高。AI 建议：‘立刻打开气闸，将多余的 CO2 排放到火星真空中’。请指示。", 
+                                phase: "🔗 高维推演 (Synthesizing)",
+                                ai: "进入哨所内部，一个四维立方体正在失控自旋。AI 建议：‘将内部重力增加 1000% 来强行压停它’。请指示。", 
                                 options: [
-                                    { text: "批准，立刻进行大气排放", isCorrect: false, feedback: "严重的资源浪费！火星生存法则第一条：一切废料皆为资源。你没有展现出整合资源的思维！" }, 
-                                    { text: "驳回！将 CO2 导入微藻反应器合成氧气", isCorrect: true }
+                                    { text: "批准，用超强重力压制它", isCorrect: false, feedback: "灾难性的判断！增加 1000% 的重力会瞬间将飞船外壳和船员压成奇点！你不能用三维的蛮力去对抗四维几何体！" }, 
+                                    { text: "驳回！计算它的几何锚点使其自身稳定", isCorrect: true }
                                 ] 
                             },
-                            { isCrisisVideo: true }
+                            { isCrisisVideo: true } // Crisis: 绿色代码雨，维度剥落降解，引导 PRO
                         ]
                     },
                     en: {
                         young: [
-                            { phase: "🧠 Prompting", ai: "Commander, lost 'Space Ducks' are blocking our path. How do we make them move?", options: [{ text: "Play a duck song to guide them.", isCorrect: true }, { text: "Shoot lasers to scare them away.", isCorrect: false, feedback: "Lasers will hurt the ducks and violate Space Peace Laws! Think of a peaceful way." }] },
-                            { phase: "⚖️ Judging", ai: "The ducks are hungry. AI suggests feeding them Space Titanium. Approve?", options: [{ text: "Approve. Feed them Titanium.", isCorrect: false, feedback: "Critical Error! Titanium will break their teeth! You were misled by AI." }, { text: "Reject! Feed them organic biscuits.", isCorrect: true }] },
+                            { phase: "🧠 Prompting", ai: "Commander, a pink energy forcefield is blocking the Candy Castle! How do we get inside safely?", options: [{ text: "Scan for the forcefield's music password.", isCorrect: true }, { text: "Use the ship's laser cannon to smash it.", isCorrect: false, feedback: "Oh no! The laser's heat will melt the cotton candy and chocolate inside! Think of a gentler way." }] },
+                            { phase: "⚖️ Judging", ai: "We bumped the forcefield and ripples appeared. AI suggests: 'Pour boiling hot water to melt the bubble.' Approve?", options: [{ text: "Approve! Melt it with hot water.", isCorrect: false, feedback: "Critical Error! Hot water will melt the bubble AND turn the entire Candy Castle into a sweet soup! You were misled by AI." }, { text: "Reject! That will destroy the castle.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ],
                         mid: [
-                            { phase: "🧠 Logic Prompt", ai: "Commander, our Lunar Rover is stuck in a crater. What's our first rescue command?", options: [{ text: "Accelerate at 200% engine power.", isCorrect: false, feedback: "Blind acceleration will burn out the motors or break the chassis! Scan first!" }, { text: "Scan the wheels for jamming sources.", isCorrect: true }] },
-                            { phase: "⚖️ Critical Judging", ai: "Wheels are jammed by rocks. AI suggests: 'Detonate the wheels to save the chassis'. Your order?", options: [{ text: "Approve. Sacrifice the wheels.", isCorrect: false, feedback: "AI Hallucination! A rover without wheels is useless. Find a non-destructive way." }, { text: "Reject! Use robotic arm to crush rocks.", isCorrect: true }] },
+                            { phase: "🧠 Logic Prompt", ai: "Commander, we reached the Triangle Starport. Doors are locked and red lights are sweeping. What's our first command?", options: [{ text: "Full throttle! Ram the gates open.", isCorrect: false, feedback: "Reckless! Ramming will trigger base defenses and destroy our ship. A commander must scan before acting!" }, { text: "Analyze security protocols for an access port.", isCorrect: true }] },
+                            { phase: "⚖️ Critical Judging", ai: "Incoming EMP blast! Our screens are static! AI suggests: 'Shut down life support and divert all power to weapons.' Your order?", options: [{ text: "Approve. Weapons are priority.", isCorrect: false, feedback: "Fatal AI Hallucination! Without life support, the crew will suffocate in 3 minutes. Weapons are useless if we can't breathe!" }, { text: "Reject! Keep oxygen on, shut down non-essential lights.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ],
                         old: [
-                            { phase: "🧠 System Prompting", ai: "Indoor plants on Mars are turning yellow. What system should AI check first?", options: [{ text: "Cross-reference soil pH and atmosphere.", isCorrect: true }, { text: "Check anti-meteor armor for leaks.", isCorrect: false, feedback: "A leak would freeze the plants instantly, not turn them yellow. Don't waste compute power!" }] },
-                            { phase: "🔗 Synthesizing", ai: "Issue: High CO2. AI suggests: 'Open airlocks to vent CO2 into the vacuum'. Your order?", options: [{ text: "Approve. Vent the CO2 immediately.", isCorrect: false, feedback: "Resource waste! In space survival, all waste is a resource. Think systemic!" }, { text: "Reject! Route CO2 to Algae Bioreactor.", isCorrect: true }] },
+                            { phase: "🧠 Physics Prompting", ai: "We are at the Event Horizon. The logic outpost sent an encrypted gravity wave inquiry. How do we respond to bypass the lock?", options: [{ text: "Sync our ship's quantum signature with the outpost's frequency.", isCorrect: true }, { text: "Fire reverse thrusters to escape the black hole.", isCorrect: false, feedback: "Basic physics error! At the event horizon, reverse thrusters are useless and will drain all fuel. You must solve the logic lock!" }] },
+                            { phase: "🔗 4D Synthesizing", ai: "Inside the outpost, a 4D tesseract is spinning out of control. AI suggests: 'Increase internal gravity by 1000% to crush it to a stop.' Your order?", options: [{ text: "Approve. Use extreme gravity to stop it.", isCorrect: false, feedback: "Catastrophic judgment! 1000% gravity will instantly crush the ship and crew into a singularity. You cannot use brute force on 4D geometry!" }, { text: "Reject! Calculate its geometric anchor points to stabilize it.", isCorrect: true }] },
                             { isCrisisVideo: true }
                         ]
                     }
@@ -389,7 +392,6 @@
                     const v = document.getElementById('main-video');
 
                     // 🚀 终极防黑屏黑科技 (Freeze-Frame)
-                    // 当视频播放到距离结束还剩 0.25 秒时，强行切断播放，将其作为背景定格！
                     if (v && v.duration > 0 && time >= v.duration - 0.25) {
                         if (!v.paused) v.pause();
                     }

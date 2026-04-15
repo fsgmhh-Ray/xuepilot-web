@@ -10,6 +10,9 @@
         [x-cloak] { display: none !important; }
         body { background-color: #050914; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; margin: 0; }
         
+        /* 动态背景 */
+        .space-bg { position: fixed; inset: 0; z-index: -3; background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%); }
+        
         /* 视频底座 */
         .video-container { position: fixed; inset: 0; z-index: 0; background: #000; }
         .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease-in-out; }
@@ -18,7 +21,7 @@
         /* 科幻机甲风 UI 切角与渐变 */
         .tech-panel {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.95) 100%);
-            border-top: 2px solid #06b6d4; /* Cyan-500 */
+            border-top: 2px solid #06b6d4;
             border-bottom: 1px solid rgba(6, 182, 212, 0.3);
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -38,11 +41,9 @@
             box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
         }
 
-        /* 打字机光标闪烁 */
         .typing-cursor::after { content: '█'; animation: blink 1s step-start infinite; color: #06b6d4; margin-left: 4px; }
         @keyframes blink { 50% { opacity: 0; } }
         
-        /* 扫描线与全息边框 */
         .scanline { position: fixed; inset: 0; z-index: 15; background: linear-gradient(to bottom, transparent 50%, rgba(6, 182, 212, 0.05) 50%); background-size: 100% 4px; pointer-events: none; }
         .hud-border { position: fixed; inset: 0; z-index: 10; pointer-events: none; border: 2px solid rgba(6, 182, 212, 0.1); margin: 10px; }
         .hud-corner { position: absolute; width: 30px; height: 30px; border-color: #06b6d4; border-style: solid; border-width: 0; }
@@ -51,30 +52,63 @@
         .hud-corner-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
         .hud-corner-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
 
-        /* 启动屏 (Start Screen) */
+        /* 启动与大厅屏 */
         .start-overlay { position: fixed; inset: 0; z-index: 200; background: #030712; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
         .start-btn { position: relative; overflow: hidden; }
         .start-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: sweep 3s infinite; }
         @keyframes sweep { 100% { left: 200%; } }
 
-        /* 故障与锁定特效 */
         .glitch-fx { animation: shake 0.2s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 75% { transform: translate(1px, 2px); } }
         .target-lock { position: absolute; width: 180px; height: 180px; border: 2px dashed #06b6d4; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 12; animation: rotateLock 6s linear infinite; border-radius: 50%; }
         @keyframes rotateLock { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
         
         .terminal-font { font-family: 'Courier New', Courier, monospace; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 🚀 启动屏：强行获取用户交互，解锁声音权限 -->
-    <div x-show="!missionStarted" class="start-overlay" :class="systemReady ? '' : 'cursor-wait'">
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSg2LCAxODIsIDIxMiwgMC4yKSIvPjwvc3ZnPg==')] opacity-30"></div>
+    <!-- 背景元素 -->
+    <div class="space-bg"></div>
+
+    <!-- 🚀 阶段 0：年龄段选关大厅 (Lobby) -->
+    <div x-show="inLobby" x-cloak class="start-overlay fade-in">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSg2LCAxODIsIDIxMiwgMC4yKSIvPjwvc3ZnPg==')] opacity-10"></div>
+        <div class="z-10 w-full max-w-5xl px-6">
+            <div class="text-center mb-10">
+                <div class="text-6xl mb-4 animate-pulse filter drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]">🚀</div>
+                <h1 class="text-4xl font-black text-white tracking-[0.2em] mb-2" x-text="i18n[lang].lobbyTitle"></h1>
+                <p class="text-cyan-500 font-mono text-sm tracking-widest uppercase" x-text="i18n[lang].lobbyDesc"></p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div @click="selectAge('young')" class="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-8 hover:bg-emerald-900/40 hover:border-emerald-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🦆</div>
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2" x-text="i18n[lang].a1Title"></h3>
+                    <p class="text-xs text-slate-400" x-text="i18n[lang].a1Desc"></p>
+                </div>
+                <div @click="selectAge('mid')" class="bg-slate-900/80 border border-blue-500/30 rounded-2xl p-8 hover:bg-blue-900/40 hover:border-blue-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🚙</div>
+                    <h3 class="text-xl font-bold text-blue-400 mb-2" x-text="i18n[lang].a2Title"></h3>
+                    <p class="text-xs text-slate-400" x-text="i18n[lang].a2Desc"></p>
+                </div>
+                <div @click="selectAge('old')" class="bg-slate-900/80 border border-purple-500/30 rounded-2xl p-8 hover:bg-purple-900/40 hover:border-purple-500 hover:scale-105 transition-all cursor-pointer shadow-lg text-center group">
+                    <div class="text-6xl mb-4 group-hover:-translate-y-2 transition-transform">🌱</div>
+                    <h3 class="text-xl font-bold text-purple-400 mb-2" x-text="i18n[lang].a3Title"></h3>
+                    <p class="text-xs text-slate-400" x-text="i18n[lang].a3Desc"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 阶段 1：启动屏（获取声音权限） -->
+    <div x-show="!inLobby && !missionStarted" x-cloak class="start-overlay" :class="systemReady ? '' : 'cursor-wait'">
         <div class="z-10 text-center flex flex-col items-center">
             <div class="text-6xl mb-8 animate-pulse text-cyan-500 filter drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]">⎈</div>
             <h1 class="text-4xl font-black text-white tracking-[0.3em] mb-2" x-text="i18n[lang].sysName"></h1>
-            <p class="text-cyan-600 font-mono text-xs mb-12 tracking-widest uppercase">Audio Systems & Neural Link Standby</p>
+            <p class="text-cyan-600 font-mono text-xs mb-12 tracking-widest uppercase" x-text="i18n[lang].sysDesc"></p>
             
             <button x-show="systemReady" @click="startMission()" class="start-btn px-12 py-5 bg-cyan-600/20 border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white font-black tracking-widest text-lg transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)]">
                 <span x-text="i18n[lang].startBtn"></span>
@@ -87,10 +121,16 @@
         </div>
     </div>
 
-    <!-- 视频底座：移除 loop 循环，移除 autoplay，由 JS 全权控制播放和定格 -->
+    <!-- 🚀 物理声控台 -->
+    <button x-show="missionStarted" @click="toggleSound()" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center hover:bg-blue-900/80 hover:border-blue-500 transition shadow-[0_0_20px_rgba(0,0,0,0.5)] text-xl cursor-pointer">
+        <span x-text="isMuted ? '🔇' : '🔊'"></span>
+    </button>
+
+    <!-- 🚀 阶段 2：视频播放与 HUD (去掉了 loop，让视频播完自然定格) -->
     <div class="video-container">
+        <!-- 注意：去除了 loop 属性！视频播到第 12 秒会自动定格 -->
         <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''"
-               playsinline crossorigin="anonymous"
+               playsinline crossorigin="anonymous" muted
                @canplay="videoReady = true"
                @playing="videoReady = true"
                @timeupdate="handleTimeSync($event.target.currentTime)"
@@ -108,17 +148,13 @@
         <div class="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-cyan-400 font-black tracking-widest bg-black/60 px-2 py-0.5 border border-cyan-500/30" x-text="i18n[lang].target"></div>
     </div>
 
-    <!-- 🚀 交互 UI 层：仅在视频定格时 (showHUD = true) 才会显示 -->
+    <!-- 交互 UI 层：在第 8 秒弹出，视频继续播放至 12 秒定格 -->
     <main class="fixed inset-0 z-30 flex flex-col items-center justify-end pb-16 px-10 pointer-events-none">
-        
         <!-- 对话面板 -->
         <div x-show="showHUD" x-cloak x-transition:enter="transition ease-out duration-700 transform" x-transition:enter-start="opacity-0 translate-y-10 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="w-full max-w-4xl mb-8 relative pointer-events-auto">
             <div class="tech-panel p-8 relative">
-                <!-- 装饰线条 -->
                 <div class="absolute top-0 right-0 w-32 h-1 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></div>
                 <div class="absolute -top-3 left-8 bg-cyan-600 text-[10px] font-black px-4 py-1 uppercase tracking-widest text-white shadow-lg" x-text="i18n[lang].advisor"></div>
-                
-                <!-- 打字机特效文本 -->
                 <p class="text-xl md:text-2xl font-bold leading-relaxed text-cyan-50 italic mt-3 terminal-font min-h-[4rem]" :class="isTyping ? 'typing-cursor' : ''" x-html="displayedText"></p>
             </div>
         </div>
@@ -148,29 +184,39 @@
         function shipApp() {
             return {
                 lang: window.localStorage.getItem('xp_lang') || 'zh',
-                step: 0, ageGroup: 'mid',
+                inLobby: true,           // 是否在大厅
+                ageGroup: 'mid',         // 年龄段
+                step: 0,                 // 视频阶段
                 
-                systemReady: false,      // 系统是否加载完毕
-                missionStarted: false,   // 用户是否点击了开始
-                videoReady: false,       // 视频是否可以播放
-                showHUD: false,          // 是否显示机甲交互界面 (视频定格时触发)
+                systemReady: false,      // 过场连接按钮是否就绪
+                missionStarted: false,   // 是否点击了开始连接
+                videoReady: false,       // 视频是否缓冲完毕
+                showHUD: false,          // 是否弹出 HUD
                 
                 isGlitching: false, isLocking: false, 
                 currentStoryText: '', displayedText: '', currentOptions: [],
                 isTyping: false, typeInterval: null,
-                isPro: false, showCrisis: false, isThinking: false,
+                isPro: false, showCrisis: false, isThinking: false, isMuted: true,
                 failsafeTimer: null,
 
                 i18n: {
                     zh: {
-                        sysName: 'XUEPILOT 神经链路', startBtn: '⚡ 建立连接并授权音轨', linking: '核心模块加载中...',
+                        lobbyTitle: '欢迎登舰，指挥官', lobbyDesc: '请选择您的战术难度',
+                        a1Title: '星际幼崽 (6-8岁)', a1Desc: '拯救太空小鸭，简单的趣味问答',
+                        a2Title: '少年先锋 (9-12岁)', a2Desc: '月球车救援，找出 AI 的逻辑漏洞',
+                        a3Title: '银河领航员 (13-15岁)', a3Desc: '火星生态基地，复杂的跨域推演',
+                        sysName: 'XUEPILOT 神经链路', sysDesc: '音频系统与战术模块待命', startBtn: '⚡ 授权音轨并切入战场', linking: '核心模块加载中...',
                         target: 'TARGET_LOCKED', advisor: 'A.I. 战术顾问', inst: '指令集',
-                        haltedTitle: '算力维度封锁', haltedDesc: '预制维度的算力已耗尽。前方高危区域需要解锁<br><span class="text-white underline underline-offset-8">量子 Pro 密钥</span> 才能继续推演。', proBtn: '获取 Pro 能量补给 ➔'
+                        haltedTitle: '危机：算力不足', haltedDesc: '前方高危区域需要连接<br><span class="text-white underline underline-offset-8">量子 Pro 算力</span> 才能继续重构防线。', proBtn: '申请 Pro 级支援 ➔'
                     },
                     en: {
-                        sysName: 'XUEPILOT NEURAL LINK', startBtn: '⚡ ENGAGE LINK & AUDIO', linking: 'Loading core modules...',
+                        lobbyTitle: 'Welcome, Commander', lobbyDesc: 'Select your tactical difficulty',
+                        a1Title: 'Space Cadet (6-8)', a1Desc: 'Save the space ducks. Easy & fun.',
+                        a2Title: 'Vanguard (9-12)', a2Desc: 'Lunar rover rescue. Find AI flaws.',
+                        a3Title: 'Navigator (13-15)', a3Desc: 'Mars base. Advanced logic deduction.',
+                        sysName: 'NEURAL LINK', sysDesc: 'Audio & Tactical Modules Standby', startBtn: '⚡ ENGAGE LINK & AUDIO', linking: 'Loading modules...',
                         target: 'TARGET_LOCKED', advisor: 'A.I. Tactical Advisor', inst: 'EXEC',
-                        haltedTitle: 'Engine Halted', haltedDesc: 'Compute power for this dimension depleted. The sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Acquire PRO Energy ➔'
+                        haltedTitle: 'Crisis: Low Compute', haltedDesc: 'The hazardous sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.', proBtn: 'Request PRO Support ➔'
                     }
                 },
 
@@ -178,39 +224,40 @@
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
 
+                // 🚀 重塑：彻底抛弃专业术语，改用符合各年龄段认知、有趣生动的剧本
                 scripts: {
                     zh: {
                         young: [
-                            { ai: "小指挥官，前方有道气泡墙。如果不问出一个‘聪明的问题’，气泡就不会破。你想问什么？", options: [{ text: "气泡是用什么做的？" }, { text: "为什么它会挡住我们？" }] },
-                            { ai: "精彩！气泡破了。但里面的彩虹桥断了，你需要用逻辑修补它。告诉我，修桥的目的是什么？", options: [{ text: "为了让数据流过去" }, { text: "为了不让星星掉下来" }] },
-                            { ai: "🚨 致命警报！前方算力空间坍缩，糖果星球正在解体！", isCrisisVideo: true }
+                            { ai: "小指挥官，前面有一群迷路的‘星际太空鸭’挡住了航线。你要怎么让它们乖乖让路？", options: [{ text: "放一首好听的鸭鸭儿歌引导它们" }, { text: "发射飞船上的大炮把它们吓跑" }] },
+                            { ai: "鸭鸭们跟着音乐游走了，但领头的小鸭子肚子咕咕叫了。你打算喂它什么？", options: [{ text: "给它一块闪闪发光的太空石头" }, { text: "给它一块香喷喷的太空饼干" }] },
+                            { ai: "🚨 糟糕！探测到超大杯冰淇淋陨石雨！普通的飞船防护罩要被砸碎了！", isCrisisVideo: true }
                         ],
                         mid: [
-                            { ai: "指挥官，飞船已进入逻辑哨所范围。哨所守卫拒绝泊入，它说：‘我只在被质疑时展示真相’。请下达第一条指令：", options: [{ text: "分析守卫的逻辑漏洞" }, { text: "发射‘悖论’通信脉冲" }] },
-                            { ai: "守卫由于逻辑冲突重启中。我们已进入中转舱。这里的数据碎片正在流失！你需要用一个问题固定它。你的问题是？", options: [{ text: "如果因果倒置，现在是过去吗？" }, { text: "碎片与整体的关系是什么？" }] },
-                            { ai: "🚨 严重警告：算力引擎发生物理熔断！真实宇宙的因果律正在撕裂！", isCrisisVideo: true }
+                            { ai: "指挥官，我们的月球探测车卡在陨石坑里出不来了。第一步救援指令是什么？", options: [{ text: "直接让探测车全速踩油门往前冲" }, { text: "先扫描探测车周围的地形和受损情况" }] },
+                            { ai: "扫描发现轮子被卡住了。AI 建议：‘把车子全部拆掉重新组装’。这个建议有什么漏洞？", options: [{ text: "这个建议很好，非常彻底" }, { text: "太浪费时间了，在月球外拆车非常危险" }] },
+                            { ai: "🚨 警告：太阳风暴来袭！月球车彻底断电，我们需要接入更高级的 AI 算力！", isCrisisVideo: true }
                         ],
                         old: [
-                            { ai: "指挥官，我们正处于事件视界边缘。戴森球核心出现了引力动荡。为了稳定结构，我们需要确立逻辑奇点。你的决策是？", options: [{ text: "建立非欧几里得探测协议" }, { text: "同步高维算力扰动频率" }] },
-                            { ai: "能量场暂时稳定。但空间板块出现了几何错误。这是由于底层代码的逻辑冗余造成的。请指出处理优先级：", options: [{ text: "重构第一性原理协议" }, { text: "隔离并分析冗余来源" }] },
-                            { ai: "🚨 严重警告：多维空间正在发生灾难性降解！物理法则已失效！", isCrisisVideo: true }
+                            { ai: "火星基地的室内植物突然大面积发黄。作为生态官，你首先要求 AI 排查哪个系统？", options: [{ text: "检查水循环系统和土壤的营养成分" }, { text: "检查基地外墙的防陨石装甲厚度" }] },
+                            { ai: "排查发现是水管堵塞。AI 建议：‘直接提高室内温度到 50 度，让植物多出汗’。请指出漏洞。", options: [{ text: "50度会加速水分蒸发，植物会死得更快" }, { text: "可以，温度高能促进植物的光合作用" }] },
+                            { ai: "🚨 灾难警报：火星超强沙尘暴导致外壳破裂！气压骤降！需要【Pro 级算力】重构维生系统！", isCrisisVideo: true }
                         ]
                     },
                     en: {
                         young: [
-                            { ai: "Commander, there's a bubble wall ahead. Ask a smart question to break it.", options: [{ text: "What is the bubble made of?" }, { text: "Why is it blocking us?" }] },
-                            { ai: "Brilliant! Bubble shattered. But the rainbow bridge is broken. What is the logical purpose of repairing it?", options: [{ text: "To allow data stream flow" }, { text: "To prevent stars from falling" }] },
-                            { ai: "🚨 ALERT! Space collapsing, Candy Planet is disintegrating!", isCrisisVideo: true }
+                            { ai: "Commander, a flock of lost 'Space Ducks' is blocking our path. How do we make them move?", options: [{ text: "Play a nice duck song to guide them." }, { text: "Shoot lasers to scare them away." }] },
+                            { ai: "The ducks followed the music, but the leader is hungry. What should we feed it?", options: [{ text: "A shiny space rock." }, { text: "Space nutrition biscuits." }] },
+                            { ai: "🚨 Oh no! A giant ice-cream meteor shower is coming! Our shields can't hold it!", isCrisisVideo: true }
                         ],
                         mid: [
-                            { ai: "Commander, approaching logic outpost. The guard denies entry, stating: 'I only reveal truth when questioned.' Your orders?", options: [{ text: "Analyze logical flaws" }, { text: "Emit paradox pulse" }] },
-                            { ai: "Guard is rebooting. We're inside. Data fragments are leaking! Ask a conceptual question to anchor them.", options: [{ text: "If causality inverts, is now the past?" }, { text: "How do fragments relate to the whole?" }] },
-                            { ai: "🚨 CRITICAL WARNING: Engine meltdown! Causality is tearing apart!", isCrisisVideo: true }
+                            { ai: "Commander, our Lunar Rover is stuck in a crater. What's our first rescue command?", options: [{ text: "Tell the rover to accelerate at full speed." }, { text: "Scan the terrain and rover damage." }] },
+                            { ai: "The scan shows wheels are jammed. AI suggests: 'Dismantle the entire rover and rebuild it'. What's the flaw?", options: [{ text: "It's a great and thorough suggestion." }, { text: "It wastes time and is dangerous outside." }] },
+                            { ai: "🚨 Warning: Solar storm approaching! The rover lost power. We need advanced AI compute!", isCrisisVideo: true }
                         ],
                         old: [
-                            { ai: "Commander, we are at the event horizon. The Dyson sphere core is unstable. We must establish a logic singularity to stabilize it.", options: [{ text: "Init non-Euclidean protocol" }, { text: "Sync hyper-dimensional freq" }] },
-                            { ai: "Energy field stable. However, spatial plates show geometric errors due to redundant base code. Priority?", options: [{ text: "Refactor first principles" }, { text: "Isolate redundant sources" }] },
-                            { ai: "🚨 CRITICAL WARNING: Multi-dimensional degradation detected!", isCrisisVideo: true }
+                            { ai: "The indoor plants at the Mars Base are turning yellow. As Ecology Officer, what do you check first?", options: [{ text: "The water circulation and soil nutrients." }, { text: "The anti-meteor armor thickness outside." }] },
+                            { ai: "It's a water pipe block. AI suggests: 'Raise indoor temperature to 50°C so plants sweat more'. Find the flaw.", options: [{ text: "50°C will accelerate evaporation and kill them." }, { text: "High temperature is good for plant growth." }] },
+                            { ai: "🚨 Disaster Alert: Dust storm breached the dome! Pressure dropping! PRO Compute required!", isCrisisVideo: true }
                         ]
                     }
                 },
@@ -223,7 +270,6 @@
                     }
                 },
 
-                // 🚀 打字机特效引擎
                 typewriterEffect(text) {
                     this.displayedText = '';
                     let i = 0;
@@ -236,37 +282,35 @@
                             clearInterval(this.typeInterval);
                             this.isTyping = false;
                         }
-                    }, 40); // 打字速度
+                    }, 40);
                 },
 
                 init() {
                     try {
-                        const params = new URLSearchParams(window.location.search);
-                        this.ageGroup = params.get('age') || 'mid';
                         this.isPro = window.localStorage.getItem('xp_is_pro') === 'true';
-                        
-                        if (!this.scripts[this.lang][this.ageGroup]) this.ageGroup = 'mid';
-                        const scene = this.scripts[this.lang][this.ageGroup][0];
-                        this.currentStoryText = scene.ai;
-                        this.currentOptions = scene.options || [];
-                        
-                        // 模拟系统自检，1秒后解锁 Start 按钮
-                        setTimeout(() => { this.systemReady = true; }, 1000);
-
+                        // 初始化时不加载剧本，等待在大厅中选择
                     } catch (e) {
                         console.error("Init Error:", e);
-                        this.systemReady = true;
                     }
                 },
 
-                // 🚀 用户点击启动：解锁声音！
+                // 🚀 在大厅中点击年龄卡片
+                selectAge(age) {
+                    this.ageGroup = age;
+                    this.updateLang();
+                    this.inLobby = false; // 隐藏大厅，显示神经链路连接屏
+                    
+                    // 模拟 1 秒的加载动画后，解锁“启动”按钮
+                    setTimeout(() => { this.systemReady = true; }, 1000);
+                },
+
                 startMission() {
                     this.missionStarted = true;
-                    
                     const v = document.getElementById('main-video');
                     if(v) {
                         v.src = this.videoUrl;
-                        v.muted = false; // 完美解锁声音！因为这是在用户的 Click 事件中触发的。
+                        v.muted = false; // 用户产生点击交互后，浏览器解除声音封印
+                        this.isMuted = false;
                         v.load();
                         const playPromise = v.play();
                         if (playPromise !== undefined) playPromise.catch(e => console.warn("Audio block:", e));
@@ -274,16 +318,20 @@
                     this.startFailsafe();
                 },
 
+                toggleSound() {
+                    this.isMuted = !this.isMuted;
+                    const v = document.getElementById('main-video');
+                    if (v) v.muted = this.isMuted;
+                },
+
                 startFailsafe() {
                     clearTimeout(this.failsafeTimer);
                     this.failsafeTimer = setTimeout(() => {
-                        console.warn("Failsafe triggered");
                         this.triggerNodeAction();
-                    }, 9000); // 9秒保底（比正常的 7.8 秒长）
+                    }, 9000); // 如果视频没触发事件，9秒后强行弹出UI
                 },
 
                 handleVideoError() {
-                    console.error("Video Load Error");
                     clearTimeout(this.failsafeTimer);
                     setTimeout(() => { this.triggerNodeAction(); }, 2000);
                 },
@@ -294,13 +342,9 @@
                     if (time > 2.5 && time < 2.7) this.isGlitching = true; else this.isGlitching = false;
                     if (time > 5.0) this.isLocking = true; else this.isLocking = false;
                     
-                    // 🚀 核心控制：当视频到达 7.8 秒时，定格画面，弹出 UI！
-                    if (time > 7.8 && !this.showHUD) {
+                    // 🚀 核心优化：第 8 秒弹出 HUD。由于视频去掉了 loop，它会自然播到 12 秒并停住，作为背景！
+                    if (time > 8.0 && !this.showHUD) {
                         clearTimeout(this.failsafeTimer); 
-                        
-                        const v = document.getElementById('main-video');
-                        if (v && !v.paused) v.pause(); // 瞬间定格！不再循环！
-
                         this.triggerNodeAction();
                     }
                 },
@@ -308,19 +352,16 @@
                 triggerNodeAction() {
                     const currentScene = this.scripts[this.lang][this.ageGroup][this.step];
                     if (currentScene && currentScene.isCrisisVideo) {
-                        if (!this.showCrisis) this.triggerCrisisNow(); // 第3个视频播到尾声，强行拉闸！
+                        if (!this.showCrisis) this.triggerCrisisNow(); 
                     } else {
                         if (!this.showHUD) {
-                            this.showHUD = true; // 弹出极客风 UI
-                            this.typewriterEffect(this.currentStoryText); // 开始打字
+                            this.showHUD = true; 
+                            this.typewriterEffect(this.currentStoryText); 
                         }
                     }
                 },
 
                 triggerCrisisNow() {
-                    const v = document.getElementById('main-video');
-                    if (v) v.pause(); 
-                    
                     if (this.isPro) {
                         Swal.fire({
                             title: this.lang === 'zh' ? 'PRO 权限已验证' : 'PRO Access Verified', 
@@ -328,7 +369,7 @@
                             icon: 'success', background: '#030712', color: '#06b6d4'
                         }).then(() => { window.location.href = 'index.html'; });
                     } else {
-                        this.showCrisis = true;
+                        this.showCrisis = true; // 拦截并引导付费
                     }
                 },
 
@@ -336,16 +377,15 @@
                     if (this.isThinking) return;
                     this.isThinking = true;
                     
-                    // 收起当前界面的 HUD
                     this.showHUD = false;
                     this.isTyping = false;
                     clearInterval(this.typeInterval);
-                    this.videoReady = false; 
+                    this.videoReady = false; // 黑屏过渡
                     clearTimeout(this.failsafeTimer);
 
                     setTimeout(() => {
                         this.isThinking = false;
-                        this.step++; // 推进剧本
+                        this.step++; 
                         
                         const nextScene = this.scripts[this.lang][this.ageGroup][this.step];
                         if (nextScene) {
@@ -357,15 +397,13 @@
                                 if(v) {
                                     v.src = this.videoUrl;
                                     v.load(); 
-                                    // 视频播放，带着声音，毫无阻力
                                     const playPromise = v.play();
                                     if (playPromise !== undefined) playPromise.catch(e => console.warn(e));
-                                    
                                     this.startFailsafe(); 
                                 }
                             });
                         }
-                    }, 800); // 留一点时间让旧界面淡出
+                    }, 800);
                 }
             }
         }

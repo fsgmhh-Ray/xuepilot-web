@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XuePilot - Unified Dashboard</title>
+    <title>XuePilot - Unified OS (Explorer & Command Center)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
@@ -22,7 +22,14 @@
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Quill Editor Styling for Dashboard */
+        /* 🚀 3D 星球与物理网格专属样式 */
+        .planet-3d, .planet-core { will-change: transform, box-shadow; backface-visibility: hidden; transform: translateZ(0); border-radius: 50%; position: relative; transition: transform 0.3s ease; }
+        .planet-locked { filter: grayscale(1) opacity(0.4); cursor: not-allowed !important; }
+        .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; animation: lockPulse 2s infinite; }
+        .free-badge { position: absolute; top: -10px; right: -10px; background: #10b981; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 50; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
+        @keyframes lockPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
+        
+        /* Quill Editor Styling */
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; }
         .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; font-size: 0.875rem; }
         .ql-editor { min-height: 400px; }
@@ -44,7 +51,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest">XuePilot</h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">Unified OS V8.0</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">Unified OS V9.0</div>
                 </div>
             </div>
         </div>
@@ -53,34 +60,37 @@
             
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">进入学习宇宙 (For Students)</div>
             
-            <a href="classroom.html" class="btn-nav-class text-emerald-400 hover:text-white bg-emerald-900/20 border-emerald-500/30 py-4 mb-4 shadow-lg shadow-emerald-900/20">
+            <button @click="view = 'classroom'" class="btn-nav-class transition-all py-4 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'text-emerald-500 hover:text-emerald-300 bg-emerald-900/10 border-emerald-900/30'">
                 <span class="mr-3 text-2xl">🌌</span> 
-                <div class="flex flex-col"><span class="text-base font-black">进入学生探索舱</span><span class="text-[10px] text-emerald-500 font-normal mt-0.5">3D 沉浸式知识星系</span></div>
-            </a>
+                <div class="flex flex-col"><span class="text-base font-black text-white">进入学生探索舱</span><span class="text-[10px] font-normal mt-0.5" :class="view === 'classroom' ? 'text-emerald-300' : 'text-emerald-600'">3D 沉浸式知识星系</span></div>
+            </button>
             
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">开放探索域 (Open Labs)</div>
             
-            <a href="simulator.html" class="btn-nav-class" :class="view==='simulator'?'bg-blue-600/20 text-blue-400 border-blue-500/30':'text-slate-300'">
+            <a href="simulator.html" class="btn-nav-class text-slate-300 hover:text-blue-400">
                 <span class="mr-3 text-xl">🎮</span> AI 指挥官模拟舱
             </a>
             <button @click="view = 'writing'" class="btn-nav-class" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">✍️</span> AI 启发写作舱
             </button>
-            <button @click="view = 'reading'" class="btn-nav-class" :class="view==='reading'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
-                <span class="mr-3 text-xl">🤖</span> 中英文智能伴读
+            
+            <!-- 🚀 修复点：拆分为独立的英文与大语文入口 -->
+            <button @click="openReading('en')" class="btn-nav-class" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
+                <span class="mr-3 text-xl">📘</span> 英文智能伴读
+            </button>
+            <button @click="openReading('zh')" class="btn-nav-class" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
+                <span class="mr-3 text-xl">📙</span> 大语文智能伴读
             </button>
 
             <!-- 家长后台分隔区 -->
             <div class="mt-auto">
                 <div class="h-px bg-slate-800/50 my-4 mx-2"></div>
                 
-                <!-- 密码解锁按钮 -->
                 <button @click="promptParentLock()" class="btn-nav-class w-full justify-between group transition-all" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
                     <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span> 家长/教师主控后台</div>
                     <span x-text="isParentUnlocked ? '🔓' : '🔒'" class="opacity-50 group-hover:opacity-100"></span>
                 </button>
 
-                <!-- 解锁后才显示的家长菜单 -->
                 <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1">
                     <button @click="view = 'students'" class="btn-nav-class text-xs py-2" :class="view==='students'?'text-blue-400':'text-slate-400'">👨‍👩‍👧‍👦 学员管理</button>
                     <button @click="view = 'forge'" class="btn-nav-class text-xs py-2" :class="view==='forge'?'text-purple-400':'text-slate-400'">🪐 课程与大纲规划</button>
@@ -91,26 +101,62 @@
         </nav>
     </aside>
 
-    <!-- 主内容区 -->
     <main class="flex-1 relative bg-[#02040a] overflow-hidden flex flex-col">
         <!-- 动态网格背景 -->
-        <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-        <!-- ================= 视图：应用大厅 (Launchpad) ================= -->
-        <div x-show="view === 'launchpad'" x-cloak x-transition class="flex-1 flex flex-col items-center justify-center p-8 z-10 fade-in relative">
-            <div class="absolute inset-0 bg-blue-600/5 blur-3xl rounded-full"></div>
-            <div class="glass-panel p-12 rounded-[2.5rem] max-w-4xl w-full text-center border border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative z-10">
-                <div class="text-7xl mb-6 drop-shadow-2xl">🛸</div>
-                <h2 class="text-4xl font-black text-white mb-4">欢迎登舰，指挥官</h2>
-                <p class="text-slate-400 text-lg mb-10">请在左侧面板选择进入知识宇宙，或开启专项能力训练舱。</p>
+        <!-- ================= 🚀 视图：3D 学生探索舱 ================= -->
+        <div x-show="view === 'classroom'" x-cloak x-transition class="flex-1 relative overflow-hidden bg-transparent z-10 fade-in w-full h-full">
+            
+            <!-- 灵动物理射线画布 -->
+            <canvas id="network-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
+
+            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport"
+                 @mousedown="startPan" @touchstart="startPan" @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <a href="classroom.html" class="bg-gradient-to-br from-emerald-900/40 to-slate-900 border border-emerald-500/30 p-6 rounded-2xl hover:border-emerald-400 hover:scale-105 transition shadow-lg flex items-center gap-4 text-left">
-                        <div class="text-5xl">🌌</div><div><h3 class="text-xl font-bold text-emerald-400 mb-1">3D 星球教室</h3><p class="text-xs text-slate-400">遨游定制化知识星系</p></div>
-                    </a>
-                    <a href="simulator.html" class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/30 p-6 rounded-2xl hover:border-blue-400 hover:scale-105 transition shadow-lg flex items-center gap-4 text-left">
-                        <div class="text-5xl">🎮</div><div><h3 class="text-xl font-bold text-blue-400 mb-1">指挥官模拟舱</h3><p class="text-xs text-slate-400">科幻沉浸式逻辑演习</p></div>
-                    </a>
+                <div class="absolute w-full h-full pointer-events-none">
+                    <template x-for="g in galaxies" :key="g.id">
+                        <div class="absolute flex items-center justify-center w-0 h-0 group transition-all ease-[cubic-bezier(0.25,1,0.5,1)]"
+                             :style="g.id === activeGalaxyId 
+                                     ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` 
+                                     : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`"
+                             @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
+                            
+                            <div x-show="g.id !== activeGalaxyId" class="absolute pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); bottom: 140px;">
+                                <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-xs font-black uppercase flex items-center gap-2 whitespace-nowrap">🔥 <span x-text="g.title"></span></span>
+                            </div>
+                            
+                            <!-- 绝美 3D 中心星核 -->
+                            <div class="absolute z-30 flex flex-col items-center justify-start pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);">
+                                <div class="planet-core flex flex-col items-center justify-center text-center cursor-pointer border border-blue-500/30"
+                                     :style="g.id === activeGalaxyId ? 'width: 160px; height: 160px; background: radial-gradient(circle at 30% 30%, #3b82f6, #1e3a8a, #020617); box-shadow: inset -15px -15px 30px rgba(0,0,0,0.8), 0 0 60px rgba(59,130,246,0.6);' : 'width: 250px; height: 250px; background: radial-gradient(circle at 30% 30%, #0ea5e9, #1d4ed8, #0f172a); box-shadow: inset -25px -25px 50px rgba(0,0,0,0.8), 0 0 100px rgba(14,165,233,0.5);'"
+                                     @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
+                                    <div class="mb-1 drop-shadow-md" :class="g.id === activeGalaxyId ? 'text-5xl' : 'text-8xl'">🔮</div>
+                                    <div x-show="g.id === activeGalaxyId" class="text-[12px] font-black text-blue-200 uppercase tracking-widest mt-2" x-text="g.title"></div>
+                                    <div x-show="g.id === activeGalaxyId" class="mt-2 text-[9px] text-blue-400 border border-blue-500/50 rounded-full px-3 py-1 hover:bg-blue-600 hover:text-white transition">退回全景</div>
+                                </div>
+                            </div>
+
+                            <!-- 绝美 3D 环绕学科星球 -->
+                            <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
+                                <template x-for="(s, sIdx) in g.subjects" :key="s.id">
+                                    <div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" 
+                                         :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" 
+                                         @click.stop="tryOpenMission(g, s, sIdx)">
+                                        
+                                        <div x-show="isSubjectFree(g, s, sIdx)" class="free-badge">FREE</div>
+                                        <div x-show="!isPro && !isSubjectFree(g, s, sIdx)" class="energy-lock">🔒</div>
+                                        
+                                        <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl group-hover:scale-110 transition-transform" 
+                                             :style="getPlanetStyle(sIdx)"
+                                             :class="!isPro && !isSubjectFree(g, s, sIdx) ? 'planet-locked' : ''" x-text="s.icon"></div>
+                                        
+                                        <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:bg-cyan-900 group-hover:border-cyan-400 transition whitespace-nowrap" x-text="s.title"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -120,7 +166,7 @@
             <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 shadow-xl border border-orange-500/20">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <h3 class="font-black text-xl text-orange-400 flex items-center gap-3"><span class="text-2xl">✍️</span> 启发写作舱</h3>
-                    <p class="text-xs text-slate-500">将你的草稿输入，AI 将扮演苏格拉底导师进行提问式辅导。</p>
+                    <p class="text-xs text-slate-500">将草稿输入，AI 将扮演苏格拉底导师进行提问式辅导。</p>
                 </div>
                 <div class="flex-1 p-6 flex flex-col">
                     <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500" placeholder="在此输入你的原始思考或作文草稿..."></textarea>
@@ -137,19 +183,23 @@
             </div>
         </div>
 
-        <!-- ================= 视图：智能伴读舱 ================= -->
-        <div x-show="view === 'reading'" x-cloak x-transition class="flex-1 flex p-8 gap-6 z-10 fade-in">
-            <div class="w-1/2 glass-panel rounded-3xl flex flex-col overflow-hidden border border-indigo-500/20">
+        <!-- ================= 🚀 视图：双语智能伴读舱 (已隔离配置) ================= -->
+        <div x-show="view.startsWith('reading')" x-cloak x-transition class="flex-1 flex p-8 gap-6 z-10 fade-in">
+            <div class="w-1/2 glass-panel rounded-3xl flex flex-col overflow-hidden border" :class="view==='reading-en' ? 'border-indigo-500/20' : 'border-emerald-500/20'">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                    <h3 class="font-bold text-indigo-400 text-lg flex items-center gap-2"><span>📘</span> 阅读素材载入区</h3>
+                    <h3 class="font-bold text-lg flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
+                        <span x-text="view==='reading-en'?'📘 英文阅读素材载入区':'📙 中文阅读素材载入区'"></span>
+                    </h3>
                 </div>
                 <div class="flex-1 p-6 flex flex-col">
-                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-sm leading-relaxed resize-none rounded-2xl focus:border-indigo-500 mb-4" placeholder="在此粘贴一篇英文文章或中文故事（例如《小王子》片段）。右侧的伴读导师将围绕此素材与你展开探讨。"></textarea>
+                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-sm leading-relaxed resize-none rounded-2xl mb-4" :class="view==='reading-en'?'focus:border-indigo-500':'focus:border-emerald-500'" :placeholder="view==='reading-en' ? '在此粘贴一篇英文文章或片段 (Paste your English article here)...' : '在此粘贴中文素材或名著片段 (例如《小王子》或《红楼梦》片段)...'"></textarea>
                 </div>
             </div>
-            <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border border-emerald-500/30 overflow-hidden">
+            <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
                 <div class="h-16 border-b border-slate-800/50 flex items-center justify-center bg-slate-900/50">
-                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2 text-emerald-400"><span class="text-xl">🤖</span> NOVA 智能伴读导师</span>
+                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
+                        <span class="text-xl">🤖</span> <span x-text="view==='reading-en'?'NOVA 英文伴读导师':'NOVA 大语文导师'"></span>
+                    </span>
                 </div>
                 <div class="flex-1 p-6 overflow-y-auto space-y-4" id="nova-reading-chat">
                     <template x-for="(msg,i) in readingChatLog" :key="i">
@@ -158,108 +208,233 @@
                             <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-lg" :class="msg.role==='user'?'bg-blue-600/30 text-blue-100 border border-blue-500/30 rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'"><span x-html="msg.text"></span></div>
                         </div>
                     </template>
-                    <div x-show="readingLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">深入检索上下文中...</div>
+                    <div x-show="readingLoading" class="text-blue-400 animate-pulse text-[10px] font-mono">Retrieving context / 检索上下文中...</div>
                 </div>
                 <div class="p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
-                    <input type="text" x-model="readingInput" @keydown.enter="sendReadingText()" class="flex-1 input-dark px-4 py-3 rounded-xl text-sm" placeholder="探讨你的想法...">
-                    <button @click="sendReadingText()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold shadow-lg transition" :disabled="readingLoading || !readingInput.trim()">🚀</button>
+                    <input type="text" x-model="readingInput" @keydown.enter="sendReadingText()" class="flex-1 input-dark px-4 py-3 rounded-xl text-sm" :placeholder="view==='reading-en' ? 'Discuss your thoughts here...' : '在此探讨你的想法...'">
+                    <button @click="sendReadingText()" class="px-6 py-3 hover:bg-opacity-80 rounded-xl font-bold shadow-lg transition" :class="view==='reading-en'?'bg-indigo-600':'bg-emerald-600'" :disabled="readingLoading || !readingInput.trim()">🚀</button>
                 </div>
             </div>
         </div>
 
-        <!-- ================= 家长后台视图：此处省略详细布局，沿用之前的强力组件 ================= -->
-        <!-- (为了确保单文件整洁和性能，这里复用之前为您写的家长视图架构) -->
-        <div x-show="view === 'students'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
-            <!-- 简化展示：学员管理 -->
-            <div class="text-center mt-20">
-                <div class="text-6xl mb-4">👨‍👩‍👧‍👦</div><h2 class="text-2xl font-black text-white">学员档案管理 (已解锁)</h2>
-                <p class="text-slate-400 mt-2">（此模块与之前版本完全一致，现受密码保护）</p>
-            </div>
-        </div>
-        <div x-show="view === 'forge'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
-            <div class="text-center mt-20"><div class="text-6xl mb-4">🪐</div><h2 class="text-2xl font-black text-white">大纲与排课中心</h2><p class="text-slate-400 mt-2">规划星系的终极引擎</p></div>
-        </div>
-        <div x-show="view === 'radar'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
-            <div class="text-center mt-20"><div class="text-6xl mb-4">📡</div><h2 class="text-2xl font-black text-white">学情分析雷达</h2></div>
-        </div>
-        <div x-show="view === 'config'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in">
-            <div class="text-center mt-20"><div class="text-6xl mb-4">⚙️</div><h2 class="text-2xl font-black text-white">API 与云端设定</h2></div>
-        </div>
+        <!-- 家长后台预留视图区域 -->
+        <div x-show="view === 'students'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in"><div class="text-center mt-20"><div class="text-6xl mb-4">👨‍👩‍👧‍👦</div><h2 class="text-2xl font-black text-white">学员档案管理 (已解锁)</h2></div></div>
+        <div x-show="view === 'forge'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in"><div class="text-center mt-20"><div class="text-6xl mb-4">🪐</div><h2 class="text-2xl font-black text-white">大纲与排课中心</h2></div></div>
+        <div x-show="view === 'radar'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in"><div class="text-center mt-20"><div class="text-6xl mb-4">📡</div><h2 class="text-2xl font-black text-white">学情分析雷达</h2></div></div>
+        <div x-show="view === 'config'" x-cloak x-transition class="flex-1 flex flex-col p-8 z-10 overflow-y-auto fade-in"><div class="text-center mt-20"><div class="text-6xl mb-4">⚙️</div><h2 class="text-2xl font-black text-white">API 与云端设定</h2></div></div>
 
     </main>
 
     <script>
         function dashboardApp() {
             return {
-                view: 'launchpad', 
-                isParentUnlocked: false,
-                parentPin: null,
+                view: 'classroom', // 默认直接进入 3D 星球教室！
+                isParentUnlocked: false, parentPin: null, isPro: false,
+                
+                // 3D 星空引擎参数
+                galaxies: [], activeGalaxyId: null,
+                panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
+                mouseX: window.innerWidth / 2, mouseY: window.innerHeight / 2,
+                ctx: null, canvas: null, particles: [], animationFrameId: null,
                 
                 // Writing & Reading states
                 writingDraft: '', writingFeedback: '', isCritiquing: false,
-                readingMaterial: '', readingInput: '', readingChatLog: [{role: 'nova', text: '你好！请在左侧贴入文章，然后我们就可以开始探讨了。'}], readingLoading: false,
+                readingMaterial: '', readingInput: '', readingChatLog: [], readingLoading: false,
 
                 async init() {
-                    // 读取系统保存的家长密码
                     this.parentPin = window.safeStorage.get('xp_parent_pin');
+                    this.isPro = window.localStorage.getItem('xp_is_pro') === 'true';
+                    
+                    const s = window.localStorage.getItem('xp_galaxies'); 
+                    if(s) { try { this.galaxies = JSON.parse(s); } catch(e){} }
+                    
+                    this.injectDemoDataIfEmpty();
+                    if(this.galaxies.length > 0 && !this.activeGalaxyId) this.activeGalaxyId = this.galaxies[0].id;
+
+                    this.initNetworkCanvas();
                 },
 
-                // ================= 🚀 家长后台密码锁逻辑 =================
+                // 拆分伴读功能入口
+                openReading(lang) {
+                    this.view = 'reading-' + lang;
+                    this.readingMaterial = '';
+                    this.readingInput = '';
+                    this.readingChatLog = [{
+                        role: 'nova', 
+                        text: lang === 'en' ? 'Hello! Please paste an English article on the left, and we can start exploring it.' : '你好！请在左侧贴入文章，然后我们就可以开始探讨了。'
+                    }];
+                },
+
+                injectDemoDataIfEmpty() {
+                    if (!this.galaxies || this.galaxies.length === 0) {
+                        const demoGalaxies = [{
+                            id: `gal_demo_${Date.now()}`, title: '太阳系探索先遣营', region: 'CN', baseStandard: 'custom', studentId: 'stu_default', overview: '', bgX: 50, bgY: 50,
+                            subjects: [
+                                { id: 'sub_demo_1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 },
+                                { id: 'sub_demo_2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5 },
+                                { id: 'sub_demo_3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0 }
+                            ]
+                        }];
+                        this.galaxies = demoGalaxies;
+                        window.localStorage.setItem('xp_galaxies', JSON.stringify(this.galaxies));
+                    }
+                },
+
+                getPlanetStyle(index) {
+                    const colors = [
+                        ['#10b981', '#064e3b', 'rgba(16,185,129,0.4)'], 
+                        ['#f59e0b', '#78350f', 'rgba(245,158,11,0.4)'], 
+                        ['#8b5cf6', '#4c1d95', 'rgba(139,92,246,0.4)'], 
+                        ['#ec4899', '#831843', 'rgba(236,72,153,0.4)'], 
+                        ['#06b6d4', '#164e63', 'rgba(6,182,212,0.4)']   
+                    ];
+                    const c = colors[index % colors.length];
+                    return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`;
+                },
+
+                isSubjectFree(g, s, i) { return this.isPro || g.isFree || i === 0; },
+                
+                tryOpenMission(g, s, i) {
+                    if (this.isSubjectFree(g, s, i)) {
+                        window.location.href = `simulator.html?mission=${encodeURIComponent(s.title)}`;
+                    } else {
+                        Swal.fire({ title: '量子引力场锁定', text: '需要 PRO 级算力才能跃迁。', icon: 'warning', background: '#0f172a', color: '#fff', confirmButtonColor: '#3b82f6' });
+                    }
+                },
+
+                activateGalaxy(gid) { this.activeGalaxyId = gid; this.panX = 0; this.panY = 0; },
+                startPan(e) {
+                    if (e.target.closest('button') || e.target.closest('.planet-core') || e.target.closest('.planet-3d')) return;
+                    this.isPanning = true;
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.startX = cx - this.panX; this.startY = cy - this.panY;
+                },
+                doPan(e) {
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.mouseX = cx; this.mouseY = cy; 
+                    if (!this.isPanning) return;
+                    this.panX = Math.max(-2000, Math.min(2000, cx - this.startX)); this.panY = Math.max(-2000, Math.min(2000, cy - this.startY));
+                },
+                endPan() { this.isPanning = false; },
+
+                initNetworkCanvas() {
+                    this.canvas = document.getElementById('network-canvas');
+                    if(!this.canvas) return;
+                    this.ctx = this.canvas.getContext('2d');
+                    const resize = () => { this.canvas.width = window.innerWidth - 288; this.canvas.height = window.innerHeight; };
+                    window.addEventListener('resize', resize); resize();
+
+                    const particleCount = Math.floor(window.innerWidth / 30);
+                    for(let i=0; i<particleCount; i++) {
+                        this.particles.push({
+                            x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height,
+                            vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5
+                        });
+                    }
+                    const animate = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(animate); };
+                    animate();
+                },
+
+                drawNetwork() {
+                    if(this.view !== 'classroom' || !this.ctx || !this.canvas) return;
+                    const width = this.canvas.width; const height = this.canvas.height;
+                    const cx = width / 2; const cy = height / 2;
+                    this.ctx.clearRect(0, 0, width, height); this.ctx.lineWidth = 1;
+
+                    // 1. 游离粒子连线
+                    for(let i=0; i<this.particles.length; i++) {
+                        let p = this.particles[i];
+                        p.x += p.vx; p.y += p.vy;
+                        if(p.x < 0 || p.x > width) p.vx *= -1; if(p.y < 0 || p.y > height) p.vy *= -1;
+
+                        for(let j=i+1; j<this.particles.length; j++) {
+                            let p2 = this.particles[j]; let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                            if(dist < 150) {
+                                this.ctx.beginPath(); this.ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - dist/150)})`;
+                                this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x, p2.y); this.ctx.stroke();
+                            }
+                        }
+
+                        let adjustedMouseX = this.mouseX - 288;
+                        if(adjustedMouseX > 0) {
+                            let distMouse = Math.hypot(p.x - adjustedMouseX, p.y - this.mouseY);
+                            if(distMouse < 200) {
+                                this.ctx.beginPath(); this.ctx.strokeStyle = `rgba(34, 211, 238, ${0.4 * (1 - distMouse/200)})`;
+                                this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(adjustedMouseX, this.mouseY); this.ctx.stroke();
+                                p.x += (adjustedMouseX - p.x) * 0.01; p.y += (this.mouseY - p.y) * 0.01;
+                            }
+                        }
+                    }
+
+                    // 2. 星系核心光束连线 (绝对直线)
+                    if (this.activeGalaxyId) {
+                        const activeGalaxy = this.galaxies.find(g => g.id === this.activeGalaxyId);
+                        if (activeGalaxy && activeGalaxy.subjects && activeGalaxy.subjects.length > 0) {
+                            let starNodes = [{ x: cx + this.panX, y: cy + this.panY, isCore: true }];
+                            activeGalaxy.subjects.forEach(s => {
+                                starNodes.push({ x: cx + this.panX + Math.cos(s.angle) * s.radius, y: cy + this.panY + Math.sin(s.angle) * s.radius, isCore: false });
+                            });
+
+                            this.ctx.lineWidth = 1.5;
+                            let adjustedMouseX = this.mouseX - 288;
+                            for(let i=0; i<starNodes.length; i++) {
+                                for(let j=i+1; j<starNodes.length; j++) {
+                                    let n1 = starNodes[i]; let n2 = starNodes[j];
+                                    let dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+                                    
+                                    if (n1.isCore || n2.isCore || dist < 450) {
+                                        this.ctx.beginPath();
+                                        let alpha = (n1.isCore || n2.isCore) ? 0.3 : 0.15;
+                                        this.ctx.strokeStyle = `rgba(147, 51, 234, ${alpha})`;
+                                        
+                                        if (dist < 800 && adjustedMouseX > 0) {
+                                            let mouseDistToCenter = Math.hypot((n1.x+n2.x)/2 - adjustedMouseX, (n1.y+n2.y)/2 - this.mouseY);
+                                            if(mouseDistToCenter < 150) {
+                                                this.ctx.strokeStyle = `rgba(34, 211, 238, ${0.8 - mouseDistToCenter/200})`;
+                                                this.ctx.lineWidth = 2;
+                                            } else { this.ctx.lineWidth = 1.5; }
+                                        }
+                                        this.ctx.moveTo(n1.x, n1.y); this.ctx.lineTo(n2.x, n2.y); this.ctx.stroke();
+                                    }
+                                }
+                                
+                                if (adjustedMouseX > 0) {
+                                    let distToMouse = Math.hypot(starNodes[i].x - adjustedMouseX, starNodes[i].y - this.mouseY);
+                                    if (distToMouse < 250) {
+                                        this.ctx.beginPath(); this.ctx.lineWidth = 1; this.ctx.setLineDash([5, 5]); 
+                                        this.ctx.strokeStyle = `rgba(56, 189, 248, ${0.8 * (1 - distToMouse/250)})`;
+                                        this.ctx.moveTo(starNodes[i].x, starNodes[i].y); this.ctx.lineTo(adjustedMouseX, this.mouseY); this.ctx.stroke();
+                                        this.ctx.setLineDash([]); 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+
                 async promptParentLock() {
                     if (this.isParentUnlocked) {
-                        // 点击上锁
-                        this.isParentUnlocked = false;
-                        this.view = 'launchpad';
+                        this.isParentUnlocked = false; this.view = 'classroom';
                         Swal.fire({toast: true, position: 'top-end', icon: 'info', title: '家长后台已锁定', showConfirmButton: false, timer: 1500});
                         return;
                     }
-
                     if (!this.parentPin) {
-                        // 首次设置密码
-                        const { value: newPin } = await Swal.fire({
-                            title: '初始化家长密码',
-                            text: '初次进入主控后台，请设置一个 4 位数字密码，以防止孩子误触排课配置。',
-                            input: 'password',
-                            inputAttributes: { maxlength: 4, inputmode: 'numeric', pattern: '[0-9]*' },
-                            background: '#0f172a', color: '#fff',
-                            showCancelButton: true, confirmButtonText: '设定密码'
-                        });
+                        const { value: newPin } = await Swal.fire({ title: '初始化密码', text: '请设置 4 位数字密码', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '设定密码' });
                         if (newPin && newPin.length >= 4) {
-                            this.parentPin = newPin;
-                            window.safeStorage.set('xp_parent_pin', newPin);
-                            this.isParentUnlocked = true;
-                            this.view = 'students';
-                            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '密码已设定并解锁', showConfirmButton: false, timer: 1500});
+                            this.parentPin = newPin; window.safeStorage.set('xp_parent_pin', newPin);
+                            this.isParentUnlocked = true; this.view = 'students';
                         }
                     } else {
-                        // 验证已有密码
-                        const { value: pin } = await Swal.fire({
-                            title: '解锁家长后台',
-                            input: 'password',
-                            inputAttributes: { maxlength: 4, inputmode: 'numeric', pattern: '[0-9]*' },
-                            background: '#0f172a', color: '#fff',
-                            showCancelButton: true, confirmButtonText: '解锁'
-                        });
-                        if (pin === this.parentPin) {
-                            this.isParentUnlocked = true;
-                            this.view = 'students';
-                            Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '验证通过', showConfirmButton: false, timer: 1000});
-                        } else if (pin) {
-                            Swal.fire({title: '密码错误', icon: 'error', background: '#0f172a', color: '#fff'});
-                        }
+                        const { value: pin } = await Swal.fire({ title: '解锁后台', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '解锁' });
+                        if (pin === this.parentPin) { this.isParentUnlocked = true; this.view = 'students'; } else if (pin) { Swal.fire({title: '密码错误', icon: 'error', background: '#0f172a', color: '#fff'}); }
                     }
                 },
 
-                // ================= 🤖 工具舱的假装 AI 请求（防报错） =================
                 async callAI(prompt) {
                     const key = window.safeStorage.get('xp_sys_key');
                     const url = (window.safeStorage.get('xp_sys_url') || '/proxy/groq') + '/chat/completions';
                     const model = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
-                    if(!key) { 
-                        // 如果没有配置 Key，就给出一个体验版回复
-                        await new Promise(r => setTimeout(r, 1500));
-                        return "【本地演示反馈】\n您的思维很有趣！但由于未在后台配置真实的 API 密钥，我只能给出模拟回复。\n请让家长在后台配置密钥以解锁真正的苏格拉底 AI 导师。"; 
-                    }
+                    if(!key) { await new Promise(r => setTimeout(r, 1500)); return "【本地演示】请在后台配置真实的 API 密钥以解锁 AI 功能。"; }
                     try {
                         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'user', content: prompt }] }) });
                         const data = await res.json(); return data.choices[0].message.content;
@@ -268,7 +443,7 @@
 
                 async runWritingCritique() {
                     if(!this.writingDraft.trim()) return; this.isCritiquing = true;
-                    const res = await this.callAI(`作为严厉且睿智的导师，请分3点提出启发性反问。\n我的原案：\n${this.writingDraft}`);
+                    const res = await this.callAI(`作为严厉且睿智的导师，不要代写修改。请分3点提出启发性反问。\n原案：\n${this.writingDraft}`);
                     if(res) this.writingFeedback = res.replace(/\n/g, '<br>');
                     this.isCritiquing = false;
                 },
@@ -279,7 +454,9 @@
                     setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
                     
                     let context = this.readingMaterial ? `背景材料:\n${this.readingMaterial.substring(0, 1000)}\n\n` : '';
-                    const prompt = `${context}学生:${t}\n要求: 结合材料进行苏格拉底式反问，绝不直给答案。`;
+                    const langReq = this.view === 'reading-en' ? 'Reply completely in English. Act as an inspiring Socratic English tutor.' : '用中文回复。扮演启发式的大语文导师。';
+                    const prompt = `${context}学生:${t}\n要求: 结合材料进行苏格拉底式反问，绝不直给答案。${langReq}`;
+                    
                     const reply = await this.callAI(prompt);
                     if(reply) { this.readingChatLog.push({role: 'nova', text: reply.replace(/\n/g, '<br>')}); setTimeout(() => { const el = document.getElementById('nova-reading-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100); }
                     this.readingLoading = false;

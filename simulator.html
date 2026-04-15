@@ -9,11 +9,10 @@
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #000; color: #f8fafc; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        .video-container { position: fixed; inset: 0; z-index: 1; background: #000; }
         
-        /* 🚀 移除 opacity: 0 的生硬控制，改用更加平滑的过渡，并加上 !important 确保生效 */
-        .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.5s ease; filter: brightness(0.7) contrast(1.2); }
-        .video-active { opacity: 1 !important; }
+        /* 🚀 极致裸露：去掉了所有的 opacity 渐变和滤镜，让视频百分百清晰显示 */
+        .video-container { position: fixed; inset: 0; z-index: 0; background: #222; }
+        .scene-video { width: 100%; height: 100%; object-fit: cover; opacity: 1 !important; }
         
         .glitch-fx { animation: shake 0.15s infinite; filter: hue-rotate(90deg) brightness(1.5); }
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 2px); } }
@@ -24,34 +23,16 @@
         .quantum-btn { pointer-events: auto; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(59, 130, 246, 0.4); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .quantum-btn:hover { background: rgba(30, 41, 59, 0.9); border-color: #3b82f6; transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 45px rgba(59, 130, 246, 0.3); }
         .terminal-font { font-family: 'Courier New', Courier, monospace; }
-        .warp-overlay { position: fixed; inset: 0; z-index: 150; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
     </style>
 </head>
 <body x-data="shipApp()" x-init="init()" @message.window="if($event.data.type === 'LANG_CHANGE') { lang = $event.data.lang; updateLang(); }" class="h-screen w-screen relative select-none" :class="isGlitching ? 'glitch-fx' : ''">
 
-    <!-- 强制解锁层 -->
-    <div id="master-loader" class="warp-overlay">
-        <div class="text-center">
-            <div class="w-12 h-12 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-6 mx-auto"></div>
-            <div class="text-blue-500 font-mono tracking-[0.8em] text-[10px] uppercase animate-pulse" x-text="i18n[lang].linking"></div>
-        </div>
-    </div>
-    <script>
-        function hideMasterLoader() {
-            const loader = document.getElementById('master-loader');
-            if(loader) { loader.style.opacity = '0'; setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500); }
-        }
-        setTimeout(hideMasterLoader, 1500);
-        window.addEventListener('pageshow', function(e) { if(e.persisted) hideMasterLoader(); });
-    </script>
-
-    <!-- 视频容器 -->
+    <!-- 🚀 移除了所有加载遮罩层，直接展示视频容器 -->
     <div class="video-container">
-        <!-- 🚀 核心大改：去掉内部的 source 和绑定的 src，加上 loop，全部交由纯原生 JS 强制加载 -->
-        <video id="main-video" class="scene-video" :class="videoReady ? 'video-active' : ''" 
+        <!-- 直接绑定 src，去掉了所有多余的伪装 class -->
+        <video id="main-video" class="scene-video" 
                autoplay muted loop playsinline crossorigin="anonymous"
-               @canplay="videoReady = true"
-               @playing="videoReady = true"
+               :src="videoUrl"
                @timeupdate="handleTimeSync($event.target.currentTime)"
                @error="handleVideoError()">
         </video>
@@ -98,7 +79,7 @@
         function shipApp() {
             return {
                 lang: window.localStorage.getItem('xp_lang') || 'zh',
-                videoReady: false, step: 0, ageGroup: 'mid',
+                step: 0, ageGroup: 'mid',
                 isGlitching: false, isLocking: false, showOptions: false,
                 currentStoryText: 'Initializing...', currentOptions: [],
                 isPro: false, showCrisis: false, isThinking: false,
@@ -106,14 +87,14 @@
 
                 i18n: {
                     zh: {
-                        linking: '正在建立神经链接...', target: 'TARGET_LOCKED',
+                        target: 'TARGET_LOCKED',
                         advisor: 'A.I. 战术顾问', inst: '指令集',
                         haltedTitle: '算力维度封锁',
                         haltedDesc: '预制维度的算力已耗尽。前方区域需要解锁<br><span class="text-white underline underline-offset-8">量子 Pro 密钥</span> 才能继续。',
                         proBtn: '获取 Pro 能量补给 ➔'
                     },
                     en: {
-                        linking: 'Linking to Dimension...', target: 'TARGET_LOCKED',
+                        target: 'TARGET_LOCKED',
                         advisor: 'A.I. Tactical Advisor', inst: 'Instruction Set',
                         haltedTitle: 'Engine Halted',
                         haltedDesc: 'Compute power for this dimension depleted. The sector ahead requires a <br><span class="text-white underline underline-offset-8">Quantum PRO Key</span> to proceed.',
@@ -121,7 +102,6 @@
                     }
                 },
 
-                // 🚀 彻底去掉 ?t= 时间戳，防止 Supabase CDN 拒绝服务
                 get videoUrl() {
                     return `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${this.ageGroup}_step${this.step + 1}.mp4`;
                 },
@@ -176,10 +156,12 @@
                     this.failsafeTimer = setTimeout(() => {
                         this.isLocking = true;
                         this.showOptions = true;
+                        console.warn("Failsafe triggered UI display.");
                     }, 8500); 
                 },
 
                 handleVideoError() {
+                    console.error("Video failed to load completely.");
                     clearTimeout(this.failsafeTimer);
                     setTimeout(() => {
                         this.isLocking = true;
@@ -207,20 +189,14 @@
                         this.currentStoryText = scene.ai;
                         this.currentOptions = scene.options;
                         
-                        setTimeout(() => {
-                            hideMasterLoader();
-                            this.startFailsafe(); 
-                            
-                            // 🚀 核心强行加载逻辑：用原生 JS 狠狠把视频塞进去并启动
-                            const v = document.getElementById('main-video');
-                            if(v) {
-                                v.src = this.videoUrl;
-                                v.load();
-                                v.play().catch(e => console.warn('Autoplay prevented', e));
-                                // 保底开灯：如果 1 秒后还是没收到 canplay 信号，强行显示（哪怕是一块黑布，也好过卡死）
-                                setTimeout(() => { this.videoReady = true; }, 1000);
-                            }
-                        }, 500);
+                        // 直接启动保底定时器和强制视频加载
+                        this.startFailsafe(); 
+                        const v = document.getElementById('main-video');
+                        if(v) {
+                            v.src = this.videoUrl;
+                            v.load();
+                            v.play().catch(e => console.warn('Autoplay prevented', e));
+                        }
                     } catch (e) {
                         console.error("Init Error:", e);
                     }
@@ -235,7 +211,6 @@
                     setTimeout(() => {
                         this.isThinking = false;
                         this.step++;
-                        this.videoReady = false;
                         
                         const nextScene = this.scripts[this.lang][this.ageGroup][this.step];
                         if (nextScene && nextScene.triggerCrisis) {
@@ -245,14 +220,12 @@
                             this.currentStoryText = nextScene.ai;
                             this.currentOptions = nextScene.options;
                             
-                            // 🚀 同样的原生强制加载
                             const v = document.getElementById('main-video');
                             if(v) {
                                 v.src = this.videoUrl;
                                 v.load();
                                 v.play().catch(e => console.warn('Autoplay prevented', e));
                                 this.startFailsafe(); 
-                                setTimeout(() => { this.videoReady = true; }, 1000);
                             }
                         }
                     }, 1200);

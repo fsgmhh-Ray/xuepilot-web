@@ -326,8 +326,8 @@
         <div x-show="view === 'students'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">👨‍👩‍👧‍👦 学员管理</h2></div>
         <div x-show="view === 'radar'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">📡 全息学情雷达</h2></div>
         
-        <!-- ================= 🚀 全局 NOVA 悬浮终端 (在伴读舱隐藏) ================= -->
-        <div x-show="!view.startsWith('reading')" x-cloak class="fixed top-0 left-0 z-[100] flex flex-col items-end" :style="`transform: translate(${novaGlobal.pos.x}px, ${novaGlobal.pos.y}px);`">
+        <!-- ================= 🚀 全局 NOVA 悬浮终端 (仅在 3D 探索舱显示) ================= -->
+        <div x-show="view === 'classroom'" x-cloak class="fixed top-0 left-0 z-[100] flex flex-col items-end" :style="`transform: translate(${novaGlobal.pos.x}px, ${novaGlobal.pos.y}px);`">
             
             <!-- 聊天窗口 -->
             <div x-show="novaGlobal.open" x-transition.opacity class="absolute bottom-16 right-0 mb-4 w-80 glass-panel rounded-3xl overflow-hidden flex flex-col border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]" style="height: 400px;">
@@ -389,7 +389,7 @@
                     const s = window.localStorage.getItem('xp_galaxies'); 
                     if(s) { try { this.galaxies = JSON.parse(s); } catch(e){} }
                     if(this.galaxies.length === 0) {
-                        this.galaxies = [{ id: 'demo', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 }] }];
+                        this.galaxies = [{ id: 'demo', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 }, { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5 }, { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0 }] }];
                     }
                     this.activeGalaxyId = this.galaxies[0].id;
                     this.initNetworkCanvas();
@@ -415,7 +415,6 @@
                         const my = ev.type.includes('touch') ? ev.touches[0].clientY : ev.clientY;
                         if (Math.hypot(mx - this.novaGlobal.start.x, my - this.novaGlobal.start.y) > 3) {
                             this.novaGlobal.isDragging = true;
-                            // 限制拖拽边界
                             let newX = mx - this.novaGlobal.offset.x;
                             let newY = my - this.novaGlobal.offset.y;
                             this.novaGlobal.pos.x = Math.max(30, Math.min(window.innerWidth - 30, newX));
@@ -612,15 +611,74 @@
 
                 // 物理渲染引擎
                 getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
-                initNetworkCanvas() { this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d'); const res = () => { this.canvas.width = window.innerWidth - 320; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res(); for(let i=0; i<40; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 }); } for(let i=0; i<80; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); },
+                
+                initNetworkCanvas() { 
+                    this.canvas = document.getElementById('network-canvas'); if(!this.canvas) return; 
+                    this.ctx = this.canvas.getContext('2d'); 
+                    const res = () => { this.canvas.width = window.innerWidth - 320; this.canvas.height = window.innerHeight; }; 
+                    window.addEventListener('resize', res); res(); 
+                    
+                    // 🚀 动态计算极度密集的丝线与飞星数量
+                    const pCount = Math.floor(window.innerWidth / 12);
+                    const sCount = Math.floor(window.innerWidth / 6);
+                    this.particles = []; this.stars = [];
+                    
+                    for(let i=0; i<pCount; i++) { this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 }); } 
+                    for(let i=0; i<sCount; i++) { this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width }); } 
+                    
+                    if(this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                    const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim(); 
+                },
+                
                 drawNetwork() {
                     if(this.view !== 'classroom' || !this.ctx) return;
                     const w = this.canvas.width; const h = this.canvas.height; this.ctx.clearRect(0, 0, w, h); let mx = this.mouseX - 320;
                     this.ctx.fillStyle = "#fff";
                     this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
-                    this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<150) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.1*(1-d/150)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-this.mouseY); if(dm<200) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/200)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,this.mouseY); this.ctx.stroke(); } } });
+                    this.particles.forEach((p, i) => { 
+                        p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
+                        this.particles.slice(i+1).forEach(p2 => { 
+                            let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                            // 🚀 增加连接的距离，使得网格更密集长久
+                            if(d<180) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/180)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } 
+                        }); 
+                        if(mx>0) { 
+                            let dm = Math.hypot(p.x-mx, p.y-this.mouseY); 
+                            // 🚀 增加鼠标引力范围
+                            if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,this.mouseY); this.ctx.stroke(); } 
+                        } 
+                    });
                     if (this.activeGalaxyId) { const ag = this.galaxies.find(g => g.id === this.activeGalaxyId); let cx = w/2 + this.panX; let cy = h/2 + this.panY; ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
                 },
+                
+                // 🚀 星球点击防迷失：提示正在建设中
+                tryOpenMission(g, s, i) {
+                    if (i === 0 || this.isPro) { 
+                        Swal.fire({
+                            title: '🚧 星球内容建设中',
+                            html: `<div class="text-left">
+                                     <p class="text-sm text-slate-300 mb-3">全息课程 <b>《${s.title}》</b> 的内容还在施工哦！</p>
+                                     <p class="text-xs text-slate-400">最高指挥官（家长）还没有在后台为你部署这个星球的专属任务。</p>
+                                   </div>`,
+                            icon: 'info',
+                            background: '#0f172a',
+                            color: '#fff',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3b82f6',
+                            cancelButtonColor: '#475569',
+                            confirmButtonText: '去玩危机救援演习 🎮',
+                            cancelButtonText: '留在当前星域'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = `simulator.html?mission=${encodeURIComponent(s.title)}`;
+                            }
+                        });
+                    } 
+                    else { 
+                        Swal.fire({ title: '量子引力场锁定', text: '指挥官，此星域需要 PRO 级算力才能解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); 
+                    }
+                },
+                
                 activateGalaxy(id) { this.activeGalaxyId = id; this.panX = 0; this.panY = 0; },
                 startPan(e) { if(e.target.closest('.planet-core, .planet-3d')) return; this.isPanning=true; const cx = e.type.includes('touch')?e.touches[0].clientX:e.clientX; this.startX = cx-this.panX; this.startY = (e.type.includes('touch')?e.touches[0].clientY:e.clientY)-this.panY; },
                 doPan(e) { const cx = e.type.includes('touch')?e.touches[0].clientX:e.clientX; const cy = e.type.includes('touch')?e.touches[0].clientY:e.clientY; this.mouseX=cx; this.mouseY=cy; if(!this.isPanning) return; this.panX=cx-this.startX; this.panY=cy-this.startY; },

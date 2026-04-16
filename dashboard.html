@@ -68,7 +68,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V18.0 Epic Data</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V18.5 Anti-Fragile</div>
                 </div>
             </a>
         </div>
@@ -283,7 +283,7 @@
             </div>
         </div>
 
-        <!-- 🚀 带有 RAG 投喂舱的 Planner Modal (含跨区语言支持) -->
+        <!-- 🚀 带有 RAG 投喂舱的 Planner Modal -->
         <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]">
                 <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
@@ -341,7 +341,6 @@
                     let s = window.safeStorage.get('xp_galaxies');
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
                     if (this.state.galaxies.length === 0) {
-                        // 🚀 核心优化：内置硬核的全球多语言预制星系库
                         this.state.galaxies = [
                             { 
                                 id: 'gal_demo_cn', title: '🇨🇳 四年级下学期核心星系', baseStandard: '中国义务教育课标 (2022版)', bgX: 20, bgY: 30, isDeployed: true, 
@@ -442,8 +441,68 @@
             },
 
             // =========================================================================
-            // =============== 🚀 大纲生成引擎与部署机制 (Forge & RAG) =================
+            // =============== 🚀 家控中枢验证 (终极防熔断降级版) ======================
             // =========================================================================
+            async promptParentLock() {
+                try {
+                    if (this.state.isParentUnlocked) { 
+                        this.state.isParentUnlocked = false; 
+                        $('parent-menu').style.display='none'; $('lock-icon').innerText='🔒'; 
+                        this.switchView('classroom'); 
+                        try { Swal.fire({toast: true, position: 'top-end', icon: 'info', title: '家控中枢已重新锁定', showConfirmButton: false, timer: 1500}); } catch(e){}
+                        return; 
+                    }
+                    
+                    let pin = null;
+                    
+                    // 尝试调用精美的 SweetAlert2
+                    try {
+                        const res = await Swal.fire({ 
+                            title: '家控中枢验证', 
+                            html: '<div class="text-sm text-slate-300 mb-2">请输入 4 位数字高阶密码</div><div class="text-xs text-emerald-400 font-bold bg-emerald-900/20 border border-emerald-500/30 p-2 rounded-lg inline-block">(系统初始默认密码: 0000)</div>', 
+                            input: 'password', 
+                            inputAttributes: { maxlength: "4", autocapitalize: 'off', autocorrect: 'off', placeholder: '****' }, 
+                            background: '#0f172a', color: '#fff', 
+                            confirmButtonText: '开启高阶权限', confirmButtonColor: '#3b82f6',
+                            showCancelButton: true, cancelButtonText: '取消', cancelButtonColor: '#475569'
+                        });
+                        if (res && res.isConfirmed) {
+                            pin = res.value;
+                        } else {
+                            return; // 用户点击取消或关闭了弹窗
+                        }
+                    } catch(swalErr) {
+                        // 🚀 核心防熔断：如果被防追踪屏蔽，自动降级为原生 prompt！
+                        console.warn("Swal 弹窗被环境拦截，系统触发原生 UI 降级");
+                        pin = prompt("家控中枢验证\n请输入 4 位数字高阶密码 (系统初始默认密码: 0000)");
+                        if (pin === null) return; // 用户点击了取消
+                    }
+                    
+                    if (pin !== null && pin !== undefined) {
+                        if (pin === this.state.parentPin) { 
+                            this.state.isParentUnlocked = true; 
+                            $('parent-menu').style.display='block'; $('lock-icon').innerText='🔓'; 
+                            this.switchView('forge'); 
+                            try { Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '权限验证通过', showConfirmButton: false, timer: 1500}); } catch(e){}
+                        } else {
+                            try {
+                                Swal.fire({
+                                    title: '密码验证失败',
+                                    text: '指挥官，密码错误！提示：系统初始默认密码为 0000。',
+                                    icon: 'error', background: '#0f172a', color: '#fff', confirmButtonColor: '#ef4444', confirmButtonText: '重新输入'
+                                });
+                            } catch(e) {
+                                alert("密码验证失败！提示：系统初始默认密码为 0000。");
+                            }
+                        }
+                    }
+                } catch(globalErr) {
+                    console.error('家控锁验证程序发生严重异常:', globalErr);
+                    alert("验证程序被浏览器安全策略拦截，无法开启！");
+                }
+            },
+
+            // =============== 🚀 大纲生成引擎与部署机制 (Forge & RAG) =================
             openPlanner() {
                 if (this.state.isPro || this.state.galaxies.length < 2) { $('planner-hint').innerText = this.state.isPro?'【PRO权限】：支持多语言输出与真实进度投喂。':'【基础版权限】：您可以免费体验星系的智能铸造。'; $('planner-modal').style.display='flex'; } 
                 else { Swal.fire({ title: '算力空间已满', html: '<p class="text-sm">基础版最多只能同时部署 <b>1 个专属星系</b>。<br>想要创建新星系，请先在列表中删除旧星系；<br>或升级 <b>PRO 领航员</b> 解锁无限星系铸造权！</p>', icon: 'info', background: '#0f172a', color: '#fff' }); }

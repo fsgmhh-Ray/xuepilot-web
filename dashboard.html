@@ -68,7 +68,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V16.6 Master</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V16.9 LangOverride</div>
                 </div>
             </a>
         </div>
@@ -283,7 +283,7 @@
             </div>
         </div>
 
-        <!-- 🚀 带有 RAG 投喂舱的 Planner Modal -->
+        <!-- 🚀 带有 RAG 投喂舱的 Planner Modal (含跨区语言支持) -->
         <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]">
                 <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
@@ -294,7 +294,13 @@
                 </div>
                 <div class="space-y-4">
                     <div class="flex gap-4">
-                        <select id="plan-curriculum" class="flex-1 input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option>中国义务教育课标 (2022版)</option><option>美国 Common Core State Standards</option></select>
+                        <select id="plan-curriculum" class="flex-1 input-dark p-4 rounded-xl text-sm focus:border-blue-500">
+                            <option>中国义务教育课标 (2022版)</option>
+                            <option>美国 Common Core State Standards</option>
+                            <option>英国 National Curriculum (KS1/KS2)</option>
+                            <option>新加坡 MOE Syllabus</option>
+                            <option>台湾 108课纲</option>
+                        </select>
                         <select id="plan-grade" class="w-1/4 input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="三年级">三年级 (Grade 3)</option><option value="四年级">四年级 (Grade 4)</option><option value="初中一年级">初一 (Grade 7)</option></select>
                         <select id="plan-term" class="w-1/4 input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="上学期">上学期 (Term 1)</option><option value="下学期">下学期 (Term 2)</option></select>
                     </div>
@@ -336,7 +342,7 @@
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
                     if (this.state.galaxies.length === 0) {
                         this.state.galaxies = [{ 
-                            id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, isDeployed: true, 
+                            id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, isDeployed: true, baseStandard: '中国义务教育课标 (2022版)',
                             subjects: [
                                 { id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, lessons: [] }, 
                                 { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5, lessons: [] }, 
@@ -419,7 +425,7 @@
             // =============== 🚀 大纲生成引擎与部署机制 (Forge & RAG) =================
             // =========================================================================
             openPlanner() {
-                if (this.state.isPro || this.state.galaxies.length < 2) { $('planner-hint').innerText = this.state.isPro?'【PRO权限】：支持无限星系铸造与进度投喂。':'【基础版权限】：您可以免费体验星系的智能铸造。'; $('planner-modal').style.display='flex'; } 
+                if (this.state.isPro || this.state.galaxies.length < 2) { $('planner-hint').innerText = this.state.isPro?'【PRO权限】：支持多语言输出与真实进度投喂。':'【基础版权限】：您可以免费体验星系的智能铸造。'; $('planner-modal').style.display='flex'; } 
                 else { Swal.fire({ title: '算力空间已满', html: '<p class="text-sm">基础版最多只能同时部署 <b>1 个专属星系</b>。<br>想要创建新星系，请先在列表中删除旧星系；<br>或升级 <b>PRO 领航员</b> 解锁无限星系铸造权！</p>', icon: 'info', background: '#0f172a', color: '#fff' }); }
             },
             deleteGalaxy(id) {
@@ -446,13 +452,14 @@
                 if (!this.state.isPro || !hasKey) {
                     setTimeout(() => {
                         $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造星系"; $('plan-btn').disabled = false;
-                        Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于未接入专属 AI 算力，系统无法执行 RAG 融合检索。已为您加载<b>预制多学科大纲演示</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可投喂真实进度，生成独一无二的专属宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '前往星系库', confirmButtonColor: '#3b82f6' }).then(() => {
+                        Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于未接入专属 AI 算力，系统无法执行 RAG 融合检索。已为您加载<b>预制多学科大纲演示</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可投喂真实进度，生成多语言专属宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '前往星系库', confirmButtonColor: '#3b82f6' }).then(() => {
                             const ng = { 
                                 id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, ragContext: ragContext,
                                 subjects: [ 
                                     { id: 'sub_demo_1', title: '核心物理探索', icon: '🌍', radius: 240, angle: 0, lessons: [] },
                                     { id: 'sub_demo_2', title: '星际数学逻辑', icon: '📐', radius: 360, angle: 2.1, lessons: [] },
-                                    { id: 'sub_demo_3', title: '外星文明解构', icon: '🧬', radius: 480, angle: 4.2, lessons: [] }
+                                    { id: 'sub_demo_3', title: '外星文明解构', icon: '🧬', radius: 480, angle: 4.2, lessons: [] },
+                                    { id: 'sub_demo_4', title: 'English Interstellar Comm', icon: '💬', radius: 600, angle: 1.5, lessons: [] }
                                 ] 
                             };
                             this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.renderForgeList(); this.switchView('forge'); 
@@ -461,11 +468,14 @@
                 }
                 
                 let contextPrompt = ragContext ? `【用户投喂的实际教学进度】：\n"${ragContext}"\n请将上述投喂内容与官方课标进行融合。` : '【用户未投喂具体进度，请完全依赖官方课标发散】';
+                
+                // 🚀 核心优化：多语言约束协议，强制英语课名称必须为英文
                 const prompt = `[系统级指令：执行全球教育大纲对齐协议 (RAG Alignment)]
+【语言强制要求】：必须使用大纲【${curr}】所属国家/地区的官方语言输出内容（例如：美国/英国/新加坡标准必须用纯正英文，中国大陆标准必须用简体中文，台湾标准必须用繁体中文）。**例外情况：如果生成的学科是英语(English)课，该学科名称必须使用英文。**
 第一步：检索并对齐【${curr}】中【${grade}】【${term}】的官方核心教育目标。
 第二步：${contextPrompt}
 第三步：将提取出的核心模块，重构为 3 到 5 个极具科幻探索感的“星际学科行星”（例如：将“数学计算”重构为“星际逻辑拓扑”）。
-必须返回严格的JSON数组格式：[{"title": "学科名称", "icon": "单字符emoji"}]。不要输出任何推理过程、解释文字和Markdown包裹。`;
+必须返回严格的JSON数组格式：[{"title": "学科名称(遵循语言要求)", "icon": "单字符emoji"}]。不要输出任何推理过程、解释文字和Markdown包裹。`;
 
                 const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
                 if (res) { 
@@ -481,10 +491,10 @@
                     } catch(e) {} 
                 }
                 
-                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0, lessons: [] }];
+                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: 'Standard Core', icon: '🧠', radius: 240, angle: 0, lessons: [] }];
                 const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, ragContext: ragContext, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, subjects: newSubjects };
                 this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造星系"; $('plan-btn').disabled = false;
-                Swal.fire({ title: '锻造成功！', text: '新星系已根据您的投喂数据重构完毕。您可以深度编辑后再点击「部署」上线。', icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '进入锻造库' }).then(() => { this.renderForgeList(); this.switchView('forge'); });
+                Swal.fire({ title: '锻造成功！', text: '新星系已根据您的投喂数据及所选语言重构完毕。您可以深度编辑后再点击「部署」上线。', icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '进入锻造库' }).then(() => { this.renderForgeList(); this.switchView('forge'); });
             },
             
             renderForgeList() {
@@ -616,8 +626,18 @@
             async generateLessons() {
                 const btn = $('btn-gen-lessons'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 正在挖掘中..."; btn.disabled = true;
                 
+                // 🚀 核心优化：检测到包含“英语”或“English”，强制覆写为英文输出
+                const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
+                const langConstraint = isEnglishSubject 
+                    ? `【语言强制要求】：当前学科为英语，无论地区标准为何，**必须全部使用纯正英文 (English)** 输出章节名称。` 
+                    : `【语言强制要求】：必须使用标准【${this.state.editGalaxy.baseStandard || '权威教育标准'}】所属地区的官方语言（如纯正英语、简体中文、繁体中文等）输出内容。`;
+                
                 const contextRef = this.state.editGalaxy.ragContext ? `请重点参考家长投喂的实际进度：\n"${this.state.editGalaxy.ragContext}"\n` : '';
-                const prompt = `[系统级指令：知识卫星碎片化协议]\n第一步：分析【${this.state.editSubject.title}】在【${this.state.editGalaxy.baseStandard || '权威教育标准'}】下的底层知识图谱。\n${contextRef}第二步：提取3到5个循序渐进的进阶知识点，并包装为“探险任务节点”（例如：将“浮力”包装为“失重深渊的浮力解析”）。\n返回纯JSON数组：[{"title": "章节/节点名称"}]。不要输出解释文字。`;
+                const prompt = `[系统级指令：知识卫星碎片化协议]
+${langConstraint}
+第一步：分析【${this.state.editSubject.title}】在【${this.state.editGalaxy.baseStandard || '通用'}】下的底层知识图谱。
+${contextRef}第二步：提取3到5个循序渐进的进阶知识点，并包装为“探险任务节点”（例如：将“浮力”包装为“失重深渊的浮力解析”）。
+返回纯JSON数组：[{"title": "章节/节点名称(遵循语言约束)"}]。不要输出解释文字。`;
                 
                 const res = await this.callAI(prompt, 'sys', true);
                 if(res) {
@@ -626,7 +646,7 @@
                         this.state.lessons = parsed.map((l,i) => ({id: 'l_'+Date.now()+i, title: l.title, content: ''}));
                     } catch(e){}
                 } else {
-                    this.state.lessons = [ {id: 'l_1', title: '核心概念引入与现象观察', content: ''}, {id: 'l_2', title: '底层原理解析与苏格拉底提问', content: ''}, {id: 'l_3', title: '科幻场景应用与思维拓展', content: ''} ];
+                    this.state.lessons = [ {id: 'l_1', title: isEnglishSubject ? 'Interstellar English Mission 1' : '核心概念引入与现象观察', content: ''}, {id: 'l_2', title: isEnglishSubject ? 'Interstellar English Mission 2' : '底层原理解析与苏格拉底提问', content: ''}, {id: 'l_3', title: isEnglishSubject ? 'Interstellar English Mission 3' : '科幻场景应用与思维拓展', content: ''} ];
                     Swal.fire({toast:true, position:'top-end', icon:'info', title:'演示模式：已加载预制高质量章节', showConfirmButton:false, timer:2000});
                 }
                 this.state.editSubject.lessons = this.state.lessons; 
@@ -638,13 +658,28 @@
                 const l = this.state.lessons.find(x => x.id === this.state.curLessonId); if(!l) return;
                 const btn = $('btn-gen-content'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 生成中..."; btn.disabled = true;
                 
-                const prompt = `[系统级指令：苏格拉底接生术教案生成]\n你不是在写死板的教科书，而是在为【${l.title}】编写一份“苏格拉底式启发教案”。\n严格遵循以下原则：\n1. 抛出一个极具吸引力的悖论或极端科幻场景开场（例如：如果在黑洞边缘...）\n2. 将枯燥的知识点拆解为 2-3 个连环追问，绝对不要直接给答案，而是引导思考。\n3. 设计一个跨学科整合的结尾挑战。\n直接输出优美的 HTML 格式片段 (可用 h3, ul, li, p, strong)。不要 html 外层标签，不要包裹在 Markdown 代码块里。`;
+                // 🚀 核心优化：教案生成的语言强制覆写
+                const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
+                const langConstraint = isEnglishSubject 
+                    ? `【语言强制要求】：当前学科为英语，无论地区标准为何，**教案内容必须全部使用纯正英文 (English)** 输出！` 
+                    : `【语言强制要求】：你必须根据所属教育标准【${this.state.editGalaxy.baseStandard || '通用'}】，使用对应的原生语言（如纯正英语、简体中文、繁体中文等）输出整篇教案。`;
+                
+                const prompt = `[系统级指令：苏格拉底接生术教案生成]
+${langConstraint}
+你不是在写死板的教科书，而是在为【${l.title}】编写一份“苏格拉底式启发教案”。
+严格遵循以下原则：
+1. 抛出一个极具吸引力的悖论或极端科幻场景开场（例如：如果在黑洞边缘...）
+2. 将枯燥的知识点拆解为 2-3 个连环追问，绝对不要直接给答案，而是引导思考。
+3. 设计一个跨学科整合的结尾挑战。
+直接输出优美的 HTML 格式片段 (可用 h3, ul, li, p, strong)。不要 html 外层标签，不要包裹在 Markdown 代码块里。`;
                 
                 const res = await this.callAI(prompt, 'sys', true);
                 if(res) {
                     const clean = this.cleanMD(res, 'html'); window.quillEditor.root.innerHTML = clean; l.content = clean;
                 } else {
-                    const demoHtml = `<h3>1. 探索提问阶段</h3><p>各位小指挥官，我们在日常航行中是否注意过这样的现象？</p><ul><li>如果重力突然消失，水滴会变成什么形状？</li><li>为什么它不是方形或者三角形？</li></ul><h3>2. 逻辑拆解与追问</h3><p>让我们像科学家一样分解这个问题：<strong>核心维持力量是什么？</strong> 是表面张力。</p><p>大家思考一下：如果我们在飞船里吹一个泡泡，它能存在多久？</p>`;
+                    const demoHtml = isEnglishSubject 
+                        ? `<h3>1. Exploration & Questioning</h3><p>Commanders, have you ever noticed this phenomenon during your stellar travels?</p><ul><li>If gravity suddenly disappeared, what shape would a water droplet take?</li></ul><h3>2. Logical Deconstruction</h3><p>Let's break it down like scientists: <strong>What is the core sustaining force here?</strong></p>` 
+                        : `<h3>1. 探索提问阶段</h3><p>各位小指挥官，我们在日常航行中是否注意过这样的现象？</p><ul><li>如果重力突然消失，水滴会变成什么形状？</li><li>为什么它不是方形或者三角形？</li></ul><h3>2. 逻辑拆解与追问</h3><p>让我们像科学家一样分解这个问题：<strong>核心维持力量是什么？</strong> 是表面张力。</p><p>大家思考一下：如果我们在飞船里吹一个泡泡，它能存在多久？</p>`;
                     window.quillEditor.root.innerHTML = demoHtml; l.content = demoHtml;
                     Swal.fire({toast:true, position:'top-end', icon:'info', title:'演示模式：已渲染启发式教案 Demo', showConfirmButton:false, timer:2500});
                 }
@@ -808,154 +843,6 @@
                     this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。请让家长去控制台配置吧！</p></div>`});
                 }
                 this.renderReadingChat();
-            },
-
-            // =============== 🚀 家控中枢验证 (强化防静默 Bug 版) ================
-            async promptParentLock() {
-                if (this.state.isParentUnlocked) { 
-                    this.state.isParentUnlocked = false; 
-                    $('parent-menu').style.display='none'; $('lock-icon').innerText='🔒'; 
-                    this.switchView('classroom'); 
-                    Swal.fire({toast: true, position: 'top-end', icon: 'info', title: '家控中枢已重新锁定', showConfirmButton: false, timer: 1500});
-                    return; 
-                }
-                
-                const { value: pin } = await Swal.fire({ 
-                    title: '家控中枢验证', 
-                    html: '<div class="text-sm text-slate-300 mb-2">请输入 4 位数字高阶密码</div><div class="text-xs text-emerald-400 font-bold bg-emerald-900/20 border border-emerald-500/30 p-2 rounded-lg inline-block">(系统初始默认密码: 0000)</div>', 
-                    input: 'password', 
-                    inputAttributes: { maxlength: 4, autocapitalize: 'off', autocorrect: 'off', placeholder: '****' }, 
-                    background: '#0f172a', color: '#fff', 
-                    confirmButtonText: '开启高阶权限', confirmButtonColor: '#3b82f6',
-                    showCancelButton: true, cancelButtonText: '取消', cancelButtonColor: '#475569'
-                });
-                
-                // 确保用户点击了确认而不是取消
-                if (pin !== undefined) {
-                    if (pin === this.state.parentPin) { 
-                        this.state.isParentUnlocked = true; 
-                        $('parent-menu').style.display='block'; $('lock-icon').innerText='🔓'; 
-                        this.switchView('forge'); 
-                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '权限验证通过', showConfirmButton: false, timer: 1500});
-                    } else {
-                        // 🚀 核心修复：如果是错密码，绝对不能静默失败，必须强烈提示！
-                        Swal.fire({
-                            title: '密码验证失败',
-                            text: '指挥官，密码错误！提示：系统初始默认密码为 0000。',
-                            icon: 'error', background: '#0f172a', color: '#fff', confirmButtonColor: '#ef4444', confirmButtonText: '重新输入'
-                        });
-                    }
-                }
-            },
-            
-            async testAPI(type) {
-                const key = $(`${type}-key`).value, url = $(`${type}-url`).value, model = $(`${type}-model`).value;
-                if (!key || !url || !model) { Swal.fire({ title: '配置不完整', icon: 'warning', background: '#0f172a', color: '#fff' }); return; }
-                try { 
-                    const e = url.replace(/\/$/, '') + (url.endsWith('/chat/completions') ? '' : '/chat/completions'); 
-                    const res = await fetch(e, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }) }); 
-                    if (res.ok) Swal.fire({ toast:true, position:'top-end', icon: 'success', title: '链路通畅', showConfirmButton: false, timer: 1500 }); 
-                    else throw new Error(); 
-                } catch(e) { Swal.fire({ toast:true, position:'top-end', icon: 'error', title: '链路失败', showConfirmButton: false, timer: 1500 }); }
-            },
-            saveConfig() {
-                ['sys','nova'].forEach(t => { window.safeStorage.set(`xp_${t}_key`, $(`${t}-key`).value); window.safeStorage.set(`xp_${t}_url`, $(`${t}-url`).value); window.safeStorage.set(`xp_${t}_model`, $(`${t}-model`).value); });
-                Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已保存', showConfirmButton:false, timer:1500});
-            },
-
-            // =============== 🚀 大纲生成引擎与部署机制 (Forge & RAG) =================
-            openPlanner() {
-                if (this.state.isPro || this.state.galaxies.length < 2) { $('planner-hint').innerText = this.state.isPro?'【PRO权限】：支持无限星系铸造与进度投喂。':'【基础版权限】：您可以免费体验星系的智能铸造。'; $('planner-modal').style.display='flex'; } 
-                else { Swal.fire({ title: '算力空间已满', html: '<p class="text-sm">基础版最多只能同时部署 <b>1 个专属星系</b>。<br>想要创建新星系，请先在列表中删除旧星系；<br>或升级 <b>PRO 领航员</b> 解锁无限星系铸造权！</p>', icon: 'info', background: '#0f172a', color: '#fff' }); }
-            },
-            deleteGalaxy(id) {
-                Swal.fire({ title: '确认销毁该星系？', text: '销毁后该大纲下的所有资源将被清空。', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: '执行销毁' }).then((res) => {
-                    if (res.isConfirmed) {
-                        this.state.galaxies = this.state.galaxies.filter(g => g.id !== id); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
-                        if (this.state.activeGalaxyId === id) this.state.activeGalaxyId = this.state.galaxies.length > 0 ? this.state.galaxies[0].id : null;
-                        this.renderForgeList(); this.renderGalaxy(); Swal.fire({ toast:true, position:'top-end', icon:'success', title:'星系已销毁', showConfirmButton:false, timer:2000 });
-                    }
-                });
-            },
-            toggleDeploy(id) {
-                const g = this.state.galaxies.find(x => x.id === id);
-                if(g) {
-                    g.isDeployed = !g.isDeployed; window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.renderForgeList();
-                    Swal.fire({toast:true, position:'top-end', icon:'success', title: g.isDeployed ? '已上线同步至前台宇宙' : '已撤回草稿箱', showConfirmButton:false, timer:1500});
-                }
-            },
-            async generateGalaxy() {
-                $('plan-btn').innerHTML = "<span class='animate-spin'>↻</span> [RAG 协议运行中] 正在融合重构大纲..."; $('plan-btn').disabled = true;
-                const hasKey = !!window.safeStorage.get('xp_sys_key'); 
-                const curr = $('plan-curriculum').value, grade = $('plan-grade').value, term = $('plan-term').value, ragContext = $('plan-rag-context').value.trim();
-                
-                if (!this.state.isPro || !hasKey) {
-                    setTimeout(() => {
-                        $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造星系"; $('plan-btn').disabled = false;
-                        Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于未接入专属 AI 算力，系统无法执行 RAG 融合检索。已为您加载<b>预制多学科大纲演示</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可投喂真实进度，生成独一无二的专属宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '前往星系库', confirmButtonColor: '#3b82f6' }).then(() => {
-                            const ng = { 
-                                id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, ragContext: ragContext,
-                                subjects: [ 
-                                    { id: 'sub_demo_1', title: '核心物理探索', icon: '🌍', radius: 240, angle: 0, lessons: [] },
-                                    { id: 'sub_demo_2', title: '星际数学逻辑', icon: '📐', radius: 360, angle: 2.1, lessons: [] },
-                                    { id: 'sub_demo_3', title: '外星文明解构', icon: '🧬', radius: 480, angle: 4.2, lessons: [] }
-                                ] 
-                            };
-                            this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.renderForgeList(); this.switchView('forge'); 
-                        });
-                    }, 1500); return;
-                }
-                
-                let contextPrompt = ragContext ? `【用户投喂的实际教学进度】：\n"${ragContext}"\n请将上述投喂内容与官方课标进行融合。` : '【用户未投喂具体进度，请完全依赖官方课标发散】';
-                const prompt = `[系统级指令：执行全球教育大纲对齐协议 (RAG Alignment)]
-第一步：检索并对齐【${curr}】中【${grade}】【${term}】的官方核心教育目标。
-第二步：${contextPrompt}
-第三步：将提取出的核心模块，重构为 3 到 5 个极具科幻探索感的“星际学科行星”（例如：将“数学计算”重构为“星际逻辑拓扑”）。
-必须返回严格的JSON数组格式：[{"title": "学科名称", "icon": "单字符emoji"}]。不要输出任何推理过程、解释文字和Markdown包裹。`;
-
-                const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
-                if (res) { 
-                    try { 
-                        const clean = this.cleanMD(res, 'json');
-                        const parsed = JSON.parse(clean); 
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            newSubjects = parsed.map((s, i) => ({
-                                id: 'sub_' + Date.now() + i, title: s.title || '核心学科', icon: s.icon || '📚', 
-                                radius: 240 + (i * 80), angle: (i * (Math.PI * 2 / parsed.length)) + Math.random(), lessons: []
-                            }));
-                        } 
-                    } catch(e) {} 
-                }
-                
-                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0, lessons: [] }];
-                const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, ragContext: ragContext, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, subjects: newSubjects };
-                this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造星系"; $('plan-btn').disabled = false;
-                Swal.fire({ title: '锻造成功！', text: '新星系已根据您的投喂数据重构完毕。您可以深度编辑后再点击「部署」上线。', icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '进入锻造库' }).then(() => { this.renderForgeList(); this.switchView('forge'); });
-            },
-            
-            renderForgeList() {
-                const c = $('forge-list'); c.innerHTML = '';
-                this.state.galaxies.forEach(g => {
-                    const deployBtn = g.isDeployed 
-                        ? `<button onclick="App.toggleDeploy('${g.id}')" class="px-4 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/50 rounded-xl text-xs font-bold transition hover:bg-emerald-900/50 shadow-inner">✅ 已部署前台 (点击撤回)</button>`
-                        : `<button onclick="App.toggleDeploy('${g.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-[0_0_15px_rgba(59,130,246,0.4)]">🚀 部署至探索舱</button>`;
-                    
-                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border ${g.isDeployed?'border-emerald-500/30':'border-slate-700'} hover:border-blue-500/50 transition-all flex flex-col relative group">
-                        <button onclick="App.deleteGalaxy('${g.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-14 h-14 rounded-full ${g.isDeployed?'bg-emerald-900/50 border-emerald-500':'bg-slate-800 border-slate-600'} flex items-center justify-center text-3xl border shadow-inner">🔮</div>
-                            <div class="pr-6">
-                                <h3 class="font-bold text-lg text-white">${g.title}</h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">${g.baseStandard || 'Custom'}</span>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含 ${g.subjects?.length||0} 个核心学科行星与知识卫星节点。可通过引擎深度定制。</p>
-                        <div class="flex gap-2 mt-auto">
-                            <button onclick="App.editCurriculum('${g.id}')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition border border-slate-600 shadow-md">⚙️ 排课编辑器</button>
-                            ${deployBtn}
-                        </div>
-                    </div>`;
-                });
             },
 
             // =============== 🚀 3D 星球与 Canvas 渲染 ================

@@ -106,7 +106,6 @@
                 </div>
             </button>
             
-            <!-- 🌟 升级文案：英文伴读 -->
             <button @click="openReading('en')" class="btn-nav py-3" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">🔤</span>
                 <div class="flex flex-col">
@@ -115,7 +114,6 @@
                 </div>
             </button>
             
-            <!-- 🌟 升级文案：大语文伴读 -->
             <button @click="openReading('zh')" class="btn-nav py-3" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
                 <span class="mr-3 text-xl">📜</span>
                 <div class="flex flex-col">
@@ -327,6 +325,36 @@
         <div x-show="view === 'forge'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">🪐</div><h2 class="text-2xl font-black text-white">大纲与星系锻造</h2><button @click="triggerForgePaywall()" class="mt-4 px-6 py-3 bg-blue-600 rounded-xl font-bold">✨ 规划新星系</button></div>
         <div x-show="view === 'students'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">👨‍👩‍👧‍👦 学员管理</h2></div>
         <div x-show="view === 'radar'" x-cloak class="flex-1 p-8 z-10 fade-in"><h2 class="text-2xl font-black mb-4">📡 全息学情雷达</h2></div>
+        
+        <!-- ================= 🚀 全局 NOVA 悬浮终端 (在伴读舱隐藏) ================= -->
+        <div x-show="!view.startsWith('reading')" x-cloak class="fixed top-0 left-0 z-[100] flex flex-col items-end" :style="`transform: translate(${novaGlobal.pos.x}px, ${novaGlobal.pos.y}px);`">
+            
+            <!-- 聊天窗口 -->
+            <div x-show="novaGlobal.open" x-transition.opacity class="absolute bottom-16 right-0 mb-4 w-80 glass-panel rounded-3xl overflow-hidden flex flex-col border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]" style="height: 400px;">
+                <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center cursor-move" @mousedown="startNovaDrag" @touchstart="startNovaDrag">
+                    <span class="text-sm font-black text-blue-400 tracking-widest flex items-center gap-2">🤖 NOVA 随航助理</span>
+                    <button @click="novaGlobal.open = false" class="text-slate-500 hover:text-white transition">✖</button>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto space-y-4" id="nova-global-chat">
+                    <template x-for="(msg, i) in novaGlobal.msgs" :key="i">
+                        <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
+                            <span class="text-[10px] text-slate-500 font-bold mb-1" x-text="msg.role==='user'?'指挥官':'NOVA'"></span>
+                            <div class="max-w-[90%] p-3 rounded-2xl text-sm shadow-md" :class="msg.role==='user'?'bg-blue-600 text-white rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'" x-html="msg.text"></div>
+                        </div>
+                    </template>
+                    <div x-show="novaGlobal.loading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA is processing...</div>
+                </div>
+                <div class="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
+                    <input type="text" x-model="novaGlobal.input" @keyup.enter="sendNovaGlobal()" class="flex-1 input-dark px-3 py-2 rounded-xl text-sm" placeholder="输入指令...">
+                    <button @click="sendNovaGlobal()" class="bg-blue-600 px-4 py-2 rounded-xl font-bold shadow-lg hover:bg-blue-500 transition" :disabled="novaGlobal.loading || !novaGlobal.input.trim()">➤</button>
+                </div>
+            </div>
+
+            <!-- 悬浮球 -->
+            <button @mousedown="startNovaDrag" @touchstart="startNovaDrag" class="absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 border-2 border-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center text-2xl transition-transform hover:scale-110 active:scale-95" style="touch-action: none;">
+                🤖
+            </button>
+        </div>
     </main>
 
     <script>
@@ -345,6 +373,15 @@
                 
                 writingDraft: '', writingFeedback: '', isCritiquing: false, critiqueMode: '',
                 readingMaterial: '', readingInput: '', readingChatLog: [], readingLoading: false,
+                
+                // 🚀 全局 NOVA 状态管理
+                novaGlobal: {
+                    open: false, isDragging: false,
+                    pos: { x: window.innerWidth ? window.innerWidth - 60 : 800, y: window.innerHeight ? window.innerHeight - 60 : 600 },
+                    offset: { x: 0, y: 0 }, start: { x: 0, y: 0, time: 0 },
+                    msgs: [{role: 'nova', text: '指挥官，NOVA 随时待命。有关探索、排课或设定的问题都可以随时唤醒我！'}],
+                    input: '', loading: false
+                },
 
                 async init() {
                     this.parentPin = window.safeStorage.get('xp_parent_pin');
@@ -356,10 +393,66 @@
                     }
                     this.activeGalaxyId = this.galaxies[0].id;
                     this.initNetworkCanvas();
+                    
+                    // 初始化悬浮球位置 (避免遮挡)
+                    this.novaGlobal.pos = { x: window.innerWidth - 60, y: window.innerHeight - 60 };
+                },
+
+                // ================= 🚀 全局 NOVA 拖拽与对话引擎 =================
+                startNovaDrag(e) {
+                    if(e.type === 'mousedown') e.preventDefault();
+                    this.novaGlobal.isDragging = false;
+                    this.novaGlobal.start.time = Date.now();
+                    const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    this.novaGlobal.start.x = cx;
+                    this.novaGlobal.start.y = cy;
+                    this.novaGlobal.offset.x = cx - this.novaGlobal.pos.x;
+                    this.novaGlobal.offset.y = cy - this.novaGlobal.pos.y;
+
+                    const move = (ev) => {
+                        const mx = ev.type.includes('touch') ? ev.touches[0].clientX : ev.clientX;
+                        const my = ev.type.includes('touch') ? ev.touches[0].clientY : ev.clientY;
+                        if (Math.hypot(mx - this.novaGlobal.start.x, my - this.novaGlobal.start.y) > 3) {
+                            this.novaGlobal.isDragging = true;
+                            // 限制拖拽边界
+                            let newX = mx - this.novaGlobal.offset.x;
+                            let newY = my - this.novaGlobal.offset.y;
+                            this.novaGlobal.pos.x = Math.max(30, Math.min(window.innerWidth - 30, newX));
+                            this.novaGlobal.pos.y = Math.max(30, Math.min(window.innerHeight - 30, newY));
+                        }
+                    };
+                    const stop = (ev) => {
+                        window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', stop);
+                        window.removeEventListener('touchmove', move); window.removeEventListener('touchend', stop);
+                        if (!this.novaGlobal.isDragging && (Date.now() - this.novaGlobal.start.time) < 300) {
+                            this.novaGlobal.open = !this.novaGlobal.open;
+                            if(this.novaGlobal.open) setTimeout(() => { const el = document.getElementById('nova-global-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+                        }
+                        setTimeout(() => { this.novaGlobal.isDragging = false; }, 50);
+                    };
+                    window.addEventListener('mousemove', move, {passive: false}); window.addEventListener('mouseup', stop);
+                    window.addEventListener('touchmove', move, {passive: false}); window.addEventListener('touchend', stop);
+                },
+
+                async sendNovaGlobal() {
+                    const t = this.novaGlobal.input.trim(); if(!t) return;
+                    this.novaGlobal.input = ''; this.novaGlobal.msgs.push({role:'user', text:t}); this.novaGlobal.loading = true;
+                    setTimeout(() => { const el = document.getElementById('nova-global-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
+
+                    const prompt = `你是XuePilot OS的随航AI助理NOVA。回答要非常简短、机智、带有科幻感。学生说："${t}"`;
+                    const res = await this.callAI(prompt, 'nova');
+                    if(res) {
+                        let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
+                        cleanRes = cleanRes.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                        this.novaGlobal.msgs.push({role:'nova', text: cleanRes});
+                    }
+                    this.novaGlobal.loading = false;
+                    setTimeout(() => { const el = document.getElementById('nova-global-chat'); if(el) el.scrollTop = el.scrollHeight; }, 100);
                 },
 
                 // ================= 🚀 AI API 调用与 Prompt =================
-
                 async callAI(prompt, type='nova') {
                     const key = localStorage.getItem(`xp_${type}_key`);
                     const rawUrl = localStorage.getItem(`xp_${type}_url`) || '/proxy/groq';

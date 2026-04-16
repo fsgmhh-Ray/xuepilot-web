@@ -33,6 +33,14 @@
         .magic-btn { position: relative; overflow: hidden; }
         .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
         .magic-btn:hover::after { opacity: 1; transform: scale(1); }
+
+        /* 🎴 3D 翻转卡片 (Flip-Card) 特效 */
+        .flip-card { background-color: transparent; perspective: 1000px; height: 180px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 1rem; }
+        .flip-card-front { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+        .flip-card-back { background: linear-gradient(135deg, rgba(37,99,235,0.9), rgba(79,70,229,0.9)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(37,99,235,0.5); }
     </style>
     <script>
         window.safeStorage = {
@@ -45,7 +53,7 @@
 </head>
 <body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
 
-    <!-- 背景粒子网格 (纯前台隔离) -->
+    <!-- 背景粒子网格 -->
     <div class="absolute inset-0 z-0 opacity-30 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
     <aside class="w-[20rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative bg-slate-900/30">
@@ -69,7 +77,7 @@
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">全球教育网关</div>
             <button onclick="App.switchView('resources')" id="nav-resources" class="btn-nav py-3 mb-4 text-slate-300">
                 <span class="mr-3 text-2xl">🌐</span> 
-                <div class="flex flex-col"><span class="text-sm font-black text-white">全球教育智库</span><span class="text-[10px] text-cyan-500 font-normal mt-0.5 leading-snug">海量大纲与权威探索站点</span></div>
+                <div class="flex flex-col"><span class="text-sm font-black text-white">全球教育智库</span><span class="text-[10px] text-cyan-500 font-normal mt-0.5 leading-snug">海量大纲教材与权威探索站点</span></div>
             </button>
 
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项集训营</div>
@@ -86,7 +94,7 @@
                 <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力</span></div>
             </button>
 
-            <!-- 物理隔离墙出口：呼叫家控中枢 -->
+            <!-- 物理隔离墙出口 -->
             <div class="mt-auto pt-4 border-t border-slate-800/50">
                 <button onclick="App.promptParentLock()" class="btn-nav w-full justify-between group py-3 text-slate-500 hover:text-amber-500 transition">
                     <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span><div class="flex flex-col"><span class="text-xs">呼叫家控中枢</span></div></div>
@@ -106,43 +114,53 @@
             </div>
         </div>
 
-        <!-- 🚀 新增：全球教育资源与大纲智库舱 -->
+        <!-- 🚀 新增极客版：全球教育智库中心 (Global Edu-Vault) -->
         <div id="view-resources" class="view-panel flex-col p-8 z-10 fade-in bg-slate-950/90 overflow-y-auto">
             <div class="max-w-6xl mx-auto w-full">
-                <div class="flex justify-between items-end mb-8 border-b border-slate-800 pb-6">
+                <div class="flex justify-between items-end mb-10 border-b border-slate-800 pb-6">
                     <div>
-                        <h2 class="text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-cyan-400">🌐</span> 全球教育智库中心</h2>
-                        <p class="text-slate-400 text-sm tracking-wide">对接全球权威机构大纲与顶级探索资源，支持 AI 动态检索与累加。</p>
+                        <h2 class="text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🌐</span> 全球教育智库中心</h2>
+                        <p class="text-slate-400 text-sm tracking-wide">对接全球权威机构大纲、开源教材与顶级探索资源，支持一键铸造知识星球。</p>
                     </div>
                 </div>
 
                 <!-- Section A: 官方大纲档案室 (Syllabi Vault) -->
-                <div class="mb-12">
+                <div class="mb-14">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-200 flex items-center gap-2"><span>📂</span> 各国/地区核心课标档案库 (Syllabi)</h3>
-                        <span class="text-xs font-mono text-cyan-500 bg-cyan-900/30 px-3 py-1 rounded border border-cyan-800/50">Database Linked</span>
+                        <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📂</span> 核心课标档案库 (Syllabi Vault)</h3>
+                        <span class="text-xs font-mono text-cyan-500 bg-cyan-900/30 px-3 py-1 rounded border border-cyan-800/50 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div> DB Linked</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="syllabi-container">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="syllabi-container">
                         <!-- 大纲卡片由 JS 动态注入 -->
-                    </div>
-                    
-                    <!-- 商业化钩子：AI 动态搜索大纲按钮 -->
-                    <div class="mt-8 text-center bg-slate-900/50 border border-dashed border-slate-700 rounded-2xl p-8 hover:border-cyan-500/50 transition duration-300">
-                        <div class="text-4xl mb-3 opacity-80">🤖</div>
-                        <h4 class="text-lg font-bold text-slate-300 mb-2">需要其他国家或特定学期的大纲？</h4>
-                        <p class="text-xs text-slate-500 mb-6 max-w-lg mx-auto">XuePilot 的教研爬虫可接入全球 200+ 教育部门与顶级私校的数据库，实时抓取并解析学期排课计划。</p>
-                        <button onclick="App.triggerAISearch()" class="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black shadow-[0_0_20px_rgba(6,182,212,0.4)] transition transform hover:scale-105 flex items-center gap-2 mx-auto">
-                            ✨ 启动 AI 全球教研深度检索
-                        </button>
                     </div>
                 </div>
 
-                <!-- Section B: 权威探索导航 (Edu Websites) -->
-                <div class="mb-10">
-                    <h3 class="text-xl font-bold text-slate-200 flex items-center gap-2 mb-6"><span>🔭</span> 权威科学与认知探索站点 (Portals)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" id="edu-links-container">
-                        <!-- 网站链接卡片由 JS 动态注入 -->
+                <!-- Section B: 全球开源教材库 (Textbooks) -->
+                <div class="mb-14">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📚</span> 全球精选开源教材库 (Open Textbooks)</h3>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="textbook-container">
+                        <!-- 教材卡片由 JS 动态注入 -->
+                    </div>
+                </div>
+
+                <!-- Section C: 3D 翻牌式 权威探索站点 (Portals) -->
+                <div class="mb-10">
+                    <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2 mb-6"><span>🔭</span> 权威认知探索站点 (Portals)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="edu-links-container">
+                        <!-- 网站链接 Flip Card 由 JS 动态注入 -->
+                    </div>
+                </div>
+
+                <!-- AI 动态搜寻按钮 -->
+                <div class="mt-12 text-center bg-slate-900/50 border border-dashed border-slate-700 rounded-3xl p-10 hover:border-cyan-500/50 transition duration-300">
+                    <div class="text-5xl mb-4 opacity-80">🤖</div>
+                    <h4 class="text-xl font-bold text-slate-300 mb-2">需要其他国家或特定学期的大纲教材？</h4>
+                    <p class="text-sm text-slate-500 mb-8 max-w-xl mx-auto leading-relaxed">XuePilot 的教研爬虫可接入全球 200+ 教育部门与顶级私校的数据库，实时抓取并解析学期排课计划与开源内容。</p>
+                    <button onclick="App.triggerAISearch()" class="px-10 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black shadow-[0_0_30px_rgba(6,182,212,0.4)] transition transform hover:scale-105 flex items-center gap-3 mx-auto text-lg">
+                        ✨ 启动 AI 全球教研深度检索
+                    </button>
                 </div>
             </div>
         </div>
@@ -215,22 +233,30 @@
                 writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。\n后来我们去划船，湖水很清。划完船我们去吃了冰淇淋，冰淇淋是草莓味的，很好吃。\n今天真是开心的一天啊！我希望下次还能来玩。',
                 readingChatLog: [],
 
-                // 🚀 预置的全球智库数据模拟
+                // 🚀 扩充版：全球智库数据映射
                 syllabiVault: [
-                    { id: 'sb_us_01', title: 'Common Core Math (Grade 4)', region: 'US', icon: '🇺🇸', isFree: true, desc: '美国CCSS四年级核心数学大纲与阶段测验计划' },
-                    { id: 'sb_cn_01', title: '义务教育语文 (三年级下)', region: 'CN', icon: '🇨🇳', isFree: true, desc: '中国2022版新课标大纲，含国学与阅读重点' },
-                    { id: 'sb_sg_01', title: 'MOE Science (Primary 3)', region: 'SG', icon: '🇸🇬', isFree: false, desc: '新加坡教育部小学三年级科学探究排课表' },
-                    { id: 'sb_uk_01', title: 'National Curriculum KS2 Computing', region: 'UK', icon: '🇬🇧', isFree: false, desc: '英国国家大纲 Key Stage 2 计算机科学培养方案' },
-                    { id: 'sb_tw_01', title: '108课纲 自然科学领域', region: 'TW', icon: '🇹🇼', isFree: false, desc: '台湾108素养导向课纲，跨领域探究与实作计划' },
-                    { id: 'sb_fi_01', title: 'Phenomenon-Based Learning', region: 'FI', icon: '🇫🇮', isFree: false, desc: '芬兰现象式教学法：跨学科融合主题排课样本' }
+                    { id: 'sb_us_01', title: 'Common Core State Standards (CCSS) - Grade 4 Math', region: '美国', icon: '🇺🇸', isFree: true, desc: '全美核心州立标准：强化分数的几何理解与多维数学模型架构。' },
+                    { id: 'sb_cn_01', title: '义务教育语文课程标准 (三年级下)', region: '中国', icon: '🇨🇳', isFree: true, desc: '中国 2022 版新课标：聚焦中华优秀传统文化传承与整本书阅读体系。' },
+                    { id: 'sb_sg_01', title: 'Singapore MOE Syllabus - Primary 3 Science', region: '新加坡', icon: '🇸🇬', isFree: false, desc: '享誉全球的科学探究大纲：基于生命周期与多样性的现象式启发体系。' },
+                    { id: 'sb_uk_01', title: 'National Curriculum KS2 Computing', region: '英国', icon: '🇬🇧', isFree: false, desc: '英国国家大纲 Key Stage 2：算法逻辑、布尔运算与计算机科学先导方案。' },
+                    { id: 'sb_tw_01', title: '108课纲 - 自然科学领域 (国小段)', region: '台湾', icon: '🇹🇼', isFree: false, desc: '台湾 108 素养导向课纲：跨领域探究、实作计划与科学态度养成。' },
+                    { id: 'sb_fi_01', title: 'Phenomenon-Based Learning (PhenoBL)', region: '芬兰', icon: '🇫🇮', isFree: false, desc: '芬兰现象式教学法：打破传统学科边界，以真实世界现象为驱动的模块化排课。' }
+                ],
+                textbookVault: [
+                    { id: 'tb_us_01', title: 'OpenStax K-12 OER Library', type: '开源体系', icon: '📚', isFree: true, desc: '来自莱斯大学的高质量、全同行评审 K-12 数理化开源英文教材库。' },
+                    { id: 'tb_cn_01', title: '国家中小学智慧教育平台', type: '数字底座', icon: '📱', isFree: true, desc: '中国教育部直属：人教版、部编版全学段超高清电子教材与课件源。' },
+                    { id: 'tb_sg_01', title: 'Marshall Cavendish Education (Sample)', type: '教研标杆', icon: '📐', isFree: false, desc: '“新加坡数学”全球流行教材《Targeting Math》底层逻辑库预览。' },
+                    { id: 'tb_gb_01', title: 'CGP Primary Books Framework', type: '英式体系', icon: '🔬', isFree: false, desc: '英国第一教辅品牌 CGP 核心知识点图谱，提炼 KS1-KS3 精华。' }
                 ],
                 eduLinks: [
-                    { title: 'NASA Kids\' Club', url: 'https://www.nasa.gov/kidsclub/index.html', desc: '美国宇航局官方儿童科学探索舱', icon: '🚀' },
-                    { title: 'PhET Simulations', url: 'https://phet.colorado.edu/zh_CN/', desc: '科罗拉多大学诺奖得主创立的物理/化学/生物仿真实验室', icon: '⚛️' },
-                    { title: 'Khan Academy', url: 'https://zh.khanacademy.org/', desc: '可汗学院：全球公认的最强免费数学与科学进阶题库', icon: '🌱' },
-                    { title: 'Scratch MIT', url: 'https://scratch.mit.edu/', desc: '麻省理工学院开发的图形化编程与创意分享社区', icon: '🐱' },
-                    { title: 'National Geographic', url: 'https://kids.nationalgeographic.com/', desc: '国家地理儿童版：地球生态、动物与地理探索', icon: '🌍' },
-                    { title: 'Code.org', url: 'https://code.org/', desc: '全球最大的少儿编程普及阵地，含《我的世界》等联名关卡', icon: '💻' }
+                    { title: 'NASA Kids\' Club', url: 'https://www.nasa.gov/kidsclub/index.html', desc: '美国宇航局官方设立的儿童科学探索与太空游戏前哨站。', icon: '🚀' },
+                    { title: 'PhET Simulations', url: 'https://phet.colorado.edu/zh_CN/', desc: '科罗拉多大学诺奖得主创立，提供极其硬核的理化生互动仿真实验室。', icon: '⚛️' },
+                    { title: 'Khan Academy', url: 'https://zh.khanacademy.org/', desc: '可汗学院：硅谷顶级教育非营利组织，提供全球最强数理进阶题库。', icon: '🌱' },
+                    { title: 'Scratch MIT', url: 'https://scratch.mit.edu/', desc: '麻省理工学院媒体实验室开发的图形化编程与创意游戏分享社区。', icon: '🐱' },
+                    { title: 'NatGeo Kids', url: 'https://kids.nationalgeographic.com/', desc: '国家地理儿童版：地球生态、动物行为学与极限地理的绝佳探索地。', icon: '🌍' },
+                    { title: 'Code.org', url: 'https://code.org/', desc: '全球最大的少儿编程普及阵地，内含《我的世界》等联名逻辑关卡。', icon: '💻' },
+                    { title: 'Brilliant.org', url: 'https://brilliant.org/', desc: '硅谷精英都在用的互动式思维训练：直击数学、逻辑与计算机本质。', icon: '🧠' },
+                    { title: 'Desmos Graphing', url: 'https://www.desmos.com/calculator?lang=zh-CN', desc: '极其优美的在线图形计算器，将枯燥的代数方程瞬间转化为视觉艺术。', icon: '📈' }
                 ]
             },
 
@@ -260,7 +286,7 @@
 
                     this.initNetworkCanvas();
                     this.renderGalaxy();
-                    this.renderResources(); // 渲染新栏目
+                    this.renderResources(); // 渲染智库新栏目
                 } catch(err) { console.error('Init error:', err); }
             },
 
@@ -285,9 +311,9 @@
                 if (viewId === 'classroom') this.renderGalaxy();
             },
 
-            // =============== 🚀 全球智库资源 (Resources Vault) ================
+            // =============== 🚀 全球智库资源 (Resources Vault & Connect to Forge) ================
             renderResources() {
-                // 渲染官方大纲库
+                // 1. 渲染官方大纲库 (Syllabi)
                 const sCont = $('syllabi-container');
                 if(sCont) {
                     sCont.innerHTML = this.state.syllabiVault.map(s => {
@@ -298,37 +324,69 @@
                         </div>` : '';
                         
                         return `
-                        <div onclick="App.viewSyllabus('${s.id}')" class="relative bg-slate-900/60 border border-slate-700 p-5 rounded-2xl hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition cursor-pointer group">
+                        <div class="relative bg-slate-900/60 border border-slate-700 p-6 rounded-2xl hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition group flex flex-col h-full">
                             ${lockUI}
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="text-3xl">${s.icon}</span>
-                                <h4 class="font-bold text-slate-200 text-sm line-clamp-2">${s.title}</h4>
+                            <div class="flex items-start gap-4 mb-4">
+                                <span class="text-4xl filter drop-shadow-md">${s.icon}</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-200 text-sm leading-snug mb-1">${s.title}</h4>
+                                    <span class="text-[9px] font-mono text-slate-400 border border-slate-600 px-2 py-0.5 rounded-full">${s.region} Standard</span>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-400 line-clamp-2">${s.desc}</p>
+                            <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-6 flex-1">${s.desc}</p>
+                            <button onclick="App.importSyllabus('${s.id}')" class="w-full py-2.5 bg-slate-800 hover:bg-cyan-700 text-cyan-400 hover:text-white border border-slate-700 hover:border-cyan-500 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2">
+                                ✨ 导入并铸造星系
+                            </button>
                         </div>`;
                     }).join('');
                 }
 
-                // 渲染网站导航
+                // 2. 渲染开源教材库 (Textbooks)
+                const tbCont = $('textbook-container');
+                if(tbCont) {
+                    tbCont.innerHTML = this.state.textbookVault.map(t => {
+                        const isAccessible = t.isFree || this.state.isPro;
+                        const lockUI = !isAccessible ? `<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl z-10"><span class="text-2xl mb-1">🔒</span><span class="text-[10px] font-bold text-cyan-400">PRO</span></div>` : '';
+                        return `
+                        <div class="relative bg-slate-900/40 border border-slate-700 p-5 rounded-2xl hover:border-blue-500/30 transition flex flex-col items-center text-center group">
+                            ${lockUI}
+                            <span class="text-3xl mb-3 group-hover:scale-110 transition-transform">${t.icon}</span>
+                            <h4 class="font-bold text-slate-200 text-xs mb-1">${t.title}</h4>
+                            <p class="text-[9px] text-slate-500 mb-4 line-clamp-2">${t.desc}</p>
+                            <button onclick="App.viewTextbook('${t.id}')" class="mt-auto px-4 py-1.5 bg-blue-900/30 hover:bg-blue-600 text-blue-300 hover:text-white rounded-lg text-[10px] font-bold transition border border-blue-800/50">阅览档案</button>
+                        </div>`;
+                    }).join('');
+                }
+
+                // 3. 渲染 3D 翻牌式网站导航 (Edu Websites Flip-Cards)
                 const lCont = $('edu-links-container');
                 if(lCont) {
                     lCont.innerHTML = this.state.eduLinks.map(link => `
-                        <a href="${link.url}" target="_blank" class="block bg-slate-900/60 border border-slate-700 p-5 rounded-2xl hover:border-blue-500 hover:bg-slate-800 transition shadow-lg group">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-3xl filter grayscale group-hover:grayscale-0 transition duration-300">${link.icon}</span>
-                                <span class="text-slate-600 group-hover:text-blue-400 transition">↗</span>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-4xl mb-3 filter grayscale opacity-80">${link.icon}</span>
+                                    <h4 class="font-bold text-slate-200 text-sm truncate w-full px-2">${link.title}</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <h4 class="font-black text-white text-base mb-2">${link.title}</h4>
+                                    <p class="text-[10px] text-blue-100 line-clamp-3 leading-relaxed mb-4">${link.desc}</p>
+                                    <a href="${link.url}" target="_blank" class="px-5 py-2 bg-white/20 hover:bg-white text-white hover:text-blue-900 rounded-full text-xs font-bold transition backdrop-blur-sm border border-white/30 flex items-center gap-1">
+                                        开启跃迁 ↗
+                                    </a>
+                                </div>
                             </div>
-                            <h4 class="font-bold text-slate-200 text-sm mb-1 truncate">${link.title}</h4>
-                            <p class="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">${link.desc}</p>
-                        </a>
+                        </div>
                     `).join('');
                 }
             },
 
-            viewSyllabus(id) {
+            // 🚀 核心连接：从智库大纲直接创立 3D 星系
+            async importSyllabus(id) {
                 const s = this.state.syllabiVault.find(x => x.id === id);
                 if(!s) return;
 
+                // 1. 付费墙拦截
                 if(!s.isFree && !this.state.isPro) {
                     Swal.fire({
                         title: '🔒 量子加密锁定',
@@ -336,12 +394,62 @@
                         icon: 'warning', background: '#0f172a', color: '#fff',
                         confirmButtonText: '呼叫家长 ➔', confirmButtonColor: '#06b6d4', showCancelButton: true, cancelButtonText: '稍后再说'
                     }).then((res) => { if(res.isConfirmed) this.promptParentLock(); });
-                } else {
-                    Swal.fire({
-                        title: '📂 档案解析完毕',
-                        text: `您正在阅览 ${s.title} 的大纲数据结构 (演示内容)...`,
-                        icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#3b82f6'
+                    return;
+                }
+
+                // 2. 家控密码验证 (物理隔离保护)
+                let pin = null;
+                const currentPin = this.state.parentPin || '0000';
+                try {
+                    const res = await Swal.fire({ 
+                        title: '授权铸造星系', 
+                        html: `<div class="text-sm text-slate-300 mb-3">将大纲转化为 3D 星系需要高级权限。请输入家长密码：</div>`, 
+                        input: 'password', inputAttributes: { maxlength: "4", autocapitalize: 'off', autocorrect: 'off' }, 
+                        background: '#0f172a', color: '#fff', confirmButtonText: '授权验证', confirmButtonColor: '#3b82f6', showCancelButton: true 
                     });
+                    if (res && res.isConfirmed) { pin = res.value; } else { return; }
+                } catch(e) {
+                    pin = prompt("【授权铸造星系】\n请输入家长密码 (默认: 0000)");
+                    if (pin === null) return;
+                }
+
+                if (pin !== currentPin) {
+                    Swal.fire({ title: '密码错误', text: '权限验证失败，无法铸造星系。', icon: 'error', background: '#0f172a', color: '#fff' });
+                    return;
+                }
+
+                // 3. 授权通过，执行生成动画与部署
+                Swal.fire({
+                    title: '🤖 正在解析全球大纲',
+                    html: `系统正在提取 <b>${s.title}</b> 的底层知识图谱，并重构为 3D 星系...<br><span class="text-[10px] text-cyan-500 font-mono mt-3 block">Extracting Core Subjects & Aligning RAG Context...</span>`,
+                    allowOutsideClick: false, showConfirmButton: false, background: '#0f172a', color: '#fff',
+                    didOpen: () => Swal.showLoading(), timer: 2500
+                }).then(() => {
+                    // 模拟生成与大纲匹配的专属星系
+                    const isEnglish = s.id.includes('us') || s.id.includes('uk') || s.id.includes('sg');
+                    const ng = {
+                        id: 'gal_import_' + Date.now(), title: `${s.region} 专属映射星系`, baseStandard: s.title, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: true,
+                        subjects: [
+                            { id: 'sub_a', title: isEnglish ? 'Core Mechanics' : '底层基石规律', icon: '🌍', radius: 240, angle: 0, lessons: [] },
+                            { id: 'sub_b', title: isEnglish ? 'Logical Topology' : '逻辑拓扑学', icon: '📐', radius: 360, angle: 2.1, lessons: [] },
+                            { id: 'sub_c', title: isEnglish ? 'Applied Synthesis' : '高阶应用统筹', icon: '🚀', radius: 480, angle: 4.2, lessons: [] }
+                        ]
+                    };
+                    this.state.galaxies.unshift(ng);
+                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
+                    this.state.activeGalaxyId = ng.id;
+                    this.switchView('classroom');
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系具象化部署完毕！', showConfirmButton:false, timer:2500});
+                });
+            },
+
+            viewTextbook(id) {
+                const t = this.state.textbookVault.find(x => x.id === id);
+                if(!t) return;
+                if(!t.isFree && !this.state.isPro) {
+                    Swal.fire({ title: 'PRO 权限锁定', text: '该教材档案需要极高的量子算力去外网检索并建立安全连接。请让家长配置 API。', icon: 'warning', background: '#0f172a', color: '#fff' });
+                } else {
+                    Swal.fire({ title: '档案提取中...', text: `正在接入 ${t.title} 的远端接口，即将为您开启全息投影阅读。`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonColor: '#3b82f6' });
                 }
             },
 
@@ -365,8 +473,8 @@
                         this.state.syllabiVault.unshift({
                             id: 'sb_new_' + Date.now(),
                             title: '🇨🇦 Ontario Curriculum (G6 Science)',
-                            region: 'CA', icon: '🍁', isFree: false,
-                            desc: '【AI 刚刚捕获】加拿大安大略省六年级科学探究大纲最新版'
+                            region: '加拿大', icon: '🍁', isFree: false,
+                            desc: '【AI 刚刚捕获】加拿大安大略省六年级科学探究大纲最新版，侧重于生物多样性与太空科技基础。'
                         });
                         this.renderResources();
                         Swal.fire({ toast:true, position:'top-end', icon:'success', title:'新大纲档案已捕获并入库', showConfirmButton:false, timer:2000 });
@@ -542,7 +650,7 @@
             getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
             renderGalaxy() {
                 const c = $('galaxy-container'); c.innerHTML = '';
-                const deployedGalaxies = this.state.galaxies;
+                const deployedGalaxies = this.state.galaxies.filter(g => g.isDeployed !== false);
                 
                 if (deployedGalaxies.length === 0) {
                     c.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 pointer-events-auto"><div class="text-7xl mb-6 opacity-30 animate-pulse">🌌</div><p class="tracking-widest uppercase text-sm font-bold bg-slate-900/80 px-8 py-5 rounded-2xl border border-slate-800 text-center leading-relaxed">当前宇宙处于休眠状态。<br><br><span class="text-blue-400">指挥官，请点击左下方【呼叫家控中枢】<br>联系家长「🚀 部署至探索舱」唤醒您的第一个星系！</span></p></div>`;

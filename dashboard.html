@@ -68,7 +68,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V16.9 LangOverride</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V18.0 Epic Data</div>
                 </div>
             </a>
         </div>
@@ -341,14 +341,34 @@
                     let s = window.safeStorage.get('xp_galaxies');
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
                     if (this.state.galaxies.length === 0) {
-                        this.state.galaxies = [{ 
-                            id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, isDeployed: true, baseStandard: '中国义务教育课标 (2022版)',
-                            subjects: [
-                                { id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, lessons: [] }, 
-                                { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5, lessons: [] }, 
-                                { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0, lessons: [] }
-                            ] 
-                        }];
+                        // 🚀 核心优化：内置硬核的全球多语言预制星系库
+                        this.state.galaxies = [
+                            { 
+                                id: 'gal_demo_cn', title: '🇨🇳 四年级下学期核心星系', baseStandard: '中国义务教育课标 (2022版)', bgX: 20, bgY: 30, isDeployed: true, 
+                                subjects: [
+                                    { id: 'cn_sub1', title: '大语文时空 (文言文与阅读)', icon: '📜', radius: 240, angle: 0.5, lessons: [{id:'l_cn_1', title:'古诗词《清平乐·村居》的意境白描', content:'<h3>1. 破冰提问：跨越时空的画面</h3><p>指挥官，当你闭上眼睛听到“茅檐低小，溪上青青草”时，你脑海中浮现的是什么颜色的滤镜？是温暖的橘黄色，还是清冷的青绿色？</p><ul><li>如果让你给这幅画配上声音，除了溪水声，你还能听到什么？</li></ul><h3>2. 逻辑拆解：醉里吴音相媚好</h3><p>词中说老爷爷和老奶奶在“相媚好”（带着醉意亲切地聊天）。</p><p><strong>反问：</strong>你觉得他们为什么会喝醉？是因为生活太苦闷，还是因为太惬意？你能从下阕的孩子们在做什么找到线索吗？</p><h3>3. 认知升华：最喜小儿亡赖</h3><p>辛弃疾为什么觉得那个调皮捣蛋、在溪头剥莲蓬的小儿子最可爱？</p><p><strong>思考挑战：</strong>如果让你重写这首词，把场景换成现代的城市公寓，这“一家五口”分别在干什么，才能让你感受到同样的“相媚好”？</p>'}, {id:'l_cn_2', title:'神话与科幻的边界', content:''}] }, 
+                                    { id: 'cn_sub2', title: '四维空间数学 (几何与方程)', icon: '📐', radius: 360, angle: 2.1, lessons: [] }, 
+                                    { id: 'cn_sub3', title: '万物科学实验室 (生命与能量)', icon: '🧬', radius: 480, angle: 4.2, lessons: [] },
+                                    { id: 'cn_sub4', title: 'Interstellar English', icon: '💬', radius: 600, angle: 5.5, lessons: [] }
+                                ] 
+                            },
+                            { 
+                                id: 'gal_demo_us', title: '🇺🇸 Grade 5 Common Core Matrix', baseStandard: '美国 Common Core State Standards', bgX: 70, bgY: 40, isDeployed: true, 
+                                subjects: [
+                                    { id: 'us_sub1', title: 'STEM & Robotics', icon: '⚙️', radius: 240, angle: 1.0, lessons: [{id:'l_us_1', title:'Designing a Mars Rover (Kinematics)', content:'<h3>1. Initial Inquiry: The Gravity Problem</h3><p>Commanders, we are deploying a rover to Mars, where gravity is only 38% of Earth\'s.</p><ul><li>If we use the exact same tires as a car on Earth, what do you think will happen when the rover tries to accelerate?</li></ul><h3>2. Deconstructing Kinematics</h3><p>Let\'s break down the forces: <strong>Friction = Normal Force &times; Coefficient of Friction</strong>. Since gravity is lower, the normal force drops.</p><p><strong>Critical Question:</strong> To prevent the rover from slipping, should we make the rover heavier, or change the tire material? What are the pros and cons of adding dead weight to a spacecraft?</p><h3>3. Synthesis Challenge</h3><p>Now, combine your knowledge of kinematics with aerodynamics (even though Mars has a thin atmosphere). Design a spoiler or thruster system that helps the rover grip the Martian soil. Explain your blueprint.</p>'}, {id:'l_us_2', title:'Hydroponics Lab', content:''}] }, 
+                                    { id: 'us_sub2', title: 'ELA Critical Reading', icon: '📚', radius: 360, angle: 3.2, lessons: [] }, 
+                                    { id: 'us_sub3', title: 'Advanced Fractions', icon: '🔢', radius: 480, angle: 5.4, lessons: [] }
+                                ] 
+                            },
+                            { 
+                                id: 'gal_demo_sg', title: '🇸🇬 Primary 3 MOE Hub', baseStandard: '新加坡 MOE Syllabus', bgX: 40, bgY: 70, isDeployed: true, 
+                                subjects: [
+                                    { id: 'sg_sub1', title: 'Heuristics Mathematics', icon: '🧠', radius: 240, angle: 0.2, lessons: [{id:'l_sg_1', title:'Bar Model Method: Space Logistics', content:''}] }, 
+                                    { id: 'sg_sub2', title: 'Science: Diversity & Cycles', icon: '🌱', radius: 380, angle: 2.5, lessons: [] }, 
+                                    { id: 'sg_sub3', title: 'Global English', icon: '🌐', radius: 520, angle: 4.8, lessons: [] }
+                                ] 
+                            }
+                        ];
                         window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
                     } else {
                         this.state.galaxies.forEach(g => { if(typeof g.isDeployed === 'undefined') g.isDeployed = true; });
@@ -469,7 +489,6 @@
                 
                 let contextPrompt = ragContext ? `【用户投喂的实际教学进度】：\n"${ragContext}"\n请将上述投喂内容与官方课标进行融合。` : '【用户未投喂具体进度，请完全依赖官方课标发散】';
                 
-                // 🚀 核心优化：多语言约束协议，强制英语课名称必须为英文
                 const prompt = `[系统级指令：执行全球教育大纲对齐协议 (RAG Alignment)]
 【语言强制要求】：必须使用大纲【${curr}】所属国家/地区的官方语言输出内容（例如：美国/英国/新加坡标准必须用纯正英文，中国大陆标准必须用简体中文，台湾标准必须用繁体中文）。**例外情况：如果生成的学科是英语(English)课，该学科名称必须使用英文。**
 第一步：检索并对齐【${curr}】中【${grade}】【${term}】的官方核心教育目标。
@@ -626,7 +645,6 @@
             async generateLessons() {
                 const btn = $('btn-gen-lessons'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 正在挖掘中..."; btn.disabled = true;
                 
-                // 🚀 核心优化：检测到包含“英语”或“English”，强制覆写为英文输出
                 const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
                 const langConstraint = isEnglishSubject 
                     ? `【语言强制要求】：当前学科为英语，无论地区标准为何，**必须全部使用纯正英文 (English)** 输出章节名称。` 
@@ -658,7 +676,6 @@ ${contextRef}第二步：提取3到5个循序渐进的进阶知识点，并包�
                 const l = this.state.lessons.find(x => x.id === this.state.curLessonId); if(!l) return;
                 const btn = $('btn-gen-content'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 生成中..."; btn.disabled = true;
                 
-                // 🚀 核心优化：教案生成的语言强制覆写
                 const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
                 const langConstraint = isEnglishSubject 
                     ? `【语言强制要求】：当前学科为英语，无论地区标准为何，**教案内容必须全部使用纯正英文 (English)** 输出！` 
@@ -756,7 +773,7 @@ ${langConstraint}
                 } else if (htmlStr) {
                     $('writingFeedback').innerHTML = htmlStr;
                 } else {
-                    $('writingFeedback').innerHTML = `<div class='text-center text-slate-500 mt-20'><div class='text-6xl mb-4 opacity-50'>📝</div><h4 class='text-lg font-bold text-slate-300 mb-2'>已加载预制“流水账”文本</h4><p class='text-sm mb-4'>您可以直接点击左侧的魔法卡牌，体验系统如何引导孩子重塑逻辑。</p><div class='p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl text-xs text-blue-400'>✨ 请确保已在【家控中枢】绑定 API 密钥。</div></div>`;
+                    $('writingFeedback').innerHTML = `<div class='text-center text-slate-500 mt-20'><div class='text-6xl mb-4 opacity-50'>📝</div><h4 class='text-lg font-bold text-slate-300 mb-2'>已加载预制“流水账”文本</h4><p class='text-sm mb-4'>您可以直接点击左侧的魔法卡牌，体验系统如何引导孩子重塑逻辑。</p><div class='p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl text-xs text-blue-400'>✨ 请确保已在【家长控制台】绑定 API 密钥。</div></div>`;
                 }
             },
             async runWritingTool(mode) {

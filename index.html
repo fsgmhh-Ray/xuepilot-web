@@ -106,11 +106,11 @@
                             if (session) {
                                 this.sessionUser = session.user;
                                 this.checkProStatusFromDB(session.user.id);
-                                this.injectDemoDataIfEmpty();
-                                // ✅ 登录状态下，直接无感跳转大厅
-                                window.location.href = 'dashboard.html';
-                            }
-                        } catch(e) {}
+                            this.injectDemoDataIfEmpty();
+                            // ✅ 登录状态下，直接无感跳转学生舱
+                            window.location.href = 'classroom.html';
+                        }
+                    } catch(e) {}
                     }
                 },
 
@@ -146,8 +146,8 @@
                             this.checkProStatusFromDB(res.data.user.id);
                             this.injectDemoDataIfEmpty();
                             
-                            // ✅ 登录成功后，直接跳转大厅
-                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                            // ✅ 登录成功后，直接跳转学生舱
+                            setTimeout(() => { window.location.href = 'classroom.html'; }, 1000);
                         }
                     } catch (err) {
                         Swal.fire({icon:'error', title:'验证失败', text: err.message, background:'#0f172a', color:'#fff'});
@@ -165,7 +165,7 @@
                 bypassAuth() {
                     this.sessionUser = { email: 'guest_commander@local.env' };
                     this.injectDemoDataIfEmpty();
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+                    setTimeout(() => { window.location.href = 'classroom.html'; }, 500);
                 }
             }
         }

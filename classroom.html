@@ -24,7 +24,7 @@
         .free-badge { position: absolute; top: -10px; right: -10px; background: #10b981; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 50; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
         .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; }
         
-        .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
+        .input-dark { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -80,9 +80,9 @@
                 <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力</span></div>
             </button>
 
-            <!-- 物理隔离墙出口 -->
+            <!-- 物理隔离墙出口：呼叫家控中枢 -->
             <div class="mt-auto pt-4 border-t border-slate-800/50">
-                <button onclick="window.location.href='dashboard.html'" class="btn-nav w-full justify-between group py-3 text-slate-500 hover:text-amber-500 transition">
+                <button onclick="App.promptParentLock()" class="btn-nav w-full justify-between group py-3 text-slate-500 hover:text-amber-500 transition">
                     <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span><div class="flex flex-col"><span class="text-xs">呼叫家控中枢</span></div></div>
                     <span class="text-xs opacity-50">🔒</span>
                 </button>
@@ -160,6 +160,7 @@
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
+                parentPin: window.safeStorage.get('xp_parent_pin') || '0000',
                 galaxies: [], activeGalaxyId: null, readLang: 'en',
                 panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0, mouseX: window.innerWidth/2, mouseY: window.innerHeight/2,
                 particles: [], stars: [], ctx: null, canvas: null, animationFrameId: null,
@@ -185,7 +186,6 @@
                                 { id: 'cn_sub4', title: 'Interstellar English', icon: '💬', radius: 600, angle: 5.5, lessons: [] }
                             ] 
                         }];
-                        // 演示兜底
                     }
                     if (this.state.galaxies.length > 0) {
                         this.state.activeGalaxyId = this.state.galaxies[0].id;
@@ -243,6 +243,48 @@
                 if(!text) return "";
                 const tick = String.fromCharCode(96, 96, 96);
                 return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+            },
+
+            // =============== 🚀 家控中枢验证 (终极防熔断与动态脱密) ================
+            async promptParentLock() {
+                try {
+                    let pin = null;
+                    const currentPin = this.state.parentPin || '0000';
+                    // 🚀 如果不是0000，则不再展示任何密码提示信息
+                    const hintHtml = currentPin === '0000' ? '<div class="text-xs text-emerald-400 font-bold bg-emerald-900/20 border border-emerald-500/30 p-2 rounded-lg inline-block mt-2">(初始默认: 0000，请在此修改)</div>' : '';
+
+                    try {
+                        const res = await Swal.fire({ 
+                            title: '家控中枢验证', 
+                            html: `<div class="text-sm text-slate-300">请输入 4 位数字高阶密码</div>${hintHtml}`, 
+                            input: 'password', 
+                            inputAttributes: { maxlength: "4", autocapitalize: 'off', autocorrect: 'off', placeholder: '****' }, 
+                            background: '#0f172a', color: '#fff', 
+                            confirmButtonText: '开启高阶权限', confirmButtonColor: '#3b82f6',
+                            showCancelButton: true, cancelButtonText: '取消', cancelButtonColor: '#475569'
+                        });
+                        if (res && res.isConfirmed) { pin = res.value; } else { return; }
+                    } catch(swalErr) {
+                        console.warn("Swal 弹窗被拦截，降级原生 UI");
+                        const nativeHint = currentPin === '0000' ? ' (系统初始默认密码: 0000)' : '';
+                        pin = prompt(`家控中枢验证\n请输入 4 位数字高阶密码${nativeHint}`);
+                        if (pin === null) return;
+                    }
+                    
+                    if (pin !== null && pin !== undefined) {
+                        if (pin === currentPin) { 
+                            sessionStorage.setItem('xp_unlocked', 'true');
+                            try { Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '权限验证通过，正在跃迁...', showConfirmButton: false, timer: 1500}); } catch(e){}
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+                        } else {
+                            const errHint = currentPin === '0000' ? '提示：系统初始默认密码为 0000。' : '';
+                            try { Swal.fire({ title: '密码验证失败', text: `指挥官，密码错误！${errHint}`, icon: 'error', background: '#0f172a', color: '#fff', confirmButtonColor: '#ef4444', confirmButtonText: '重新输入' }); } catch(e) { alert(`密码验证失败！${errHint}`); }
+                        }
+                    }
+                } catch(globalErr) {
+                    console.error('家控锁验证程序异常:', globalErr);
+                    alert("验证程序被浏览器安全策略拦截，无法开启！");
+                }
             },
 
             // =============== 🚀 写作舱 ================
@@ -311,7 +353,7 @@
                 else if (tool === 'zh_history') prompt = `[强制要求：中文输出。时空导游]。文本："${contextLimit}"。讲背景。反问孩子想对作者说什么。`; 
                 else if (tool === 'zh_core') prompt = `[强制要求：中文输出。像侦探]。文本："${contextLimit}"。找文眼，夸张解释。反问孩子想换什么字。`;
                 
-                const names = { 'en_vocab':'使用了技能：🔍 找找魔法单词', 'en_context':'使用了技能：🎭 发现故事彩蛋', 'en_critical':'使用了技能：🧠 终极脑力挑战', 'zh_visual':'使用了技能：🖼️ 把文字变成画', 'zh_history':'使用了技能：⏳ 和古人聊聊天', 'zh_core':'使用了技能：🎯 抓住最厉害的字' };
+                const names = { 'en_vocab':'使用了技能：🔍 找找魔法单词', 'en_context':'使用了技能：🎭 发现故事彩蛋', 'en_critical':'使用了技能：🧠 终极脑力挑战', 'zh_visual':'使用了技能：🖼️ 把文字变成画', 'zh_history':'使用了技能：⏳ 和古人聊聊天', 'zh_core':'使用了技能：🎯 抓核心字' };
                 this.state.readingChatLog.push({ role: 'user', text: `<i>[${names[tool]}]</i>` }); this.renderReadingChat();
                 
                 const res = await this.callAI(prompt, 'nova', true);
@@ -320,7 +362,7 @@
                     if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role: 'nova', text: cleanRes});
                 } else {
-                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>魔法卡牌释放失败啦！这需要连接指挥中心的真实 AI 引擎。请让家长去后台绑定 API 哦。</p></div>`});
+                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>魔法卡牌释放失败啦！这需要连接指挥中心的真实 AI 引擎。请呼叫家长去后台配置。</p></div>`});
                 }
                 this.renderReadingChat();
             },
@@ -336,7 +378,7 @@
                     let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role:'nova', text: cleanRes}); 
                 } else {
-                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。</p></div>`});
+                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。请呼叫家长去后台配置。</p></div>`});
                 }
                 this.renderReadingChat();
             },
@@ -345,10 +387,10 @@
             getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
             renderGalaxy() {
                 const c = $('galaxy-container'); c.innerHTML = '';
-                const deployedGalaxies = this.state.galaxies; // 已经被过滤过只剩部署的了
+                const deployedGalaxies = this.state.galaxies;
                 
                 if (deployedGalaxies.length === 0) {
-                    c.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 pointer-events-auto"><div class="text-7xl mb-6 opacity-30 animate-pulse">🌌</div><p class="tracking-widest uppercase text-sm font-bold bg-slate-900/80 px-8 py-5 rounded-2xl border border-slate-800 text-center leading-relaxed">当前宇宙处于休眠状态。<br><br><span class="text-blue-400">指挥官，请前往【家控中枢 -> 星系锻造】<br>点击「🚀 部署至探索舱」唤醒您的第一个星系！</span></p></div>`;
+                    c.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 pointer-events-auto"><div class="text-7xl mb-6 opacity-30 animate-pulse">🌌</div><p class="tracking-widest uppercase text-sm font-bold bg-slate-900/80 px-8 py-5 rounded-2xl border border-slate-800 text-center leading-relaxed">当前宇宙处于休眠状态。<br><br><span class="text-blue-400">指挥官，请点击左下方【呼叫家控中枢】<br>联系家长「🚀 部署至探索舱」唤醒您的第一个星系！</span></p></div>`;
                     return;
                 }
 

@@ -6,7 +6,6 @@
     <title>XuePilot - Parent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- 引入 Quill 富文本编辑器 -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
@@ -23,7 +22,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
-        /* 🚀 极客级富文本编辑器深色主题 (图片/视频已解锁) */
         .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; }
         .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; font-family: -apple-system, sans-serif;}
         .ql-snow .ql-stroke { stroke: #cbd5e1; } .ql-snow .ql-fill { fill: #cbd5e1; } .ql-snow .ql-picker { color: #cbd5e1; }
@@ -32,7 +30,6 @@
         .ql-editor ul { padding-left: 1.5rem; margin-bottom: 1rem; }
         .ql-editor p { margin-bottom: 0.75rem; }
         .ql-editor strong { color: #38bdf8; }
-        /* 媒体元素自适应 */
         .ql-editor img { border-radius: 0.5rem; max-width: 100%; margin: 1rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .ql-editor iframe.ql-video { width: 100%; height: 350px; border-radius: 0.5rem; margin: 1rem 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     </style>
@@ -74,11 +71,10 @@
                 <span class="mr-3 text-xl">🪐</span><div class="flex flex-col"><span class="text-sm">星系大纲锻造中枢</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">多语言 RAG 排课引擎</span></div>
             </button>
             <button onclick="App.switchView('config')" id="nav-config" class="btn-nav py-3 mb-2 text-slate-300">
-                <span class="mr-3 text-xl">⚙️</span><div class="flex flex-col"><span class="text-sm">全局大模型算力</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">API Key 与引擎配置</span></div>
+                <span class="mr-3 text-xl">⚙️</span><div class="flex flex-col"><span class="text-sm">全局系统与配置</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">算力及安全锁设定</span></div>
             </button>
 
             <div class="mt-auto pt-4 border-t border-slate-800/50">
-                <!-- 🚀 物理剥离：一键前往学生端 -->
                 <button onclick="window.location.href='classroom.html'" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-black text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] transition hover:scale-[1.02] flex justify-center items-center gap-2">
                     🚀 启动学生前台探索舱
                 </button>
@@ -163,12 +159,10 @@
                 <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden relative border border-blue-500/20 shadow-2xl">
                     <div id="editor-empty" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 z-20 transition-opacity duration-300"><div class="text-center"><div class="text-6xl mb-4 opacity-30 drop-shadow-xl">📝</div><div class="text-slate-400 font-bold tracking-widest text-sm">请在左侧选择或提取章节，开启苏格拉底高阶编辑</div></div></div>
                     
-                    <!-- 🚀 修复版 Quill Toolbar：已解锁图片与视频接入 -->
                     <div id="editor-toolbar" class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center flex-wrap gap-3">
                         <div class="flex gap-2 shrink-0">
                             <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
                             <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                            <!-- 图片和视频功能按钮回归！ -->
                             <span class="ql-formats"><button class="ql-image"></button><button class="ql-video"></button></span>
                         </div>
                         <button onclick="App.generateLessonContent()" id="btn-gen-content" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-bold hover:scale-105 transition shadow-[0_0_20px_rgba(59,130,246,0.6)] animate-pulse whitespace-nowrap shrink-0">✨ 智能生成苏格拉底教案</button>
@@ -178,19 +172,30 @@
             </div>
         </div>
 
-        <!-- 🚀 视图 5：全局配置 -->
-        <div id="view-config" class="view-panel items-center justify-center p-8 fade-in">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-slate-700 shadow-2xl">
-                <h2 class="text-3xl font-black text-white mb-2">⚙️ 全局大模型算力配置</h2>
-                <p class="text-slate-400 text-sm mb-8">绑定私有 API 密钥以解锁薛定谔系统的无限真实算力。</p>
+        <!-- 🚀 视图 5：全局配置 (包含密码设置) -->
+        <div id="view-config" class="view-panel items-center justify-center p-8 fade-in overflow-y-auto">
+            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-slate-700 shadow-2xl my-auto">
+                <h2 class="text-3xl font-black text-white mb-2">⚙️ 全局系统与配置</h2>
+                <p class="text-slate-400 text-sm mb-8">在这里绑定 API 算力密钥，并设置保护防线的安全隔离锁。</p>
+                
                 <div class="space-y-6">
+                    <!-- 🚀 新增：自由配置密码锁 -->
+                    <div class="bg-emerald-900/10 p-6 rounded-2xl border border-emerald-500/30">
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-emerald-400 text-xs uppercase tracking-widest">🔐 物理隔离安全密钥 (Parent PIN)</h3></div>
+                        <div class="flex gap-3">
+                            <input type="password" id="new-pin" placeholder="输入新的 4 位数字密码" maxlength="4" class="flex-1 input-dark p-4 rounded-xl text-sm font-mono tracking-widest">
+                            <button onclick="App.savePinConfig()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition whitespace-nowrap shadow-lg">更新安全密钥</button>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3">用于从学生前台跃迁至本家控中枢的访问凭证。建议及时修改以防学生误入。</p>
+                    </div>
+
                     <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase">🌌 排课规划模型 (SYS Engine)</h3><button onclick="App.testAPI('sys')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase tracking-widest">🌌 排课规划模型 (SYS Engine)</h3><button onclick="App.testAPI('sys')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
                         <input type="password" id="sys-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
                         <div class="grid grid-cols-2 gap-3"><input type="text" id="sys-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                     <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-purple-400 text-xs uppercase">🤖 伴读导师模型 (NOVA Engine)</h3><button onclick="App.testAPI('nova')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-purple-400 text-xs uppercase tracking-widest">🤖 伴读导师模型 (NOVA Engine)</h3><button onclick="App.testAPI('nova')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
                         <input type="password" id="nova-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
                         <div class="grid grid-cols-2 gap-3"><input type="text" id="nova-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="nova-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
@@ -199,7 +204,7 @@
             </div>
         </div>
 
-        <!-- 🚀 规划大纲弹窗 (Planner Modal) -->
+        <!-- 🚀 规划大纲弹窗 -->
         <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]">
                 <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
@@ -235,6 +240,7 @@
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
+                parentPin: window.safeStorage.get('xp_parent_pin') || '0000', // 🚀 获取配置密码
                 galaxies: [], students: [], currentStudentId: null,
                 editGalaxy: null, editSubject: null, lessons: [], curLessonId: null
             },
@@ -253,20 +259,15 @@
                     let s = window.safeStorage.get('xp_galaxies');
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
                     if (this.state.galaxies.length === 0) {
-                        this.state.galaxies = [
-                            { 
-                                id: 'gal_demo_cn', title: '🇨🇳 四年级下学期核心星系', baseStandard: '中国义务教育课标 (2022版)', bgX: 20, bgY: 30, isDeployed: true, 
-                                subjects: [
-                                    { id: 'cn_sub1', title: '大语文时空 (文言文与阅读)', icon: '📜', radius: 240, angle: 0.5, lessons: [{id:'l_cn_1', title:'古诗词《清平乐·村居》的意境白描', content:'<h3>1. 破冰提问：跨越时空的画面</h3><p>指挥官，当你闭上眼睛听到“茅檐低小，溪上青青草”时，你脑海中浮现的是什么颜色的滤镜？</p><ul><li>如果让你给这幅画配上声音，除了溪水声，你还能听到什么？</li></ul><img src="https://images.unsplash.com/photo-1615414050212-dbfbc746c559?auto=format&fit=crop&w=800&q=80" alt="古代村居" />'}] }, 
-                                    { id: 'cn_sub2', title: '四维空间数学 (几何与方程)', icon: '📐', radius: 360, angle: 2.1, lessons: [] }, 
-                                    { id: 'cn_sub3', title: '万物科学实验室 (生命与能量)', icon: '🧬', radius: 480, angle: 4.2, lessons: [] },
-                                    { id: 'cn_sub4', title: 'Interstellar English', icon: '💬', radius: 600, angle: 5.5, lessons: [] }
-                                ] 
-                            }
-                        ];
+                        this.state.galaxies = [{ 
+                            id: 'gal_demo_cn', title: '🇨🇳 四年级下学期核心星系', baseStandard: '中国义务教育课标 (2022版)', bgX: 50, bgY: 50, isDeployed: true, 
+                            subjects: [
+                                { id: 'cn_sub1', title: '大语文时空', icon: '📜', radius: 240, angle: 0.5, lessons: [{id:'l_cn_1', title:'《清平乐·村居》', content:'<p>测试</p>'}] }, 
+                                { id: 'cn_sub2', title: '四维空间数学', icon: '📐', radius: 360, angle: 2.1, lessons: [] }, 
+                                { id: 'cn_sub3', title: '万物科学', icon: '🧬', radius: 480, angle: 4.2, lessons: [] }
+                            ] 
+                        }];
                         window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
-                    } else {
-                        this.state.galaxies.forEach(g => { if(typeof g.isDeployed === 'undefined') g.isDeployed = true; });
                     }
                     
                     $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
@@ -586,7 +587,7 @@
                 Swal.fire({toast:true, position:'top-end', icon:'success', title:'教案已保存', showConfirmButton:false, timer:1500});
             },
 
-            // =============== 🚀 引擎配置 ================
+            // =============== 🚀 系统配置与防熔断隔离锁 ================
             async testAPI(type) {
                 const key = $(`${type}-key`).value, url = $(`${type}-url`).value, model = $(`${type}-model`).value;
                 if (!key || !url || !model) { Swal.fire({ title: '配置不完整', icon: 'warning', background: '#0f172a', color: '#fff' }); return; }
@@ -597,14 +598,70 @@
                     else throw new Error(); 
                 } catch(e) { Swal.fire({ toast:true, position:'top-end', icon: 'error', title: '链路失败', showConfirmButton: false, timer: 1500 }); }
             },
+            
             saveConfig() {
                 ['sys','nova'].forEach(t => { window.safeStorage.set(`xp_${t}_key`, $(`${t}-key`).value); window.safeStorage.set(`xp_${t}_url`, $(`${t}-url`).value); window.safeStorage.set(`xp_${t}_model`, $(`${t}-model`).value); });
-                Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已保存', showConfirmButton:false, timer:1500});
+                Swal.fire({toast:true, position:'top-end', icon:'success', title:'引擎配置已保存', showConfirmButton:false, timer:1500});
+            },
+            
+            // 🚀 核心更新：自由配置安全锁密码
+            savePinConfig() {
+                const newPin = $('new-pin').value;
+                if (newPin && newPin.length === 4 && /^\d{4}$/.test(newPin)) {
+                    this.state.parentPin = newPin;
+                    window.safeStorage.set('xp_parent_pin', newPin);
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'隔离密钥已更新', showConfirmButton:false, timer:1500});
+                    $('new-pin').value = '';
+                } else {
+                    Swal.fire({title: '格式错误', text: '安全密钥必须是 4 位纯数字。', icon: 'error', background: '#0f172a', color: '#fff'});
+                }
             }
         };
 
         window.App = App;
-        window.onload = () => { window.App.init(); window.App.switchView('students'); }; // 后台默认打开学员管理
+        window.onload = () => { 
+            window.App.init(); 
+            // 如果是从学生舱跃迁过来，自动释放侧边栏锁定状态
+            if (sessionStorage.getItem('xp_unlocked') === 'true') {
+                window.App.switchView('students');
+            } else {
+                // 如果是直接输入 URL 访问后台，需要先通过密码屏障拦截
+                promptParentLockGuard();
+            }
+        };
+
+        // 直接拦截加载
+        async function promptParentLockGuard() {
+            let pin = null;
+            const currentPin = window.App.state.parentPin || '0000';
+            const hintHtml = currentPin === '0000' ? '<div class="text-xs text-emerald-400 font-bold bg-emerald-900/20 border border-emerald-500/30 p-2 rounded-lg inline-block mt-2">(初始默认: 0000，请在此修改)</div>' : '';
+
+            try {
+                const res = await Swal.fire({
+                    title: '家控中枢防线',
+                    html: `<div class="text-sm text-slate-300">探测到直接访问后台，请输入指令密码</div>${hintHtml}`,
+                    input: 'password',
+                    inputAttributes: { maxlength: "4", autocapitalize: 'off', autocorrect: 'off', placeholder: '****' },
+                    background: '#0f172a', color: '#fff',
+                    confirmButtonText: '解除锁定', confirmButtonColor: '#3b82f6',
+                    allowOutsideClick: false, allowEscapeKey: false
+                });
+                if (res && res.isConfirmed) { pin = res.value; }
+            } catch(swalErr) {
+                const nativeHint = currentPin === '0000' ? ' (初始默认: 0000)' : '';
+                pin = prompt(`家控中枢防线\n探测到直接访问后台，请输入指令密码${nativeHint}`);
+            }
+
+            if (pin !== null && pin !== undefined) {
+                if (pin === currentPin) {
+                    try { Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '验证通过', showConfirmButton: false, timer: 1500}); } catch(e){}
+                    window.App.switchView('students');
+                } else {
+                    const errHint = currentPin === '0000' ? '提示：初始密码为 0000。' : '';
+                    try { Swal.fire({ title: '验证失败', text: `密码错误！${errHint}`, icon: 'error', background: '#0f172a', color: '#fff', confirmButtonColor: '#ef4444', confirmButtonText: '重新尝试' }).then(() => promptParentLockGuard()); } catch(e) { alert(`密码错误！${errHint}`); promptParentLockGuard(); }
+                }
+            }
+        }
     </script>
 </body>
 </html>

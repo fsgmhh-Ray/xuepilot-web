@@ -57,7 +57,7 @@
             set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
         };
         const $ = id => document.getElementById(id);
-        window.quillEditor = null; // 全局 Quill 实例
+        window.quillEditor = null;
     </script>
 </head>
 <body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
@@ -69,7 +69,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V15.0 Editor</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V15.1 Editor</div>
                 </div>
             </a>
         </div>
@@ -223,7 +223,7 @@
             </div>
         </div>
 
-        <!-- 🚀 后台：锻造 -->
+        <!-- 🚀 后台：大纲锻造中枢 -->
         <div id="view-forge" class="view-panel flex-col p-8 z-10 fade-in">
             <div class="flex justify-between items-end mb-6 shrink-0">
                 <div><h2 class="text-3xl font-black text-white mb-2">星系与课程锻造中枢</h2><p class="text-slate-400 text-sm">系统将结合真实世界教育标准，为您智能规划孩子的知识宇宙。</p></div>
@@ -296,6 +296,7 @@
     </main>
 
     <script>
+        // 🚀 完全去重、坚如磐石的原生逻辑引擎
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
@@ -305,7 +306,7 @@
                 writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。\n后来我们去划船，湖水很清。划完船我们去吃了冰淇淋，冰淇淋是草莓味的，很好吃。\n今天真是开心的一天啊！我希望下次还能来玩。',
                 readingChatLog: [],
                 
-                // 🚀 核心归位：编辑器内部状态
+                // Editor States
                 editGalaxy: null, editSubject: null, lessons: [], curLessonId: null
             },
 
@@ -329,6 +330,7 @@
                 }
                 this.state.activeGalaxyId = this.state.galaxies[0].id;
                 
+                // 填充配置面板初始值
                 $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
                 $('sys-url').value = window.safeStorage.get('xp_sys_url') || '/proxy/groq';
                 $('sys-model').value = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
@@ -393,7 +395,9 @@
                 return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
             },
 
-            // =============== 🚀 核心归位：教案编辑器 (Forge -> Editor) ================
+            // =========================================================================
+            // =============== 🚀 核心归位：教案编辑器 (Forge -> Editor) ===============
+            // =========================================================================
             editCurriculum(gid) { 
                 const g = this.state.galaxies.find(x => x.id === gid);
                 if(!g || !g.subjects || g.subjects.length === 0) return;
@@ -651,9 +655,17 @@
 
             // =============== 🚀 家长控制台与配置 ================
             async promptParentLock() {
-                if (this.state.isParentUnlocked) { this.state.isParentUnlocked = false; $('parent-menu').style.display='none'; $('lock-icon').innerText='🔒'; this.switchView('classroom'); return; }
+                if (this.state.isParentUnlocked) { 
+                    this.state.isParentUnlocked = false; 
+                    $('parent-menu').style.display='none'; $('lock-icon').innerText='🔒'; 
+                    this.switchView('classroom'); return; 
+                }
                 const { value: pin } = await Swal.fire({ title: '家长验证', text: '输入 4 位数字密码', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', confirmButtonText: '进入中枢' });
-                if (pin === this.state.parentPin) { this.state.isParentUnlocked = true; $('parent-menu').style.display='block'; $('lock-icon').innerText='🔓'; this.switchView('forge'); }
+                if (pin === this.state.parentPin) { 
+                    this.state.isParentUnlocked = true; 
+                    $('parent-menu').style.display='block'; $('lock-icon').innerText='🔓'; 
+                    this.switchView('forge'); 
+                }
             },
             async testAPI(type) {
                 const key = $(`${type}-key`).value, url = $(`${type}-url`).value, model = $(`${type}-model`).value;
@@ -709,4 +721,102 @@
             renderForgeList() {
                 const c = $('forge-list'); c.innerHTML = '';
                 this.state.galaxies.forEach(g => {
-                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex
+                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group">
+                        <button onclick="App.deleteGalaxy('${g.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
+                        <div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div><div class="pr-6"><h3 class="font-bold text-lg text-white">${g.title}</h3><span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">${g.baseStandard || 'Custom'}</span></div></div>
+                        <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含核心学科与探索节点。可通过引擎进行深度定制和真实资料投喂。</p>
+                        <button onclick="App.editCurriculum('${g.id}')" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 rounded-xl text-sm font-bold transition border border-slate-700 shadow-md">⚙️ 配置大纲与排课</button>
+                    </div>`;
+                });
+            },
+
+            // =============== 🚀 3D 星球与 Canvas 渲染 ================
+            getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
+            renderGalaxy() {
+                const c = $('galaxy-container'); c.innerHTML = '';
+                this.state.galaxies.forEach(g => {
+                    const isActive = g.id === this.state.activeGalaxyId;
+                    const style = isActive ? `left: 50%; top: 50%; transform: translate(${this.state.panX||0}px, ${this.state.panY||0}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
+                    let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)] group" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
+                    html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
+                    
+                    if (!isActive) {
+                        html += `<div class="absolute pointer-events-none z-50 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="transform: scale(8.333); bottom: 140px;">
+                                    <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-[10px] font-black uppercase flex items-center gap-2 whitespace-nowrap">🔥 <span>${g.title}</span></span>
+                                 </div>`;
+                    }
+
+                    if (isActive && g.subjects) {
+                        html += `<div class="absolute pointer-events-none" style="left:0; top:0;">`;
+                        g.subjects.forEach((s, i) => {
+                            const isFree = i === 0 || this.state.isPro;
+                            html += `<div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" style="left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);" onclick="App.openMission('${s.title}', ${isFree})">
+                                ${isFree ? '<div class="free-badge">OPEN</div>' : '<div class="energy-lock">🔒</div>'}
+                                <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl ${isFree?'':'planet-locked'}" style="${this.getPlanetStyle(i)}">${s.icon}</div>
+                                <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400 transition whitespace-nowrap">${s.title}</span>
+                            </div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    html += `</div>`; c.innerHTML += html;
+                });
+            },
+            activateGalaxy(id) { this.state.activeGalaxyId = id; this.state.panX = 0; this.state.panY = 0; this.renderGalaxy(); },
+            openMission(sTitle, isFree) {
+                if (isFree) { Swal.fire({ title: '🚧 星球建设中', html: `<div class="text-left"><p class="text-sm text-slate-300 mb-3">全息课程 <b>《${sTitle}》</b> 还在施工哦！</p><p class="text-xs text-slate-400">指挥官还没有为你部署专属任务。</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#475569', confirmButtonText: '去玩危机演习 🎮', cancelButtonText: '留在星域' }).then((r) => { if (r.isConfirmed) window.location.href = `simulator.html?mission=${encodeURIComponent(sTitle)}`; }); } 
+                else { Swal.fire({ title: '引力场锁定', text: '指挥官，此星域需要 PRO 级算力解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); }
+            },
+            
+            initNetworkCanvas() {
+                this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
+                const res = () => { 
+                    this.canvas.width = Math.max(300, window.innerWidth - 320); 
+                    this.canvas.height = window.innerHeight; 
+                }; 
+                window.addEventListener('resize', res); res();
+                
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                const pC = Math.floor(w / 8), sC = Math.floor(w / 4);
+                this.particles = []; this.stars = [];
+                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*w, y: (Math.random()-0.5)*h, z: Math.random()*w });
+                
+                if(this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim();
+                
+                const vp = $('galaxy-viewport');
+                vp.addEventListener('mousedown', e => { if(e.target.closest('.planet-core, .planet-3d, button')) return; this.state.isPan=true; this.state.sx=(e.clientX||0)-(this.state.panX||0); this.state.sy=(e.clientY||0)-(this.state.panY||0); });
+                window.addEventListener('mousemove', e => { 
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.state.mx = (e.clientX||0) - rect.left; 
+                    this.state.my = (e.clientY||0) - rect.top; 
+                    if(this.state.isPan){ this.state.panX=e.clientX-this.state.sx; this.state.panY=e.clientY-this.state.sy; this.renderGalaxy(); } 
+                });
+                window.addEventListener('mouseup', () => this.state.isPan=false);
+            },
+            drawNetwork() {
+                if(!this.ctx || !this.canvas || !$('view-classroom').classList.contains('active')) return;
+                const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
+                this.stars.forEach(s => { 
+                    s.z -= 1.5; 
+                    if(s.z <= 0) { s.z = w; s.x = (Math.random()-0.5)*w; s.y = (Math.random()-0.5)*h; } 
+                    let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; 
+                    if(sx>=0 && sx<=w && sy>=0 && sy<=h && r > 0) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } 
+                });
+                this.particles.forEach((p, i) => { 
+                    p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
+                    this.particles.slice(i+1).forEach(p2 => { 
+                        let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                        if(d<220) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/220)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } 
+                    }); 
+                    if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } 
+                });
+                if (this.state.activeGalaxyId) { const ag = this.state.galaxies.find(g => g.id === this.state.activeGalaxyId); if(!ag || !ag.subjects) return; let cx = w/2 + (this.state.panX||0); let cy = h/2 + (this.state.panY||0); ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
+            }
+        };
+
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>

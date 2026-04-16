@@ -6,42 +6,33 @@
     <title>XuePilot 派乐伴学 - Unified OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        [x-cloak] { display: none !important; }
-        body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
+        body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
         .btn-nav { display: flex; width: 100%; align-items: center; padding: 0.8rem 1rem; margin-bottom: 0.4rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: left; }
-        .btn-nav:hover { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
+        .btn-nav:hover, .btn-nav.active { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
+        .btn-nav.active { box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+        
+        .view-panel { display: none; height: 100%; width: 100%; }
+        .view-panel.active { display: flex; }
 
-        /* 3D 渲染层 */
-        .planet-3d, .planet-core { will-change: transform; border-radius: 50%; position: relative; transition: transform 0.3s ease; }
+        .planet-3d, .planet-core { border-radius: 50%; position: relative; transition: transform 0.3s ease; }
         .planet-locked { filter: grayscale(1) opacity(0.4); cursor: not-allowed !important; }
-        .sun-core {
-            border-radius: 50%; position: relative;
-            background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%);
-            box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5);
-            animation: sunPulse 4s infinite ease-in-out;
-        }
-        @keyframes sunPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(234, 88, 12, 0.8), 0 0 160px rgba(251, 191, 36, 0.5); } }
-        .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; animation: lockPulse 2s infinite; }
+        .sun-core { background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5); animation: sunPulse 4s infinite ease-in-out; }
+        @keyframes sunPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .free-badge { position: absolute; top: -10px; right: -10px; background: #10b981; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 50; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
-        @keyframes lockPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } }
+        .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; }
 
-        /* UI 组件 */
         .input-dark { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #3b82f6; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
-        /* 富文本编辑器 */
-        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; }
-        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; }
-        .ql-editor { min-height: 300px; }
-
+        .magic-btn { position: relative; overflow: hidden; }
+        .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
+        .magic-btn:hover::after { opacity: 1; transform: scale(1); }
+        
         /* API 测试状态动画 */
         .status-pulse { width: 10px; height: 10px; border-radius: 50%; }
         .ping-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
@@ -49,354 +40,176 @@
         .ping-amber { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* AI 对话框美化 */
         .ai-message { font-size: 0.9rem; line-height: 1.6; }
         .ai-message strong { color: #cbd5e1; }
         .ai-message p { margin-bottom: 0.75rem; }
-        
-        /* 童趣化按钮特效 */
-        .magic-btn { position: relative; overflow: hidden; }
-        .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
-        .magic-btn:hover::after { opacity: 1; transform: scale(1); }
     </style>
     <script>
-        window.safeStorage = { memory: {}, get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } }, set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} } };
+        // 绝对免疫存储拦截的虚拟内存池
+        window.safeStorage = {
+            memory: {},
+            get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } },
+            set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
+        };
+        const $ = id => document.getElementById(id);
     </script>
 </head>
-<body x-data="dashboardApp()" x-init="init()" class="flex h-screen w-screen relative overflow-hidden text-slate-200">
+<body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
 
-    <!-- 侧边导航栏 -->
+    <!-- 左侧导航 -->
     <aside class="w-[20rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative">
         <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
             <a href="https://www.xuepilot.com" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition group">
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
-                    <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">
-                        XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span>
-                    </h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V12.1</div>
+                    <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V13.1 Native</div>
                 </div>
             </a>
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col scrollbar-hide">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">🚀 核心知识宇宙</div>
-            
-            <button @click="view = 'classroom'" class="btn-nav py-3 mb-4" :class="view === 'classroom' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'text-emerald-500 bg-emerald-900/10'">
+            <button onclick="App.switchView('classroom')" id="nav-classroom" class="btn-nav active py-3 mb-4">
                 <span class="mr-3 text-2xl">🌌</span> 
-                <div class="flex flex-col">
-                    <span class="text-sm font-black text-white">启航！3D 知识星球</span>
-                    <span class="text-[10px] text-emerald-600 font-normal mt-0.5 leading-snug">一键同步全球顶尖教学大纲与资源的沉浸式教室</span>
-                </div>
+                <div class="flex flex-col"><span class="text-sm font-black text-white">启航！3D 知识星球</span><span class="text-[10px] text-emerald-600 font-normal mt-0.5 leading-snug">一键同步全球顶尖教学大纲与资源的沉浸式教室</span></div>
             </button>
             
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">💡 魔法专项训练营</div>
-            
-            <a href="simulator.html" class="btn-nav text-slate-300 hover:text-blue-400 py-3">
-                <span class="mr-3 text-xl">🎮</span>
-                <div class="flex flex-col">
-                    <span class="text-sm">AI 危机救援演习</span>
-                    <span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">告别刷题！在科幻实战中练就顶级逻辑与大局观</span>
-                </div>
+            <a href="simulator.html" class="btn-nav text-slate-300 py-3">
+                <span class="mr-3 text-xl">🎮</span><div class="flex flex-col"><span class="text-sm">AI 危机救援演习</span><span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">告别刷题！在科幻实战中练就顶级逻辑与大局观</span></div>
             </a>
-            
-            <button @click="view = 'writing'" class="btn-nav py-3" :class="view==='writing'?'bg-orange-600/20 text-orange-400 border-orange-500/30':'text-slate-300'">
-                <span class="mr-3 text-xl">✍️</span>
-                <div class="flex flex-col">
-                    <span class="text-sm">AI 启发写作舱</span>
-                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='writing'?'text-orange-500':'text-slate-500'">不代写答案！苏格拉底提问专治流水账，重塑逻辑链</span>
-                </div>
+            <button onclick="App.switchView('writing')" id="nav-writing" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">✍️</span><div class="flex flex-col"><span class="text-sm">AI 启发写作舱</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">不代写答案！苏格拉底提问专治流水账，重塑逻辑链</span></div>
             </button>
-            
-            <button @click="openReading('en')" class="btn-nav py-3" :class="view==='reading-en'?'bg-indigo-600/20 text-indigo-400 border-indigo-500/30':'text-slate-300'">
-                <span class="mr-3 text-xl">🔤</span>
-                <div class="flex flex-col">
-                    <span class="text-sm">英文语境透视镜</span>
-                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='reading-en'?'text-indigo-500':'text-slate-500'">构建母语级思维脉络，像语言学家一样解构跨文化隐喻</span>
-                </div>
+            <button onclick="App.openReading('en')" id="nav-reading-en" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">🔤</span><div class="flex flex-col"><span class="text-sm">英文语境透视镜</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">构建母语级思维脉络，像语言学家一样解构跨文化隐喻</span></div>
             </button>
-            
-            <button @click="openReading('zh')" class="btn-nav py-3" :class="view==='reading-zh'?'bg-emerald-600/20 text-emerald-400 border-emerald-500/30':'text-slate-300'">
-                <span class="mr-3 text-xl">📜</span>
-                <div class="flex flex-col">
-                    <span class="text-sm">大语文时空伴读</span>
-                    <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="view==='reading-zh'?'text-emerald-500':'text-slate-500'">唤醒跨时空共情力，以大师级视角重塑古典与现代审美</span>
-                </div>
+            <button onclick="App.openReading('zh')" id="nav-reading-zh" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时空伴读</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力，以大师级视角重塑古典与现代审美</span></div>
             </button>
 
             <!-- 家长后台 -->
             <div class="mt-auto pt-4 border-t border-slate-800/50">
-                <button @click="promptParentLock()" class="btn-nav w-full justify-between group py-3" :class="isParentUnlocked ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-amber-400'">
-                    <div class="flex items-center">
-                        <span class="mr-3 text-xl">🎛️</span>
-                        <div class="flex flex-col">
-                            <span class="text-sm">家长/教师主控台</span>
-                            <span class="text-[10px] font-normal mt-0.5 leading-snug" :class="isParentUnlocked ? 'text-slate-400' : 'text-slate-500'">密码锁定：配置专属大纲与查看六维学情雷达</span>
-                        </div>
-                    </div>
-                    <span x-text="isParentUnlocked ? '🔓' : '🔒'"></span>
+                <button onclick="App.promptParentLock()" class="btn-nav w-full justify-between group py-3 text-slate-400 hover:text-amber-400">
+                    <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span><div class="flex flex-col"><span class="text-sm">家长/教师主控台</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">密码锁定：配置专属大纲与引擎</span></div></div>
+                    <span id="lock-icon">🔒</span>
                 </button>
-                
-                <div x-show="isParentUnlocked" x-collapse class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1 pb-4">
-                    <button @click="view = 'students'" class="btn-nav py-2" :class="view==='students'?'text-blue-400':'text-slate-400'">
-                        <span class="mr-2">👨‍👩‍👧‍👦</span>
-                        <div class="flex flex-col"><span class="text-xs">学员档案管理</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='students'?'text-blue-500':'text-slate-500'">多孩家庭专属，学习进度与宇宙隔离</span></div>
-                    </button>
-                    <button @click="view = 'forge'" class="btn-nav py-2" :class="view==='forge'?'text-purple-400':'text-slate-400'">
-                        <span class="mr-2">🪐</span>
-                        <div class="flex flex-col"><span class="text-xs">云端大纲排课引擎</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='forge'?'text-purple-500':'text-slate-500'">一键抓取并生成符合国际标准的星系排课</span></div>
-                    </button>
-                    <button @click="view = 'radar'" class="btn-nav py-2" :class="view==='radar'?'text-emerald-400':'text-slate-400'">
-                        <span class="mr-2">📡</span>
-                        <div class="flex flex-col"><span class="text-xs">全息学情分析雷达</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='radar'?'text-emerald-500':'text-slate-500'">告别唯分数论，多维监控真实认知成长</span></div>
-                    </button>
-                    <button @click="view = 'config'" class="btn-nav py-2" :class="view==='config'?'text-slate-300':'text-slate-500'">
-                        <span class="mr-2">⚙️</span>
-                        <div class="flex flex-col"><span class="text-xs">大模型算力配置</span><span class="text-[9px] font-normal leading-snug mt-0.5" :class="view==='config'?'text-slate-400':'text-slate-500'">自主绑定 API 密钥，保障隐私与无限算力</span></div>
-                    </button>
+                <div id="parent-menu" class="pl-4 border-l-2 border-slate-800 ml-4 mt-2 space-y-1 pb-4" style="display: none;">
+                    <button onclick="App.switchView('forge')" id="nav-forge" class="btn-nav py-2 text-slate-400"><span class="mr-2">🪐</span><div class="flex flex-col"><span class="text-xs">云端大纲排课引擎</span></div></button>
+                    <button onclick="App.switchView('config')" id="nav-config" class="btn-nav py-2 text-slate-400"><span class="mr-2">⚙️</span><div class="flex flex-col"><span class="text-xs">大模型算力配置</span></div></button>
                 </div>
             </div>
         </nav>
     </aside>
 
-    <main class="flex-1 relative bg-[#02040a] overflow-hidden flex flex-col">
-        <!-- 动态网格背景 -->
+    <main class="flex-1 relative overflow-hidden flex flex-col">
         <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-        <!-- ================= 🚀 视图：3D 学生探索舱 ================= -->
-        <div x-show="view === 'classroom'" x-cloak class="flex-1 relative overflow-hidden bg-transparent z-10 w-full h-full fade-in">
+        <!-- 🚀 3D 星球舱 -->
+        <div id="view-classroom" class="view-panel active relative overflow-hidden bg-transparent z-10 fade-in">
             <canvas id="network-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
-            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport" @mousedown="startPan" @touchstart="startPan" @mousemove.window="doPan" @mouseup.window="endPan" @touchmove.window="doPan" @touchend.window="endPan">
-                <div class="absolute w-full h-full pointer-events-none">
-                    <template x-for="g in galaxies" :key="g.id">
-                        <div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]" :style="g.id === activeGalaxyId ? `left: 50%; top: 50%; transform: translate(${panX}px, ${panY}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer;`" @click="if(g.id !== activeGalaxyId) activateGalaxy(g.id)">
-                            <!-- 恒星核心 -->
-                            <div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);">
-                                <div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" :style="g.id === activeGalaxyId ? 'width: 160px; height: 160px;' : 'width: 250px; height: 250px;'" @click.stop="g.id === activeGalaxyId ? activateGalaxy(null) : activateGalaxy(g.id)">
-                                    <div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" :class="g.id === activeGalaxyId ? 'text-5xl' : 'text-8xl'">🔮</div>
-                                    <div x-show="g.id === activeGalaxyId" class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2" x-text="g.title"></div>
-                                </div>
-                            </div>
-                            <!-- 行星 -->
-                            <div x-show="g.id === activeGalaxyId" class="absolute pointer-events-none" style="left:0; top:0;">
-                                <template x-for="(s, sIdx) in g.subjects" :key="s.id">
-                                    <div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" :style="`left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);`" @click.stop="tryOpenMission(g, s, sIdx)">
-                                        <div x-show="sIdx === 0 || isPro" class="free-badge">OPEN</div><div x-show="sIdx > 0 && !isPro" class="energy-lock">🔒</div>
-                                        <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl" :style="getPlanetStyle(sIdx)" :class="sIdx > 0 && !isPro ? 'planet-locked' : ''" x-text="s.icon"></div>
-                                        <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400 transition whitespace-nowrap" x-text="s.title"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
+            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport">
+                <div id="galaxy-container" class="absolute w-full h-full pointer-events-none"></div>
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：AI 灵感写作舱 ================= -->
-        <div x-show="view === 'writing'" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
+        <!-- 🚀 写作舱 -->
+        <div id="view-writing" class="view-panel flex-row p-8 gap-6 z-10 fade-in">
             <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden bg-slate-900/80 border border-orange-500/20 shadow-2xl">
                 <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                    <div>
-                        <h3 class="font-black text-2xl text-orange-400 flex items-center gap-3"><span class="text-3xl">✍️</span> 灵感写作舱</h3>
-                        <p class="text-xs text-slate-400 mt-1">NOVA 小助手不会帮你直接写完，但会像侦探一样带你找到最酷的点子！</p>
-                    </div>
+                    <div><h3 class="font-black text-2xl text-orange-400 flex items-center gap-3"><span class="text-3xl">✍️</span> 灵感写作舱</h3><p class="text-xs text-slate-400 mt-1">NOVA 小助手不会帮你直接写完，但会像侦探一样带你找到最酷的点子！</p></div>
                 </div>
                 <div class="flex-1 p-6 flex flex-col relative">
-                    <textarea x-model="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="把你的小脑袋里想到的词语、句子，或者一篇小日记写在这里吧..."></textarea>
-                    
+                    <textarea id="writingDraft" class="flex-1 input-dark p-6 text-lg leading-relaxed resize-none rounded-2xl focus:border-orange-500 font-serif text-slate-200" placeholder="把想到的词语、句子写在这里..."></textarea>
                     <div class="absolute bottom-10 left-6 right-6 flex flex-wrap justify-center gap-3">
-                        <button @click="runWritingTool('brainstorm')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing">
-                            <span x-show="critiqueMode === 'brainstorm' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
-                            <span x-show="!(critiqueMode === 'brainstorm' && isCritiquing)">💡</span> 我没灵感了 (帮我开头)
-                        </button>
-                        <button @click="runWritingTool('logic')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
-                            <span x-show="critiqueMode === 'logic' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
-                            <span x-show="!(critiqueMode === 'logic' && isCritiquing)">🕵️</span> 侦探找茬 (检查逻辑)
-                        </button>
-                        <button @click="runWritingTool('polish')" class="magic-btn px-5 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-orange-600/40 hover:to-orange-500/40 border border-slate-600 hover:border-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2" :disabled="isCritiquing || !writingDraft.trim()">
-                            <span x-show="critiqueMode === 'polish' && isCritiquing" class="animate-spin text-orange-400">↻</span> 
-                            <span x-show="!(critiqueMode === 'polish' && isCritiquing)">✨</span> 施展魔法 (让句子变美)
-                        </button>
+                        <button onclick="App.runWritingTool('brainstorm')" class="magic-btn px-5 py-3 bg-slate-800 text-white font-bold rounded-2xl shadow-lg hover:border-orange-500 border border-slate-600 transition">💡 我没灵感了 (帮我开头)</button>
+                        <button onclick="App.runWritingTool('logic')" class="magic-btn px-5 py-3 bg-slate-800 text-white font-bold rounded-2xl shadow-lg hover:border-orange-500 border border-slate-600 transition">🕵️ 侦探找茬 (检查逻辑)</button>
+                        <button onclick="App.runWritingTool('polish')" class="magic-btn px-5 py-3 bg-slate-800 text-white font-bold rounded-2xl shadow-lg hover:border-orange-500 border border-slate-600 transition">✨ 施展魔法 (让句子变美)</button>
                     </div>
                 </div>
             </div>
-            <!-- 反馈面板 -->
             <div class="w-1/3 glass-panel rounded-3xl flex flex-col border border-orange-500/20 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-orange-600/10 blur-3xl rounded-full pointer-events-none"></div>
-                <div class="p-6 bg-slate-900 border-b border-slate-800 font-bold text-orange-300 flex items-center gap-2">
-                    <span class="text-xl">🎒</span> NOVA 小助手的悄悄话
-                </div>
-                <div class="flex-1 p-6 overflow-y-auto text-base text-slate-300 ai-message font-serif" id="writing-feedback-panel" x-html="writingFeedback"></div>
+                <div class="p-6 bg-slate-900 border-b border-slate-800 font-bold text-orange-300 flex items-center gap-2"><span class="text-xl">🎒</span> NOVA 导师反馈</div>
+                <div class="flex-1 p-6 overflow-y-auto text-base text-slate-300 leading-relaxed font-serif" id="writingFeedback"></div>
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：双语智能伴读舱 ================= -->
-        <div x-show="view.startsWith('reading')" x-cloak class="flex-1 flex p-8 gap-6 z-10 fade-in">
-            <!-- 左侧：素材区与差异化工具 -->
-            <div class="w-1/2 glass-panel rounded-3xl flex flex-col border relative overflow-hidden" :class="view==='reading-en' ? 'border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' : 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'">
+        <!-- 🚀 伴读舱 -->
+        <div id="view-reading" class="view-panel flex-row p-8 gap-6 z-10 fade-in">
+            <div class="w-1/2 glass-panel rounded-3xl flex flex-col border border-blue-500/30 relative overflow-hidden shadow-2xl">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                    <h3 class="font-black text-xl flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'" x-text="view==='reading-en'?'🔤 英语魔法书':'📜 大语文时光机'"></h3>
+                    <h3 id="reading-title" class="font-black text-xl flex items-center gap-2 text-blue-400">📖 智能伴读</h3>
                 </div>
-                
                 <div class="flex-1 p-5 flex flex-col relative">
-                    <textarea x-model="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200" :class="view==='reading-en'?'focus:border-indigo-500 font-sans':'focus:border-emerald-500 font-serif'" :placeholder="view==='reading-en' ? '在这里贴上你想读的英文小故事...\nNOVA 小精灵不会直接给你翻译，而是会带你去发现里面的秘密！' : '在这里贴上你想读的古诗、童话或者历史故事...\nNOVA 会带你穿越时空，去看看那些好玩的画面。'"></textarea>
-                    
-                    <!-- 动态导师工具箱 -->
-                    <div class="absolute bottom-8 left-6 right-6 flex flex-wrap justify-center gap-2">
-                        <template x-if="view === 'reading-en'">
-                            <div class="flex gap-2 w-full justify-center">
-                                <button @click="triggerReadingTool('en_vocab')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🔍 找找魔法单词</button>
-                                <button @click="triggerReadingTool('en_context')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🎭 发现故事彩蛋</button>
-                                <button @click="triggerReadingTool('en_critical')" class="magic-btn px-4 py-3 bg-indigo-900/80 hover:bg-indigo-600 border border-indigo-500/50 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🧠 终极脑力挑战</button>
-                            </div>
-                        </template>
-                        <template x-if="view === 'reading-zh'">
-                            <div class="flex gap-2 w-full justify-center">
-                                <button @click="triggerReadingTool('zh_visual')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🖼️ 把文字变成画</button>
-                                <button @click="triggerReadingTool('zh_history')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">⏳ 和古人聊聊天</button>
-                                <button @click="triggerReadingTool('zh_core')" class="magic-btn px-4 py-3 bg-emerald-900/80 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg transition-all" :disabled="readingLoading || !readingMaterial.trim()">🎯 抓住最厉害的字</button>
-                            </div>
-                        </template>
+                    <textarea id="readingMaterial" class="flex-1 input-dark p-6 text-base leading-relaxed resize-none rounded-2xl mb-4 text-slate-200"></textarea>
+                    <div id="reading-tools-en" class="absolute bottom-8 left-6 right-6 flex justify-center gap-2" style="display:none;">
+                        <button onclick="App.triggerReadingTool('en_vocab')" class="magic-btn px-4 py-3 bg-indigo-900/80 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg border border-indigo-500/50 hover:bg-indigo-600 transition">🔍 找魔法单词</button>
+                        <button onclick="App.triggerReadingTool('en_context')" class="magic-btn px-4 py-3 bg-indigo-900/80 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg border border-indigo-500/50 hover:bg-indigo-600 transition">🎭 发现彩蛋</button>
+                        <button onclick="App.triggerReadingTool('en_critical')" class="magic-btn px-4 py-3 bg-indigo-900/80 text-indigo-100 text-sm font-bold rounded-2xl shadow-lg border border-indigo-500/50 hover:bg-indigo-600 transition">🧠 脑力挑战</button>
+                    </div>
+                    <div id="reading-tools-zh" class="absolute bottom-8 left-6 right-6 flex justify-center gap-2" style="display:none;">
+                        <button onclick="App.triggerReadingTool('zh_visual')" class="magic-btn px-4 py-3 bg-emerald-900/80 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg border border-emerald-500/50 hover:bg-emerald-600 transition">🖼️ 文字变画</button>
+                        <button onclick="App.triggerReadingTool('zh_history')" class="magic-btn px-4 py-3 bg-emerald-900/80 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg border border-emerald-500/50 hover:bg-emerald-600 transition">⏳ 聊聊古人</button>
+                        <button onclick="App.triggerReadingTool('zh_core')" class="magic-btn px-4 py-3 bg-emerald-900/80 text-emerald-100 text-sm font-bold rounded-2xl shadow-lg border border-emerald-500/50 hover:bg-emerald-600 transition">🎯 抓最厉害的字</button>
                     </div>
                 </div>
             </div>
-
-            <!-- 右侧：导师聊天流 -->
-            <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border overflow-hidden" :class="view==='reading-en'?'border-indigo-500/30':'border-emerald-500/30'">
-                <div class="h-16 border-b flex items-center justify-center bg-slate-900" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
-                    <span class="uppercase text-sm font-black tracking-widest flex items-center gap-2" :class="view==='reading-en'?'text-indigo-400':'text-emerald-400'">
-                        <span class="text-2xl">🧸</span> <span x-text="view==='reading-en'?'NOVA 英语小精灵':'NOVA 国学小导师'"></span>
-                    </span>
+            <div class="flex-1 glass-panel rounded-3xl flex flex-col relative border border-blue-500/30 overflow-hidden shadow-2xl">
+                <div class="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-center">
+                    <span class="uppercase text-sm font-black tracking-widest text-blue-400">🧸 <span id="reading-bot-name">NOVA 小精灵</span></span>
                 </div>
-                
-                <div class="flex-1 p-6 overflow-y-auto space-y-6 scrollbar-hide" id="nova-reading-chat">
-                    <template x-for="(msg,i) in readingChatLog" :key="i">
-                        <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
-                            <span class="text-[10px] text-slate-500 font-bold mb-1 ml-1 mr-1" x-text="msg.role==='user'? '小指挥官' : 'NOVA'"></span>
-                            <div class="max-w-[85%] p-4 rounded-2xl text-[15px] ai-message shadow-md" 
-                                 :class="msg.role==='user' 
-                                 ? (view==='reading-en' ? 'bg-indigo-600 text-indigo-50 border border-indigo-500 rounded-tr-none' : 'bg-emerald-600 text-emerald-50 border border-emerald-500 rounded-tr-none') 
-                                 : 'bg-slate-800 text-slate-300 border border-slate-700 rounded-tl-none'">
-                                 <span x-html="msg.text"></span>
-                            </div>
-                        </div>
-                    </template>
-                    <div x-show="readingLoading" class="flex items-center gap-2 text-slate-500 font-mono text-xs">
-                        <div class="w-3 h-3 rounded-full animate-bounce" :class="view==='reading-en'?'bg-indigo-500':'bg-emerald-500'"></div>
-                        <span x-text="view==='reading-en' ? 'NOVA is thinking...' : 'NOVA 正在思考...' "></span>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-900 border-t flex gap-3" :class="view==='reading-en'?'border-indigo-900':'border-emerald-900'">
-                    <input type="text" x-model="readingInput" @keyup.enter="sendReadingText()" class="flex-1 input-dark px-5 py-3.5 rounded-xl text-sm" :placeholder="view==='reading-en' ? 'Tell NOVA what you think...' : '跟 NOVA 说说你的想法...'">
-                    <button @click="sendReadingText()" class="px-8 py-3 hover:brightness-110 rounded-xl font-black transition text-lg shadow-lg" :class="view==='reading-en'?'bg-indigo-600 text-white':'bg-emerald-600 text-white'" :disabled="readingLoading || !readingInput.trim()">
-                        ➤
-                    </button>
+                <div class="flex-1 p-6 overflow-y-auto space-y-6 scrollbar-hide" id="nova-reading-chat"></div>
+                <div class="p-4 bg-slate-900 border-t border-slate-800 flex gap-3">
+                    <input type="text" id="readingInput" onkeypress="if(event.key==='Enter') App.sendReadingText()" class="flex-1 input-dark px-5 py-3.5 rounded-xl text-sm" placeholder="跟 NOVA 说说你的想法...">
+                    <button onclick="App.sendReadingText()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-black shadow-lg hover:bg-blue-500 transition">➤</button>
                 </div>
             </div>
         </div>
 
-        <!-- ================= 🚀 视图：家长大纲锻造台 (Forge) ================= -->
-        <div x-show="view === 'forge'" x-cloak class="flex-1 flex flex-col p-8 z-10 overflow-hidden fade-in">
+        <!-- 🚀 后台：锻造 -->
+        <div id="view-forge" class="view-panel flex-col p-8 z-10 fade-in">
             <div class="flex justify-between items-end mb-6 shrink-0">
-                <div>
-                    <h2 class="text-3xl font-black text-white mb-2">星系与课程锻造中枢</h2>
-                    <p class="text-slate-400 text-sm">系统将结合真实世界教育标准，为您智能规划孩子的知识宇宙。</p>
-                </div>
-                <button @click="openPlanner()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg transition">✨ 规划新星系</button>
+                <div><h2 class="text-3xl font-black text-white mb-2">星系与课程锻造中枢</h2><p class="text-slate-400 text-sm">系统将结合真实世界教育标准，为您智能规划孩子的知识宇宙。</p></div>
+                <button onclick="App.openPlanner()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition">✨ 规划新星系</button>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-10">
-                <template x-for="g in galaxies" :key="g.id">
-                    <div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group">
-                        <button @click="deleteGalaxy(g.id)" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div>
-                            <div class="pr-6">
-                                <h3 class="font-bold text-lg text-white" x-text="g.title"></h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded" x-text="g.baseStandard || 'Custom'"></span>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含核心学科与探索节点。可通过引擎进行深度定制和 RAG 真实资料投喂。</p>
-                        <button @click="editCurriculum(g)" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 rounded-xl text-sm font-bold transition border border-slate-700 shadow-md">⚙️ 配置大纲与排课</button>
-                    </div>
-                </template>
-            </div>
+            <div id="forge-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-10"></div>
         </div>
 
-        <!-- ================= 🚀 视图：引擎与云端配置 (Config) ================= -->
-        <div x-show="view === 'config'" x-cloak class="flex-1 flex items-center justify-center p-8 z-10 overflow-y-auto fade-in">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 relative shadow-[0_0_40px_rgba(147,51,234,0.1)]">
+        <!-- 🚀 后台：配置 -->
+        <div id="view-config" class="view-panel items-center justify-center p-8 z-10 fade-in">
+            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_40px_rgba(147,51,234,0.1)]">
                 <h2 class="text-3xl font-black text-white mb-2">大模型算力与配置</h2>
-                <p class="text-slate-400 text-sm mb-8">绑定私有 API 密钥以解锁无限真实算力。建议排课前执行【自检测试】。</p>
+                <p class="text-slate-400 text-sm mb-8">绑定私有 API 密钥以解锁无限真实算力。</p>
                 <div class="space-y-6">
                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-blue-400 text-xs tracking-widest uppercase flex items-center gap-2">🌌 排课规划模型 (SYS Engine)<div x-show="apiStatus.sys !== 'idle'" class="status-pulse" :class="apiStatus.sys === 'testing' ? 'ping-amber' : (apiStatus.sys === 'ok' ? 'ping-green' : 'ping-red')"></div></h3>
-                            <button @click="testApiConnection('sys')" class="text-[10px] font-bold px-3 py-1 bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-600 hover:text-white transition shadow" :disabled="apiStatus.sys === 'testing'"><span x-text="apiStatus.sys === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span></button>
-                        </div>
-                        <input type="password" x-model="config.sys.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.sys.url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" x-model="config.sys.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase">🌌 排课规划模型 (SYS Engine)</h3><button onclick="App.testAPI('sys')" class="text-[10px] bg-blue-600/30 text-blue-400 border border-blue-500/30 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition">🔗 自检测试</button></div>
+                        <input type="password" id="sys-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
+                        <div class="grid grid-cols-2 gap-3"><input type="text" id="sys-url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-indigo-400 text-xs tracking-widest uppercase flex items-center gap-2">🤖 伴读导师模型 (NOVA Engine)<div x-show="apiStatus.nova !== 'idle'" class="status-pulse" :class="apiStatus.nova === 'testing' ? 'ping-amber' : (apiStatus.nova === 'ok' ? 'ping-green' : 'ping-red')"></div></h3>
-                            <button @click="testApiConnection('nova')" class="text-[10px] font-bold px-3 py-1 bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded hover:bg-indigo-600 hover:text-white transition shadow" :disabled="apiStatus.nova === 'testing'"><span x-text="apiStatus.nova === 'testing' ? '链路握手中...' : '🔗 自检测试'"></span></button>
-                        </div>
-                        <input type="password" x-model="config.nova.key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" x-model="config.nova.url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" x-model="config.nova.model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-indigo-400 text-xs uppercase">🤖 伴读导师模型 (NOVA Engine)</h3><button onclick="App.testAPI('nova')" class="text-[10px] bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded hover:bg-indigo-600 hover:text-white transition">🔗 自检测试</button></div>
+                        <input type="password" id="nova-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
+                        <div class="grid grid-cols-2 gap-3"><input type="text" id="nova-url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="nova-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                 </div>
-                <div class="mt-8 flex justify-end"><button @click="saveConfig()" class="px-10 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-xl transition tracking-widest">💾 烧录全局设定</button></div>
+                <div class="mt-8 flex justify-end"><button onclick="App.saveConfig()" class="px-10 py-4 bg-purple-600 text-white rounded-xl font-bold shadow-xl hover:bg-purple-500 transition">💾 烧录全局设定</button></div>
             </div>
         </div>
 
-        <div x-show="view === 'students'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">👨‍👩‍👧‍👦</div><h2 class="text-2xl font-black text-white">学员档案管理</h2><p class="text-slate-500 mt-2 text-sm">此模块将与 Supabase RLS 挂钩，物理隔离多学员数据。</p></div>
-        <div x-show="view === 'radar'" x-cloak class="flex-1 p-8 z-10 fade-in text-center mt-20"><div class="text-6xl mb-4">📡</div><h2 class="text-2xl font-black text-white">全息学情雷达</h2><p class="text-slate-500 mt-2 text-sm">正在实时汇总学员交互过程中的逻辑与思维特征数据...</p></div>
-        
-        <!-- ================= 🚀 全局 NOVA 悬浮终端 ================= -->
-        <div x-show="view === 'classroom'" x-cloak class="fixed top-0 left-0 z-[100] flex flex-col items-end" :style="`transform: translate(${novaGlobal.pos.x}px, ${novaGlobal.pos.y}px);`">
-            <div x-show="novaGlobal.open" x-transition.opacity class="absolute bottom-16 right-0 mb-4 w-80 glass-panel rounded-3xl overflow-hidden flex flex-col border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]" style="height: 400px;">
-                <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center cursor-move" @mousedown="startNovaDrag" @touchstart="startNovaDrag">
-                    <span class="text-sm font-black text-blue-400 tracking-widest flex items-center gap-2">🤖 NOVA 随航助理</span>
-                    <button @click="novaGlobal.open = false" class="text-slate-500 hover:text-white transition text-lg">✖</button>
-                </div>
-                <div class="flex-1 p-4 overflow-y-auto space-y-4" id="nova-global-chat">
-                    <template x-for="(msg, i) in novaGlobal.msgs" :key="i">
-                        <div class="flex flex-col" :class="msg.role==='user'?'items-end':'items-start'">
-                            <span class="text-[10px] text-slate-500 font-bold mb-1" x-text="msg.role==='user'?'指挥官':'NOVA'"></span>
-                            <div class="max-w-[90%] p-3 rounded-2xl text-sm shadow-md" :class="msg.role==='user'?'bg-blue-600 text-white rounded-tr-none':'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'" x-html="msg.text"></div>
-                        </div>
-                    </template>
-                    <div x-show="novaGlobal.loading" class="text-blue-400 animate-pulse text-[10px] font-mono">NOVA is processing...</div>
-                </div>
-                <div class="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
-                    <input type="text" x-model="novaGlobal.input" @keyup.enter="sendNovaGlobal()" class="flex-1 input-dark px-3 py-2 rounded-xl text-sm" placeholder="输入指令...">
-                    <button @click="sendNovaGlobal()" class="bg-blue-600 px-4 py-2 rounded-xl font-bold shadow-lg hover:bg-blue-500 transition" :disabled="novaGlobal.loading || !novaGlobal.input.trim()">➤</button>
-                </div>
-            </div>
-            <button @mousedown="startNovaDrag" @touchstart="startNovaDrag" class="absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 border-2 border-blue-400/50 shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center text-2xl transition-transform hover:scale-110 active:scale-95" style="touch-action: none;">🤖</button>
-        </div>
-
-        <!-- ================= 🚀 体验版大纲生成引擎 Modal ================= -->
-        <div x-show="showPlanner" x-cloak class="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-8 backdrop-blur-md fade-in">
+        <!-- 🚀 Planner Modal -->
+        <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.2)]">
-                <button @click="showPlanner = false" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white transition">✖</button>
-                <div class="text-center mb-8">
-                    <div class="text-5xl mb-4">🔮</div>
-                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-tighter">星系规划引擎</h2>
-                    <p class="text-emerald-400 text-xs mt-2 font-bold" x-show="!isPro">【基础版权限】：您可以免费且无限次体验单核星系的智能铸造。</p>
-                </div>
+                <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
+                <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400">星系规划引擎</h2><p class="text-emerald-400 text-xs mt-2 font-bold" id="planner-hint"></p></div>
                 <div class="space-y-5">
-                    <select x-model="planConfig.curriculum" class="w-full input-dark p-4 rounded-xl text-sm focus:border-purple-500"><option>中国义务教育课标 (2022版)</option><option>美国 Common Core State Standards</option><option>英国 National Curriculum</option></select>
+                    <select id="plan-curriculum" class="w-full input-dark p-4 rounded-xl text-sm focus:border-purple-500"><option>中国义务教育课标 (2022版)</option><option>美国 Common Core State Standards</option></select>
                     <div class="grid grid-cols-2 gap-4">
-                        <select x-model="planConfig.grade" class="input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="三年级">三年级 (Grade 3)</option><option value="四年级">四年级 (Grade 4)</option><option value="五年级">五年级 (Grade 5)</option></select>
-                        <select x-model="planConfig.term" class="input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="上学期">上学期 (Term 1)</option><option value="下学期">下学期 (Term 2)</option></select>
+                        <select id="plan-grade" class="input-dark p-4 rounded-xl text-sm"><option value="三年级">三年级 (Grade 3)</option><option value="四年级">四年级 (Grade 4)</option></select>
+                        <select id="plan-term" class="input-dark p-4 rounded-xl text-sm"><option value="上学期">上学期 (Term 1)</option><option value="下学期">下学期 (Term 2)</option></select>
                     </div>
-                    <button @click="generateGalaxy()" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold text-white shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition" :disabled="loading">
-                        <span x-show="loading" class="animate-spin text-xl">↻</span> <span x-text="loading ? '正在解析并在云端铸造星系...' : '🚀 启动部署，构建专属星系'"></span>
-                    </button>
+                    <button onclick="App.generateGalaxy()" id="plan-btn" class="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold text-white shadow-xl transition hover:scale-105">🚀 启动部署，构建专属星系</button>
                 </div>
             </div>
         </div>
@@ -404,79 +217,304 @@
     </main>
 
     <script>
-        function dashboardApp() {
-            return {
-                view: 'classroom', isParentUnlocked: false, parentPin: null, isPro: false,
-                apiStatus: { sys: 'idle', nova: 'idle' },
-                config: {
-                    sys: { key: localStorage.getItem('xp_sys_key')||'', url: localStorage.getItem('xp_sys_url')||'/proxy/groq', model: localStorage.getItem('xp_sys_model')||'llama-3.3-70b-versatile' },
-                    nova: { key: localStorage.getItem('xp_nova_key')||'', url: localStorage.getItem('xp_nova_url')||'/proxy/nvidia', model: localStorage.getItem('xp_nova_model')||'meta/llama-3.1-70b-instruct' }
-                },
-                galaxies: [], activeGalaxyId: null,
-                panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0,
-                mouseX: window.innerWidth / 2, mouseY: window.innerHeight / 2,
-                ctx: null, canvas: null, particles: [], stars: [], animationFrameId: null,
-                
-                // 🚀 核心优化 1：写入预制的小学生典型流水账，增加初始反馈面板提示
-                writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。\n后来我们去划船，湖水很清。划完船我们去吃了冰淇淋，冰淇淋是草莓味的，很好吃。\n今天真是开心的一天啊！我希望下次还能来玩。', 
-                writingFeedback: `<div class='text-center text-slate-500 mt-20'><div class='text-6xl mb-4 opacity-50'>📝</div><h4 class='text-lg font-bold text-slate-300 mb-2'>已加载预制“流水账”文本</h4><p class='text-sm mb-4'>您可以直接点击左侧的魔法卡牌，体验系统如何引导孩子重塑逻辑。</p><div class='p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl text-xs text-blue-400'>✨ 解锁真实算力：请在【家长控制台】绑定 API 密钥。</div></div>`, 
-                isCritiquing: false, critiqueMode: '',
-                
-                readingMaterial: '', readingInput: '', readingChatLog: [], readingLoading: false,
-                
-                showPlanner: false, loading: false,
-                planConfig: { curriculum: '中国义务教育课标 (2022版)', grade: '四年级', term: '上学期' },
-                
-                novaGlobal: {
-                    open: false, isDragging: false,
-                    pos: { x: window.innerWidth ? window.innerWidth - 60 : 800, y: window.innerHeight ? window.innerHeight - 60 : 600 },
-                    offset: { x: 0, y: 0 }, start: { x: 0, y: 0, time: 0 },
-                    msgs: [{role: 'nova', text: '指挥官，NOVA 随时待命。有关探索、排课或设定的问题都可以随时唤醒我！'}],
-                    input: '', loading: false
-                },
+        // 原生 JavaScript 重构，彻底解决 Markdown 反引号被截断及 SES 沙盒拦截问题
+        const App = {
+            state: {
+                isPro: window.safeStorage.get('xp_is_pro') === 'true',
+                isParentUnlocked: false, parentPin: window.safeStorage.get('xp_parent_pin') || '0000',
+                galaxies: [], activeGalaxyId: null, readLang: 'en',
+                writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。\n后来我们去划船，湖水很清。划完船我们去吃了冰淇淋，冰淇淋是草莓味的，很好吃。\n今天真是开心的一天啊！我希望下次还能来玩。',
+                readingChatLog: []
+            },
 
-                async init() {
-                    this.parentPin = window.safeStorage.get('xp_parent_pin');
-                    this.isPro = window.localStorage.getItem('xp_is_pro') === 'true';
-                    const s = window.localStorage.getItem('xp_galaxies'); 
-                    if(s) { try { this.galaxies = JSON.parse(s); } catch(e){} }
-                    if(this.galaxies.length === 0) {
-                        this.galaxies = [{ id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 }, { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5 }, { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0 }] }];
-                        localStorage.setItem('xp_galaxies', JSON.stringify(this.galaxies));
+            init() {
+                let s = window.safeStorage.get('xp_galaxies');
+                if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
+                if (this.state.galaxies.length === 0) {
+                    this.state.galaxies = [{ id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 }, { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5 }, { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0 }] }];
+                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
+                }
+                this.state.activeGalaxyId = this.state.galaxies[0].id;
+                
+                // 填充配置面板初始值
+                $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
+                $('sys-url').value = window.safeStorage.get('xp_sys_url') || '/proxy/groq';
+                $('sys-model').value = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
+                $('nova-key').value = window.safeStorage.get('xp_nova_key') || '';
+                $('nova-url').value = window.safeStorage.get('xp_nova_url') || '/proxy/nvidia';
+                $('nova-model').value = window.safeStorage.get('xp_nova_model') || 'meta/llama-3.1-70b-instruct';
+
+                $('writingDraft').value = this.state.writingDraft;
+                this.renderWritingFeedback(false);
+
+                this.initNetworkCanvas();
+                this.renderGalaxy();
+            },
+
+            switchView(viewId) {
+                document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+                $( `view-${viewId.includes('reading') ? 'reading' : viewId}` ).classList.add('active');
+                
+                document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
+                const navBtn = $(`nav-${viewId}`);
+                if(navBtn) {
+                    navBtn.classList.add('active');
+                    navBtn.classList.remove('text-slate-300', 'text-slate-400');
+                    if(viewId === 'classroom') navBtn.classList.add('text-emerald-300');
+                    else if(viewId === 'writing') navBtn.classList.add('text-orange-400');
+                    else if(viewId.includes('reading')) navBtn.classList.add('text-indigo-400'); // generic
+                    else navBtn.classList.add('text-purple-400');
+                }
+                
+                if (viewId === 'classroom') this.renderGalaxy();
+                if (viewId === 'forge') this.renderForgeList();
+            },
+
+            // =============== 🚀 AI 调用核心 ================
+            async callAI(prompt, type='nova', silent=false) {
+                const key = window.safeStorage.get(`xp_${type}_key`);
+                const rawUrl = window.safeStorage.get(`xp_${type}_url`) || '/proxy/groq';
+                const endpoint = rawUrl.replace(/\/$/, '') + (rawUrl.endsWith('/chat/completions') ? '' : '/chat/completions');
+                const model = window.safeStorage.get(`xp_${type}_model`) || 'llama-3.3-70b-versatile';
+                
+                if(!key) {
+                    if (!silent) Swal.fire({toast:true, position:'top-end', icon:'warning', title:'请在家长控制台配置 API 密钥', showConfirmButton:false, timer:3000});
+                    return null;
+                }
+                try {
+                    const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`}, body:JSON.stringify({model:model, messages:[{role:'user', content:prompt}]}) });
+                    if(!res.ok) throw new Error();
+                    const d = await res.json(); return d.choices[0].message.content;
+                } catch(e) { 
+                    if (!silent) Swal.fire({toast:true, position:'top-end', icon:'error', title:'网络连接异常', showConfirmButton:false, timer:3000});
+                    return null; 
+                }
+            },
+
+            // 用来替代导致截断的硬编码反引号
+            cleanMD(text, tag) {
+                if(!text) return "";
+                const tick = String.fromCharCode(96, 96, 96);
+                return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+            },
+
+            // =============== 🚀 写作舱 ================
+            renderWritingFeedback(isError, htmlStr) {
+                if (isError) {
+                    $('writingFeedback').innerHTML = `<div class='bg-rose-950/40 border border-rose-500/30 p-6 rounded-2xl shadow-lg mt-6'><h4 class='text-rose-400 font-bold mb-3 flex items-center gap-2'><span class='text-2xl'>🔌</span> 核心算力未接入</h4><p class='text-sm text-rose-200/80 mb-5 leading-relaxed'>由于没有配置大模型密钥，魔法指令被阻断。需要真实算力才能推演哦。</p><button onclick="App.promptParentLock()" class='text-sm bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-[0_0_15px_rgba(225,29,72,0.4)]'>前往控制台配置 API ➔</button></div>`;
+                } else if (htmlStr) {
+                    $('writingFeedback').innerHTML = htmlStr;
+                } else {
+                    $('writingFeedback').innerHTML = `<div class='text-center text-slate-500 mt-20'><div class='text-6xl mb-4 opacity-50'>📝</div><h4 class='text-lg font-bold text-slate-300 mb-2'>已加载预制“流水账”文本</h4><p class='text-sm mb-4'>您可以直接点击左侧的魔法卡牌，体验系统如何引导孩子重塑逻辑。</p><div class='p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl text-xs text-blue-400'>✨ 请确保已在【家长控制台】绑定 API 密钥。</div></div>`;
+                }
+            },
+            async runWritingTool(mode) {
+                const draft = $('writingDraft').value.trim(); let prompt = '';
+                if (mode === 'brainstorm') prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags. You are a friendly cartoon tutor. Draft: "${draft || '不知道写什么'}". Provide 3 sensory questions.`; 
+                else if (mode === 'logic') prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags. You are a detective. Draft: "${draft}". Find 1-2 logical leaps. Ask 2 clarifying questions.`; 
+                else if (mode === 'polish') prompt = `[FATAL CONSTRAINT]: Output strictly in Chinese. Format using HTML tags. You are a magic fairy. Draft: "${draft}". Select ONE boring sentence. Ask them to use 5 senses to rewrite it.`;
+                
+                $('writingFeedback').innerHTML = "<div class='text-blue-400 animate-pulse text-center mt-10'>✨ 魔法正在生效中...</div>";
+                const res = await this.callAI(prompt, 'nova', true);
+                if(res) {
+                    this.renderWritingFeedback(false, this.cleanMD(res, 'html'));
+                } else {
+                    this.renderWritingFeedback(true);
+                }
+            },
+
+            // =============== 🚀 伴读舱 ================
+            openReading(lang) {
+                this.state.readLang = lang;
+                this.switchView(`reading-${lang}`);
+                $('reading-tools-en').style.display = lang === 'en' ? 'flex' : 'none';
+                $('reading-tools-zh').style.display = lang === 'zh' ? 'flex' : 'none';
+                $('reading-title').innerText = lang === 'en' ? '🔤 英语魔法书' : '📜 大语文时光机';
+                $('reading-bot-name').innerText = lang === 'en' ? 'NOVA 英语小精灵' : 'NOVA 国学小导师';
+                
+                if (lang === 'en') { 
+                    $('readingMaterial').value = `Once when I was six years old I saw a magnificent picture in a book, called True Stories from Nature, about the primeval forest. It was a picture of a boa constrictor in the act of swallowing an animal.\n\nIn the book it said: "Boa constrictors swallow their prey whole, without chewing it. After that they are not able to move, and they sleep through the six months that they need for digestion."\n\nI pondered deeply, then, over the adventures of the jungle. And after some work with a colored pencil I succeeded in making my first drawing. My Drawing Number One.`; 
+                    this.state.readingChatLog = [{ role: 'nova', text: `<h3>Hello, little Commander! 🌟</h3><p>I've loaded a classic excerpt from <b>The Little Prince</b> for you.</p><p>You can click the <b>Magic Cards</b> below to discover secrets, or just chat with me!</p><div class='mt-5 p-4 bg-indigo-900/30 border border-indigo-500/30 rounded-xl text-xs text-indigo-300 shadow-inner'>✨ <b>Demo Mode:</b> Please configure the API Key in the Parent Console to unlock my full intelligence.</div>`}]; 
+                } else { 
+                    $('readingMaterial').value = `《水调歌头·明月几时有》\n宋 · 苏轼\n\n明月几时有？把酒问青天。\n不知天上宫阙，今夕是何年。\n我欲乘风归去，又恐琼楼玉宇，高处不胜寒。\n起舞弄清影，何似在人间。\n\n转朱阁，低绮户，照无眠。\n不应有恨，何事长向别时圆？\n人有悲欢离合，月有阴晴圆缺，此事古难全。\n但愿人长久，千里共婵娟。`; 
+                    this.state.readingChatLog = [{ role: 'nova', text: `<h3>你好呀，小指挥官！🌟</h3><p>我已经为你准备好了苏轼的千古名篇<b>《水调歌头》</b>。</p><p>你可以点击下方的<b>魔法技能卡片</b>，看看我是怎么带你穿越时空的！</p><div class='mt-5 p-4 bg-emerald-900/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 shadow-inner'>✨ <b>演示模式：</b>请在【家长/教师主控台】配置 API 密钥，解锁真实的跨时空伴读对话。</div>`}]; 
+                }
+                this.renderReadingChat();
+            },
+            renderReadingChat() {
+                const box = $('nova-reading-chat'); box.innerHTML = '';
+                this.state.readingChatLog.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = `flex flex-col ${msg.role==='user'?'items-end':'items-start'} mb-4`;
+                    const name = msg.role==='user' ? '小指挥官' : 'NOVA';
+                    const color = msg.role==='user' ? (this.state.readLang==='en'?'bg-indigo-600 border-indigo-500':'bg-emerald-600 border-emerald-500') : 'bg-slate-800 border-slate-700';
+                    const radius = msg.role==='user' ? 'rounded-tr-none' : 'rounded-tl-none';
+                    div.innerHTML = `<span class="text-[10px] text-slate-500 font-bold mb-1 mx-1">${name}</span><div class="max-w-[85%] p-4 rounded-2xl text-[15px] ai-message shadow-md text-white border ${color} ${radius}">${msg.text}</div>`;
+                    box.appendChild(div);
+                });
+                setTimeout(() => box.scrollTop = box.scrollHeight, 100);
+            },
+            async triggerReadingTool(tool) {
+                const material = $('readingMaterial').value.trim(); if (!material) return;
+                const contextLimit = material.substring(0, 1500); let prompt = '';
+                if (tool === 'en_vocab') prompt = `[CONSTRAINT: English/Chinese bilingual. Friendly tone]. Text: "${contextLimit}". Identify 2-3 interesting words. Explain playfully.`; 
+                else if (tool === 'en_context') prompt = `[CONSTRAINT: Output in Chinese. Friendly tone]. Text: "${contextLimit}". Find a fun "Easter Egg" (cultural reference). Explain simply.`; 
+                else if (tool === 'en_critical') prompt = `[CONSTRAINT: Output in English. Playful tone]. Text: "${contextLimit}". Pose 1-2 fun challenging questions.`; 
+                else if (tool === 'zh_visual') prompt = `[强制要求：中文输出。亲切故事姐姐]。文本："${contextLimit}"。白描画面。反问孩子看到了什么。`; 
+                else if (tool === 'zh_history') prompt = `[强制要求：中文输出。时空导游]。文本："${contextLimit}"。讲背景。反问孩子想对作者说什么。`; 
+                else if (tool === 'zh_core') prompt = `[强制要求：中文输出。像侦探]。文本："${contextLimit}"。找文眼，夸张解释。反问孩子想换什么字。`;
+                
+                const names = { 'en_vocab':'使用了技能：🔍 找找魔法单词', 'en_context':'使用了技能：🎭 发现故事彩蛋', 'en_critical':'使用了技能：🧠 终极脑力挑战', 'zh_visual':'使用了技能：🖼️ 把文字变成画', 'zh_history':'使用了技能：⏳ 和古人聊聊天', 'zh_core':'使用了技能：🎯 抓住最厉害的字' };
+                this.state.readingChatLog.push({ role: 'user', text: `<i>[${names[tool]}]</i>` }); this.renderReadingChat();
+                
+                const res = await this.callAI(prompt, 'nova', true);
+                if(res) {
+                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                    if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                    this.state.readingChatLog.push({role: 'nova', text: cleanRes});
+                } else {
+                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>魔法卡牌释放失败啦！这需要连接指挥中心的真实 AI 引擎。请让家长在后台绑定 API 密钥哦。</p></div>`});
+                }
+                this.renderReadingChat();
+            },
+            async sendReadingText() {
+                const t = $('readingInput').value.trim(); if(!t) return;
+                $('readingInput').value = ''; this.state.readingChatLog.push({role:'user', text:t}); this.renderReadingChat();
+                const material = $('readingMaterial').value;
+                const langReq = this.state.readLang === 'en' ? 'Reply in simple English. Act as an inspiring friendly cartoon English tutor.' : '用中文回复。扮演亲切的大语文老师。'; 
+                const prompt = `[Reference Material]:\n${material.substring(0, 1000)}\n\nStudent says: "${t}"\nTask: Use the Socratic method to respond gently. Do NOT spoon-feed answers. Ask a simple follow-up question. ${langReq}`;
+                
+                const res = await this.callAI(prompt, 'nova', true);
+                if(res) { 
+                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                    this.state.readingChatLog.push({role:'nova', text: cleanRes}); 
+                } else {
+                    this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。请让家长去控制台配置吧！</p></div>`});
+                }
+                this.renderReadingChat();
+            },
+
+            // =============== 🚀 家长控制台与配置 ================
+            async promptParentLock() {
+                if (this.state.isParentUnlocked) { this.state.isParentUnlocked = false; $('parent-menu').style.display='none'; $('lock-icon').innerText='🔒'; this.switchView('classroom'); return; }
+                const { value: pin } = await Swal.fire({ title: '家长验证', text: '输入 4 位数字密码', input: 'password', inputAttributes: { maxlength: 4 }, background: '#0f172a', color: '#fff', confirmButtonText: '进入中枢' });
+                if (pin === this.state.parentPin) { this.state.isParentUnlocked = true; $('parent-menu').style.display='block'; $('lock-icon').innerText='🔓'; this.switchView('forge'); }
+            },
+            async testAPI(type) {
+                const key = $(`${type}-key`).value, url = $(`${type}-url`).value, model = $(`${type}-model`).value;
+                if (!key || !url || !model) { Swal.fire({ title: '配置不完整', icon: 'warning', background: '#0f172a', color: '#fff' }); return; }
+                try { 
+                    const e = url.replace(/\/$/, '') + (url.endsWith('/chat/completions') ? '' : '/chat/completions'); 
+                    const res = await fetch(e, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }) }); 
+                    if (res.ok) Swal.fire({ toast:true, position:'top-end', icon: 'success', title: '链路通畅', showConfirmButton: false, timer: 1500 }); 
+                    else throw new Error(); 
+                } catch(e) { Swal.fire({ toast:true, position:'top-end', icon: 'error', title: '链路失败', showConfirmButton: false, timer: 1500 }); }
+            },
+            saveConfig() {
+                ['sys','nova'].forEach(t => { window.safeStorage.set(`xp_${t}_key`, $(`${t}-key`).value); window.safeStorage.set(`xp_${t}_url`, $(`${t}-url`).value); window.safeStorage.set(`xp_${t}_model`, $(`${t}-model`).value); });
+                Swal.fire({toast:true, position:'top-end', icon:'success', title:'配置已保存', showConfirmButton:false, timer:1500});
+            },
+
+            // =============== 🚀 大纲生成引擎 ================
+            openPlanner() {
+                if (this.state.isPro || this.state.galaxies.length < 2) { $('planner-hint').innerText = this.state.isPro?'【PRO权限】：无限铸星已开启':'【基础版权限】：您可以免费体验单核星系的智能铸造。'; $('planner-modal').style.display='flex'; } 
+                else { Swal.fire({ title: '算力空间已满', html: '<p class="text-sm">基础版最多只能同时部署 <b>1 个专属星系</b>。<br>想要创建新星系，请先在列表中删除旧星系；<br>或升级 <b>PRO 领航员</b> 解锁无限星系铸造权！</p>', icon: 'info', background: '#0f172a', color: '#fff' }); }
+            },
+            deleteGalaxy(id) {
+                Swal.fire({ title: '确认销毁该星系？', text: '销毁后该大纲下的所有资源将被清空。', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: '执行销毁' }).then((res) => {
+                    if (res.isConfirmed) {
+                        this.state.galaxies = this.state.galaxies.filter(g => g.id !== id); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
+                        if (this.state.activeGalaxyId === id) this.state.activeGalaxyId = this.state.galaxies.length > 0 ? this.state.galaxies[0].id : null;
+                        this.renderForgeList(); this.renderGalaxy(); Swal.fire({ toast:true, position:'top-end', icon:'success', title:'星系已销毁', showConfirmButton:false, timer:2000 });
                     }
-                    this.activeGalaxyId = this.galaxies[0].id;
-                    this.initNetworkCanvas();
-                    this.novaGlobal.pos = { x: window.innerWidth - 60, y: window.innerHeight - 60 };
-                },
+                });
+            },
+            async generateGalaxy() {
+                $('plan-btn').innerHTML = "<span class='animate-spin'>↻</span> 正在解析并在云端铸造星系..."; $('plan-btn').disabled = true;
+                const hasKey = !!window.safeStorage.get('xp_sys_key'); const curr = $('plan-curriculum').value, grade = $('plan-grade').value, term = $('plan-term').value;
+                if (!this.state.isPro || !hasKey) {
+                    setTimeout(() => {
+                        $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 启动部署，构建专属星系"; $('plan-btn').disabled = false;
+                        Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于未接入专属 AI 算力，系统加载了<b>预制单科演示大纲</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可实时生成独一无二的庞大宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '🚀 前往探索舱', confirmButtonColor: '#3b82f6' }).then(() => {
+                            const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: [ { id: 'sub_demo_1', title: '核心素养导论', icon: '🧠', radius: 240, angle: 0 } ] };
+                            this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.state.activeGalaxyId = ng.id; this.renderForgeList(); this.switchView('classroom'); this.promptParentLock(); 
+                        });
+                    }, 1500); return;
+                }
+                const prompt = `根据【${curr}】的【${grade}】【${term}】标准，生成1个最核心的学科。\n必须返回严格的JSON数组格式，例如：[{"title": "学科名称", "icon": "📚"}]。不要输出任何解释文字。`;
+                const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
+                if (res) { try { const clean = this.cleanMD(res, 'json'); const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0 }]; } catch(e) {} }
+                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0 }];
+                const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: newSubjects };
+                this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 启动部署，构建专属星系"; $('plan-btn').disabled = false;
+                Swal.fire({ title: '铸造成功！', text: '您的专属知识星系已部署！', icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '🚀 前往探索舱' }).then(() => { this.state.activeGalaxyId = ng.id; this.renderForgeList(); this.switchView('classroom'); this.promptParentLock(); });
+            },
+            renderForgeList() {
+                const c = $('forge-list'); c.innerHTML = '';
+                this.state.galaxies.forEach(g => {
+                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group">
+                        <button onclick="App.deleteGalaxy('${g.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
+                        <div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div><div class="pr-6"><h3 class="font-bold text-lg text-white">${g.title}</h3><span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">${g.baseStandard || 'Custom'}</span></div></div>
+                        <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含核心学科与探索节点。可通过引擎进行深度定制和真实资料投喂。</p>
+                        <button onclick="App.editCurriculum()" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 rounded-xl text-sm font-bold transition border border-slate-700 shadow-md">⚙️ 配置大纲与排课</button>
+                    </div>`;
+                });
+            },
+            editCurriculum() { if (!this.state.isPro) { Swal.fire({ title: '⚙️ 体验版权限限制', html: '<p class="text-sm text-slate-300">免费指挥官只能体验 <b>1 个核心科目</b> 的教案生成与编辑。<br><br>想要深度排课干预？请升级 PRO 解锁！</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看升级方案', cancelButtonText: '知道了' }); } else { Swal.fire({ title: '教研中枢接入中', text: 'Pro 级大纲排课模块待扩展...', icon: 'success', background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false }); } },
 
-                openPlanner() {
-                    if (this.isPro || this.galaxies.length < 2) { this.showPlanner = true; } else {
-                        Swal.fire({ title: '算力空间已满', html: '<p class="text-sm">基础版最多只能同时部署 <b>1 个专属星系</b>。<br>想要创建新星系，请先在列表中删除旧星系；<br>或升级 <b>PRO 领航员</b> 解锁无限星系铸造权！</p>', icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '查看升级方案', cancelButtonText: '稍后' });
+            // =============== 🚀 3D 星球与 Canvas 渲染 ================
+            getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
+            renderGalaxy() {
+                const c = $('galaxy-container'); c.innerHTML = '';
+                this.state.galaxies.forEach(g => {
+                    const isActive = g.id === this.state.activeGalaxyId;
+                    const style = isActive ? `left: 50%; top: 50%; transform: translate(${this.state.panX||0}px, ${this.state.panY||0}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
+                    let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
+                    html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
+                    if (isActive) {
+                        html += `<div class="absolute pointer-events-none" style="left:0; top:0;">`;
+                        g.subjects.forEach((s, i) => {
+                            const isFree = i === 0 || this.state.isPro;
+                            html += `<div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" style="left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);" onclick="App.openMission('${s.title}', ${isFree})">
+                                ${isFree ? '<div class="free-badge">OPEN</div>' : '<div class="energy-lock">🔒</div>'}
+                                <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl ${isFree?'':'planet-locked'}" style="${this.getPlanetStyle(i)}">${s.icon}</div>
+                                <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400 transition whitespace-nowrap">${s.title}</span>
+                            </div>`;
+                        });
+                        html += `</div>`;
                     }
-                },
+                    html += `</div>`; c.innerHTML += html;
+                });
+            },
+            activateGalaxy(id) { this.state.activeGalaxyId = id; this.state.panX = 0; this.state.panY = 0; this.renderGalaxy(); },
+            openMission(sTitle, isFree) {
+                if (isFree) { Swal.fire({ title: '🚧 星球建设中', html: `<div class="text-left"><p class="text-sm text-slate-300 mb-3">全息课程 <b>《${sTitle}》</b> 还在施工哦！</p><p class="text-xs text-slate-400">指挥官还没有为你部署专属任务。</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#475569', confirmButtonText: '去玩危机演习 🎮', cancelButtonText: '留在星域' }).then((r) => { if (r.isConfirmed) window.location.href = `simulator.html?mission=${encodeURIComponent(sTitle)}`; }); } 
+                else { Swal.fire({ title: '引力场锁定', text: '指挥官，此星域需要 PRO 级算力解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); }
+            },
+            
+            initNetworkCanvas() {
+                const cvs = $('network-canvas'); if(!cvs) return; this.ctx = cvs.getContext('2d');
+                const res = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }; window.addEventListener('resize', res); res();
+                const pC = Math.floor(window.innerWidth / 15), sC = Math.floor(window.innerWidth / 6); this.particles = []; this.stars = [];
+                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*cvs.width, y: (Math.random()-0.5)*cvs.height, z: Math.random()*cvs.width });
+                const anim = () => { this.drawNetwork(); requestAnimationFrame(anim); }; anim();
+                
+                const vp = $('galaxy-viewport');
+                vp.addEventListener('mousedown', e => { if(e.target.closest('.planet-core, .planet-3d, button')) return; this.state.isPan=true; this.state.sx=(e.clientX||0)-(this.state.panX||0); this.state.sy=(e.clientY||0)-(this.state.panY||0); });
+                window.addEventListener('mousemove', e => { this.state.mx=(e.clientX||0); this.state.my=(e.clientY||0); if(this.state.isPan){ this.state.panX=e.clientX-this.state.sx; this.state.panY=e.clientY-this.state.sy; this.renderGalaxy(); } });
+                window.addEventListener('mouseup', () => this.state.isPan=false);
+            },
+            drawNetwork() {
+                if(!this.ctx || $('view-classroom').style.display === 'none') return;
+                const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
+                this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
+                this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<180) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/180)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } });
+                if (this.state.activeGalaxyId) { const ag = this.state.galaxies.find(g => g.id === this.state.activeGalaxyId); if(!ag) return; let cx = w/2 + (this.state.panX||0); let cy = h/2 + (this.state.panY||0); ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
+            }
+        };
 
-                deleteGalaxy(id) {
-                    Swal.fire({ title: '确认销毁该星系？', text: '销毁后该大纲下的所有资源将被清空。', icon: 'warning', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: '执行销毁' }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.galaxies = this.galaxies.filter(g => g.id !== id); localStorage.setItem('xp_galaxies', JSON.stringify(this.galaxies));
-                            if (this.activeGalaxyId === id) this.activeGalaxyId = this.galaxies.length > 0 ? this.galaxies[0].id : null;
-                            Swal.fire({ toast:true, position:'top-end', icon:'success', title:'星系已销毁，算力已释放', showConfirmButton:false, timer:2000 });
-                        }
-                    });
-                },
-
-                async generateGalaxy() {
-                    this.loading = true; const hasKey = !!this.config.sys.key;
-                    if (!this.isPro || !hasKey) {
-                        setTimeout(() => {
-                            this.loading = false; this.showPlanner = false;
-                            Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于当前未接入专属 AI 算力，系统为您加载了符合该标准规范的<b>预制单科演示大纲</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可根据真实世界数据，实时生成包含全科目的庞大宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '🚀 前往探索舱', confirmButtonColor: '#3b82f6' }).then(() => {
-                                const newGalaxy = { id: 'gal_' + Date.now(), title: `${this.planConfig.grade}${this.planConfig.term}演示星系`, baseStandard: this.planConfig.curriculum, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: [ { id: 'sub_demo_1', title: '核心素养导论', icon: '🧠', radius: 240, angle: 0 } ] };
-                                this.galaxies.unshift(newGalaxy); localStorage.setItem('xp_galaxies', JSON.stringify(this.galaxies));
-                                this.activateGalaxy(newGalaxy.id); this.view = 'classroom'; this.isParentUnlocked = false;
-                            });
-                        }, 1500); return;
-                    }
-                    const prompt = `根据【${this.planConfig.curriculum}】的【${this.planConfig.grade}】【${this.planConfig.term}】标准，生成1个最核心的学科。\n必须返回严格的JSON数组格式，例如：[{"title": "学科名称", "icon": "📚"}]。不要输出任何解释文字。`;
-                    let newSubjects = []; const res = await this.callAI(prompt, 'sys', true);
-                    if (res) { try { const cleanJson = res.replace(/
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>

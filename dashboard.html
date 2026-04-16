@@ -63,7 +63,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V13.1 Native</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V13.2 Native</div>
                 </div>
             </a>
         </div>
@@ -199,7 +199,7 @@
         </div>
 
         <!-- 🚀 Planner Modal -->
-        <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
+        <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
             <div class="glass-panel w-full max-w-xl rounded-3xl p-10 relative border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.2)]">
                 <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
                 <div class="text-center mb-8"><div class="text-5xl mb-4">🔮</div><h2 class="text-2xl font-black text-purple-400">星系规划引擎</h2><p class="text-emerald-400 text-xs mt-2 font-bold" id="planner-hint"></p></div>
@@ -217,7 +217,7 @@
     </main>
 
     <script>
-        // 原生 JavaScript 重构，彻底解决 Markdown 反引号被截断及 SES 沙盒拦截问题
+        // 原生 JavaScript 重构，彻底抛弃 Alpine.js 规避 SES 报错
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
@@ -253,7 +253,10 @@
 
             switchView(viewId) {
                 document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
-                $( `view-${viewId.includes('reading') ? 'reading' : viewId}` ).classList.add('active');
+                
+                // 处理 display
+                const targetView = $( `view-${viewId.includes('reading') ? 'reading' : viewId}` );
+                if (targetView) targetView.classList.add('active');
                 
                 document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
                 const navBtn = $(`nav-${viewId}`);
@@ -291,13 +294,6 @@
                 }
             },
 
-            // 用来替代导致截断的硬编码反引号
-            cleanMD(text, tag) {
-                if(!text) return "";
-                const tick = String.fromCharCode(96, 96, 96);
-                return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
-            },
-
             // =============== 🚀 写作舱 ================
             renderWritingFeedback(isError, htmlStr) {
                 if (isError) {
@@ -317,7 +313,8 @@
                 $('writingFeedback').innerHTML = "<div class='text-blue-400 animate-pulse text-center mt-10'>✨ 魔法正在生效中...</div>";
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) {
-                    this.renderWritingFeedback(false, this.cleanMD(res, 'html'));
+                    let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
+                    this.renderWritingFeedback(false, cleanRes);
                 } else {
                     this.renderWritingFeedback(true);
                 }
@@ -369,7 +366,7 @@
                 
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) {
-                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                    let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim().replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
                     if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role: 'nova', text: cleanRes});
                 } else {
@@ -386,7 +383,7 @@
                 
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) { 
-                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                    let cleanRes = res.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role:'nova', text: cleanRes}); 
                 } else {
                     this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。请让家长去控制台配置吧！</p></div>`});
@@ -443,7 +440,10 @@
                 }
                 const prompt = `根据【${curr}】的【${grade}】【${term}】标准，生成1个最核心的学科。\n必须返回严格的JSON数组格式，例如：[{"title": "学科名称", "icon": "📚"}]。不要输出任何解释文字。`;
                 const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
-                if (res) { try { const clean = this.cleanMD(res, 'json'); const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0 }]; } catch(e) {} }
+                if (res) { try { 
+                    const tick = String.fromCharCode(96, 96, 96);
+                    const clean = res.replace(new RegExp(tick + 'json', 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+                    const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0 }]; } catch(e) {} }
                 if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0 }];
                 const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: newSubjects };
                 this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 启动部署，构建专属星系"; $('plan-btn').disabled = false;
@@ -493,11 +493,11 @@
             },
             
             initNetworkCanvas() {
-                const cvs = $('network-canvas'); if(!cvs) return; this.ctx = cvs.getContext('2d');
-                const res = () => { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }; window.addEventListener('resize', res); res();
+                this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
+                const res = () => { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res();
                 const pC = Math.floor(window.innerWidth / 15), sC = Math.floor(window.innerWidth / 6); this.particles = []; this.stars = [];
-                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
-                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*cvs.width, y: (Math.random()-0.5)*cvs.height, z: Math.random()*cvs.width });
+                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width });
                 const anim = () => { this.drawNetwork(); requestAnimationFrame(anim); }; anim();
                 
                 const vp = $('galaxy-viewport');
@@ -506,7 +506,7 @@
                 window.addEventListener('mouseup', () => this.state.isPan=false);
             },
             drawNetwork() {
-                if(!this.ctx || $('view-classroom').style.display === 'none') return;
+                if(!this.ctx || !this.canvas || !$('view-classroom').classList.contains('active')) return;
                 const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
                 this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
                 this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<180) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/180)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } });

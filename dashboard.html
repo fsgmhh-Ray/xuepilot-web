@@ -63,7 +63,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V13.2 Native</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V13.3 Native</div>
                 </div>
             </a>
         </div>
@@ -109,7 +109,8 @@
         <!-- 🚀 3D 星球舱 -->
         <div id="view-classroom" class="view-panel active relative overflow-hidden bg-transparent z-10 fade-in">
             <canvas id="network-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
-            <div class="absolute inset-0 min-h-full no-select cursor-move z-10" id="galaxy-viewport">
+            <!-- 移除了 cursor-move，默认标准指针 -->
+            <div class="absolute inset-0 min-h-full no-select z-10" id="galaxy-viewport">
                 <div id="galaxy-container" class="absolute w-full h-full pointer-events-none"></div>
             </div>
         </div>
@@ -186,12 +187,12 @@
                     <div class="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20">
                         <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase">🌌 排课规划模型 (SYS Engine)</h3><button onclick="App.testAPI('sys')" class="text-[10px] bg-blue-600/30 text-blue-400 border border-blue-500/30 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition">🔗 自检测试</button></div>
                         <input type="password" id="sys-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" id="sys-url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
+                        <div class="grid grid-cols-2 gap-3"><input type="text" id="sys-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                     <div class="bg-indigo-900/10 p-6 rounded-2xl border border-indigo-500/20">
                         <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-indigo-400 text-xs uppercase">🤖 伴读导师模型 (NOVA Engine)</h3><button onclick="App.testAPI('nova')" class="text-[10px] bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded hover:bg-indigo-600 hover:text-white transition">🔗 自检测试</button></div>
                         <input type="password" id="nova-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" id="nova-url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="nova-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
+                        <div class="grid grid-cols-2 gap-3"><input type="text" id="nova-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="nova-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end"><button onclick="App.saveConfig()" class="px-10 py-4 bg-purple-600 text-white rounded-xl font-bold shadow-xl hover:bg-purple-500 transition">💾 烧录全局设定</button></div>
@@ -217,7 +218,6 @@
     </main>
 
     <script>
-        // 原生 JavaScript 重构，彻底抛弃 Alpine.js 规避 SES 报错
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
@@ -236,7 +236,6 @@
                 }
                 this.state.activeGalaxyId = this.state.galaxies[0].id;
                 
-                // 填充配置面板初始值
                 $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
                 $('sys-url').value = window.safeStorage.get('xp_sys_url') || '/proxy/groq';
                 $('sys-model').value = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
@@ -253,8 +252,6 @@
 
             switchView(viewId) {
                 document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
-                
-                // 处理 display
                 const targetView = $( `view-${viewId.includes('reading') ? 'reading' : viewId}` );
                 if (targetView) targetView.classList.add('active');
                 
@@ -265,7 +262,7 @@
                     navBtn.classList.remove('text-slate-300', 'text-slate-400');
                     if(viewId === 'classroom') navBtn.classList.add('text-emerald-300');
                     else if(viewId === 'writing') navBtn.classList.add('text-orange-400');
-                    else if(viewId.includes('reading')) navBtn.classList.add('text-indigo-400'); // generic
+                    else if(viewId.includes('reading')) navBtn.classList.add('text-indigo-400');
                     else navBtn.classList.add('text-purple-400');
                 }
                 
@@ -273,7 +270,6 @@
                 if (viewId === 'forge') this.renderForgeList();
             },
 
-            // =============== 🚀 AI 调用核心 ================
             async callAI(prompt, type='nova', silent=false) {
                 const key = window.safeStorage.get(`xp_${type}_key`);
                 const rawUrl = window.safeStorage.get(`xp_${type}_url`) || '/proxy/groq';
@@ -294,7 +290,6 @@
                 }
             },
 
-            // 用来替代导致截断的硬编码反引号
             cleanMD(text, tag) {
                 if(!text) return "";
                 const tick = String.fromCharCode(96, 96, 96);
@@ -474,11 +469,11 @@
                 this.state.galaxies.forEach(g => {
                     const isActive = g.id === this.state.activeGalaxyId;
                     const style = isActive ? `left: 50%; top: 50%; transform: translate(${this.state.panX||0}px, ${this.state.panY||0}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
-                    let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
+                    let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)] group" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
                     html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
                     
                     if (!isActive) {
-                        html += `<div class="absolute pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); bottom: 140px;">
+                        html += `<div class="absolute pointer-events-none z-50 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="transform: scale(8.333); bottom: 140px;">
                                     <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-[10px] font-black uppercase flex items-center gap-2 whitespace-nowrap">🔥 <span>${g.title}</span></span>
                                  </div>`;
                     }
@@ -508,7 +503,7 @@
                 this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
                 const res = () => { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res();
                 
-                const pC = Math.floor(window.innerWidth / 10), sC = Math.floor(window.innerWidth / 4);
+                const pC = Math.floor(window.innerWidth / 8), sC = Math.floor(window.innerWidth / 4);
                 this.particles = []; this.stars = [];
                 for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
                 for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width });

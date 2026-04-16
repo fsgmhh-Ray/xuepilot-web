@@ -18,7 +18,7 @@
 
         .planet-3d, .planet-core { border-radius: 50%; position: relative; transition: transform 0.3s ease; }
         .planet-locked { filter: grayscale(1) opacity(0.4); cursor: not-allowed !important; }
-        .sun-core { background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5); animation: sunPulse 4s infinite ease-in-out; }
+        .sun-core { border-radius: 50%; position: relative; background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5); animation: sunPulse 4s infinite ease-in-out; }
         @keyframes sunPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .free-badge { position: absolute; top: -10px; right: -10px; background: #10b981; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 50; box-shadow: 0 0 10px rgba(16,185,129,0.5); }
         .energy-lock { position: absolute; font-size: 1.5rem; filter: drop-shadow(0 0 8px #ef4444); z-index: 50; }
@@ -294,6 +294,13 @@
                 }
             },
 
+            // 用来替代导致截断的硬编码反引号
+            cleanMD(text, tag) {
+                if(!text) return "";
+                const tick = String.fromCharCode(96, 96, 96);
+                return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+            },
+
             // =============== 🚀 写作舱 ================
             renderWritingFeedback(isError, htmlStr) {
                 if (isError) {
@@ -313,8 +320,7 @@
                 $('writingFeedback').innerHTML = "<div class='text-blue-400 animate-pulse text-center mt-10'>✨ 魔法正在生效中...</div>";
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) {
-                    let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim();
-                    this.renderWritingFeedback(false, cleanRes);
+                    this.renderWritingFeedback(false, this.cleanMD(res, 'html'));
                 } else {
                     this.renderWritingFeedback(true);
                 }
@@ -366,7 +372,7 @@
                 
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) {
-                    let cleanRes = res.replace(/```html/gi, '').replace(/```/gi, '').trim().replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
                     if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role: 'nova', text: cleanRes});
                 } else {
@@ -383,7 +389,7 @@
                 
                 const res = await this.callAI(prompt, 'nova', true);
                 if(res) { 
-                    let cleanRes = res.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
+                    let cleanRes = this.cleanMD(res, 'html').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'); if(!cleanRes.startsWith('<p>')) cleanRes = '<p>' + cleanRes + '</p>';
                     this.state.readingChatLog.push({role:'nova', text: cleanRes}); 
                 } else {
                     this.state.readingChatLog.push({role: 'nova', text: `<div class='border-l-4 border-rose-500 pl-4 py-1 my-2'><p class='text-rose-400 font-bold text-sm mb-1'>算力未接入 (No Compute Power)</p><p class='text-xs text-slate-400'>引擎没有启动，现在只能进行展示，无法真正和你聊天。请让家长去控制台配置吧！</p></div>`});
@@ -441,8 +447,7 @@
                 const prompt = `根据【${curr}】的【${grade}】【${term}】标准，生成1个最核心的学科。\n必须返回严格的JSON数组格式，例如：[{"title": "学科名称", "icon": "📚"}]。不要输出任何解释文字。`;
                 const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
                 if (res) { try { 
-                    const tick = String.fromCharCode(96, 96, 96);
-                    const clean = res.replace(new RegExp(tick + 'json', 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+                    const clean = this.cleanMD(res, 'json');
                     const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0 }]; } catch(e) {} }
                 if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0 }];
                 const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: newSubjects };
@@ -471,6 +476,13 @@
                     const style = isActive ? `left: 50%; top: 50%; transform: translate(${this.state.panX||0}px, ${this.state.panY||0}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
                     let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)]" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
                     html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
+                    
+                    if (!isActive) {
+                        html += `<div class="absolute pointer-events-none z-50 flex flex-col items-center" style="transform: scale(8.333); bottom: 140px;">
+                                    <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-[10px] font-black uppercase flex items-center gap-2 whitespace-nowrap">🔥 <span>${g.title}</span></span>
+                                 </div>`;
+                    }
+
                     if (isActive) {
                         html += `<div class="absolute pointer-events-none" style="left:0; top:0;">`;
                         g.subjects.forEach((s, i) => {
@@ -495,9 +507,12 @@
             initNetworkCanvas() {
                 this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
                 const res = () => { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }; window.addEventListener('resize', res); res();
-                const pC = Math.floor(window.innerWidth / 15), sC = Math.floor(window.innerWidth / 6); this.particles = []; this.stars = [];
+                
+                const pC = Math.floor(window.innerWidth / 10), sC = Math.floor(window.innerWidth / 4);
+                this.particles = []; this.stars = [];
                 for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
                 for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width });
+                
                 const anim = () => { this.drawNetwork(); requestAnimationFrame(anim); }; anim();
                 
                 const vp = $('galaxy-viewport');
@@ -509,7 +524,14 @@
                 if(!this.ctx || !this.canvas || !$('view-classroom').classList.contains('active')) return;
                 const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
                 this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
-                this.particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; this.particles.slice(i+1).forEach(p2 => { let d = Math.hypot(p.x-p2.x, p.y-p2.y); if(d<180) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/180)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } }); if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } });
+                this.particles.forEach((p, i) => { 
+                    p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
+                    this.particles.slice(i+1).forEach(p2 => { 
+                        let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
+                        if(d<220) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/220)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } 
+                    }); 
+                    if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } 
+                });
                 if (this.state.activeGalaxyId) { const ag = this.state.galaxies.find(g => g.id === this.state.activeGalaxyId); if(!ag) return; let cx = w/2 + (this.state.panX||0); let cy = h/2 + (this.state.panY||0); ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
             }
         };

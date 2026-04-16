@@ -6,6 +6,8 @@
     <title>XuePilot 派乐伴学 - Unified OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
         body { background-color: #020617; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
@@ -26,6 +28,16 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
+        /* 🚀 极客级富文本编辑器深色主题 */
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; padding: 12px; }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; font-family: -apple-system, sans-serif;}
+        .ql-snow .ql-stroke { stroke: #cbd5e1; } .ql-snow .ql-fill { fill: #cbd5e1; } .ql-snow .ql-picker { color: #cbd5e1; }
+        .ql-editor { min-height: 400px; font-size: 1rem; line-height: 1.8; }
+        .ql-editor h3 { color: #60a5fa; font-weight: 900; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.25rem; }
+        .ql-editor ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+        .ql-editor p { margin-bottom: 0.75rem; }
+        .ql-editor strong { color: #38bdf8; }
+
         .magic-btn { position: relative; overflow: hidden; }
         .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
         .magic-btn:hover::after { opacity: 1; transform: scale(1); }
@@ -45,6 +57,7 @@
             set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
         };
         const $ = id => document.getElementById(id);
+        window.quillEditor = null; // 全局 Quill 实例
     </script>
 </head>
 <body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
@@ -56,7 +69,7 @@
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform">🚀</span>
                 <div>
                     <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 派乐伴学</span></h1>
-                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V14.5 Editor</div>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">System OS V15.0 Editor</div>
                 </div>
             </a>
         </div>
@@ -219,6 +232,30 @@
             <div id="forge-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-10"></div>
         </div>
 
+        <!-- 🚀 核心归位：教案编辑器 (Editor) -->
+        <div id="view-editor" class="view-panel flex-col p-8 z-10 fade-in">
+            <div class="flex justify-between items-end mb-6 shrink-0">
+                <div><h2 class="text-3xl font-black text-white mb-2">🪐 <span id="editor-subject-title" class="text-blue-400">核心教研</span></h2><p class="text-slate-400 text-sm">苏格拉底式智能备课中枢，可深度干预 AI 生成的逻辑架构。</p></div>
+                <button onclick="App.saveCurriculum()" class="px-8 py-3 bg-slate-800 hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg transition border border-slate-700">💾 保存并返回星图</button>
+            </div>
+            <div class="flex flex-1 gap-6 overflow-hidden">
+                <!-- 左侧章节卫星 -->
+                <div class="w-1/4 glass-panel rounded-3xl flex flex-col p-5 overflow-hidden border border-blue-500/20 shadow-2xl">
+                    <button onclick="App.generateLessons()" id="btn-gen-lessons" class="w-full py-4 mb-4 bg-blue-900/30 border border-blue-500/50 text-blue-300 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition shadow">✨ AI 提取核心章节</button>
+                    <div id="lesson-list" class="flex-1 overflow-y-auto space-y-3 scrollbar-hide"></div>
+                </div>
+                <!-- 右侧 Quill 富文本 -->
+                <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden relative border border-blue-500/20 shadow-2xl">
+                    <div id="editor-empty" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 z-20 transition-opacity duration-300"><div class="text-center"><div class="text-6xl mb-4 opacity-30 drop-shadow-xl">📝</div><div class="text-slate-400 font-bold tracking-widest text-sm">请在左侧选择或提取章节，开启高阶编辑</div></div></div>
+                    <div id="editor-toolbar" class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
+                        <div><span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span><span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span></div>
+                        <button onclick="App.generateLessonContent()" id="btn-gen-content" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-bold hover:scale-105 transition shadow-[0_0_20px_rgba(59,130,246,0.6)] animate-pulse">✨ 智能生成苏格拉底教案</button>
+                    </div>
+                    <div id="quill-container" class="flex-1 bg-slate-900/40"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 🚀 后台：配置 -->
         <div id="view-config" class="view-panel items-center justify-center p-8 z-10 fade-in">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_40px_rgba(147,51,234,0.1)]">
@@ -266,7 +303,10 @@
                 galaxies: [], activeGalaxyId: null, readLang: 'en',
                 students: [], currentStudentId: null,
                 writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。\n后来我们去划船，湖水很清。划完船我们去吃了冰淇淋，冰淇淋是草莓味的，很好吃。\n今天真是开心的一天啊！我希望下次还能来玩。',
-                readingChatLog: []
+                readingChatLog: [],
+                
+                // 🚀 核心归位：编辑器内部状态
+                editGalaxy: null, editSubject: null, lessons: [], curLessonId: null
             },
 
             init() {
@@ -284,7 +324,7 @@
                 let s = window.safeStorage.get('xp_galaxies');
                 if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
                 if (this.state.galaxies.length === 0) {
-                    this.state.galaxies = [{ id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0 }, { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5 }, { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0 }] }];
+                    this.state.galaxies = [{ id: 'demo_1', title: '太阳系探索先遣营', bgX: 50, bgY: 50, subjects: [{ id: 's1', title: '星际物理基础', icon: '🌍', radius: 240, angle: 0, lessons: [] }, { id: 's2', title: '火星地质学', icon: '🪐', radius: 380, angle: 2.5, lessons: [] }, { id: 's3', title: '宇宙编程密码', icon: '💻', radius: 520, angle: 5.0, lessons: [] }] }];
                     window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
                 }
                 this.state.activeGalaxyId = this.state.galaxies[0].id;
@@ -351,6 +391,121 @@
                 if(!text) return "";
                 const tick = String.fromCharCode(96, 96, 96);
                 return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
+            },
+
+            // =============== 🚀 核心归位：教案编辑器 (Forge -> Editor) ================
+            editCurriculum(gid) { 
+                const g = this.state.galaxies.find(x => x.id === gid);
+                if(!g || !g.subjects || g.subjects.length === 0) return;
+                
+                if (!this.state.isPro) { 
+                    Swal.fire({ 
+                        title: '⚙️ 免费体验模式', 
+                        html: `<p class="text-sm text-slate-300">您即将进入 <b>《${g.subjects[0].title}》</b> 的教研模拟舱体验智能备课。<br><br>升级 PRO 领航员可解锁全科目独立干预，并无限制保存！</p>`, 
+                        icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '进入编辑器 ➔', cancelButtonText: '了解升级' 
+                    }).then((r) => {
+                        if (r.isConfirmed) this.openEditor(g, g.subjects[0]);
+                    });
+                } else { 
+                    this.openEditor(g, g.subjects[0]); 
+                } 
+            },
+            
+            openEditor(galaxy, subject) {
+                this.state.editGalaxy = galaxy;
+                this.state.editSubject = subject;
+                this.state.lessons = subject.lessons || [];
+                this.state.curLessonId = null;
+                
+                $('editor-subject-title').innerText = subject.title;
+                $('editor-empty').style.opacity = '1'; $('editor-empty').style.pointerEvents = 'auto';
+                if(window.quillEditor) window.quillEditor.root.innerHTML = '';
+                
+                this.renderLessonList();
+                this.switchView('editor');
+            },
+            
+            initQuill() {
+                if(!window.quillEditor) {
+                    window.quillEditor = new Quill('#quill-container', {
+                        theme: 'snow', placeholder: '在此手动录入教案，或点击右上角让 AI 魔法生成...',
+                        modules: { toolbar: '#editor-toolbar' }
+                    });
+                    window.quillEditor.on('text-change', () => {
+                        if(this.state.curLessonId) {
+                            const l = this.state.lessons.find(x => x.id === this.state.curLessonId);
+                            if(l) l.content = window.quillEditor.root.innerHTML;
+                        }
+                    });
+                }
+            },
+            
+            renderLessonList() {
+                const c = $('lesson-list'); c.innerHTML = '';
+                this.state.lessons.forEach(l => {
+                    const isActive = l.id === this.state.curLessonId;
+                    const bdr = isActive ? 'border-blue-500 bg-blue-900/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'border-slate-700 bg-slate-800/40 hover:border-blue-500 hover:bg-slate-800/80';
+                    const txt = isActive ? 'text-white' : 'text-slate-300';
+                    c.innerHTML += `<div onclick="App.selectLesson('${l.id}')" class="p-4 rounded-2xl border transition cursor-pointer flex justify-between items-center ${bdr}"><span class="font-bold text-sm truncate pr-2 ${txt}">${l.title}</span><span class="text-lg ${l.content?'text-emerald-400':'opacity-10'}">✓</span></div>`;
+                });
+            },
+            
+            selectLesson(id) {
+                if(this.state.curLessonId && window.quillEditor) {
+                    const oldL = this.state.lessons.find(x => x.id === this.state.curLessonId);
+                    if(oldL) oldL.content = window.quillEditor.root.innerHTML;
+                }
+                this.state.curLessonId = id;
+                this.renderLessonList();
+                $('editor-empty').style.opacity = '0'; $('editor-empty').style.pointerEvents = 'none';
+                this.initQuill();
+                const l = this.state.lessons.find(x => x.id === id);
+                window.quillEditor.root.innerHTML = l && l.content ? l.content : '';
+            },
+            
+            async generateLessons() {
+                const btn = $('btn-gen-lessons'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 正在挖掘中..."; btn.disabled = true;
+                const prompt = `为【${this.state.editSubject.title}】生成3个符合进阶教育大纲的教学章节名称。返回纯JSON数组：[{"title": "章节名称"}]`;
+                const res = await this.callAI(prompt, 'sys', true);
+                if(res) {
+                    try {
+                        const clean = this.cleanMD(res, 'json'); const parsed = JSON.parse(clean);
+                        this.state.lessons = parsed.map((l,i) => ({id: 'l_'+Date.now()+i, title: l.title, content: ''}));
+                    } catch(e){}
+                } else {
+                    this.state.lessons = [ {id: 'l_1', title: '核心概念引入与现象观察', content: ''}, {id: 'l_2', title: '底层原理解析与苏格拉底提问', content: ''}, {id: 'l_3', title: '科幻场景应用与思维拓展', content: ''} ];
+                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'演示模式：已加载预制高质量章节', showConfirmButton:false, timer:2000});
+                }
+                this.renderLessonList();
+                btn.innerHTML = "✨ AI 提取核心章节"; btn.disabled = false;
+            },
+            
+            async generateLessonContent() {
+                const l = this.state.lessons.find(x => x.id === this.state.curLessonId); if(!l) return;
+                const btn = $('btn-gen-content'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 生成中..."; btn.disabled = true;
+                const prompt = `为章节【${l.title}】编写一份苏格拉底式教案。直接输出优美的 HTML 格式片段 (可用 h3, ul, li, p, strong)。不要 html 外层标签。`;
+                const res = await this.callAI(prompt, 'sys', true);
+                if(res) {
+                    const clean = this.cleanMD(res, 'html'); window.quillEditor.root.innerHTML = clean; l.content = clean;
+                } else {
+                    const demoHtml = `<h3>1. 探索提问阶段</h3><p>各位小指挥官，我们在日常航行中是否注意过这样的现象？</p><ul><li>如果重力突然消失，水滴会变成什么形状？</li><li>为什么它不是方形或者三角形？</li></ul><h3>2. 逻辑拆解与追问</h3><p>让我们像科学家一样分解这个问题：<strong>核心维持力量是什么？</strong> 是表面张力。</p><p>大家思考一下：如果我们在飞船里吹一个泡泡，它能存在多久？</p>`;
+                    window.quillEditor.root.innerHTML = demoHtml; l.content = demoHtml;
+                    Swal.fire({toast:true, position:'top-end', icon:'info', title:'演示模式：已渲染启发式教案 Demo', showConfirmButton:false, timer:2500});
+                }
+                btn.innerHTML = "✨ 智能生成苏格拉底教案"; btn.disabled = false;
+            },
+            
+            saveCurriculum() {
+                if(this.state.curLessonId && window.quillEditor) {
+                    const l = this.state.lessons.find(x => x.id === this.state.curLessonId);
+                    if(l) l.content = window.quillEditor.root.innerHTML;
+                }
+                if(this.state.editSubject) {
+                    this.state.editSubject.lessons = this.state.lessons;
+                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
+                }
+                this.switchView('forge');
+                Swal.fire({toast:true, position:'top-end', icon:'success', title:'教案已加密同步至云端', showConfirmButton:false, timer:1500});
             },
 
             // =============== 🚀 学员管理与雷达 ================
@@ -536,7 +691,7 @@
                     setTimeout(() => {
                         $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 启动部署，构建专属星系"; $('plan-btn').disabled = false;
                         Swal.fire({ title: '🔮 已加载预制演示节点', html: `<div class="text-left text-sm text-slate-300 space-y-3"><p>由于未接入专属 AI 算力，系统加载了<b>预制单科演示大纲</b>。</p><p class="text-xs text-blue-400 border border-blue-500/30 bg-blue-900/20 p-2 rounded">升级 <b>PRO 领航员</b> 并接入 AI，即可实时生成独一无二的庞大宇宙！</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', confirmButtonText: '🚀 前往探索舱', confirmButtonColor: '#3b82f6' }).then(() => {
-                            const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: [ { id: 'sub_demo_1', title: '核心素养导论', icon: '🧠', radius: 240, angle: 0, lessons:[] } ] };
+                            const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: [ { id: 'sub_demo_1', title: '核心素养导论', icon: '🧠', radius: 240, angle: 0, lessons: [] } ] };
                             this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.state.activeGalaxyId = ng.id; this.renderForgeList(); this.switchView('classroom'); this.promptParentLock(); 
                         });
                     }, 1500); return;
@@ -545,8 +700,8 @@
                 const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
                 if (res) { try { 
                     const clean = this.cleanMD(res, 'json');
-                    const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0, lessons:[] }]; } catch(e) {} }
-                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0, lessons:[] }];
+                    const parsed = JSON.parse(clean); if (Array.isArray(parsed) && parsed.length > 0) newSubjects = [{ id: 'sub_' + Date.now(), title: parsed[0].title || '核心学科', icon: parsed[0].icon || '📚', radius: 240, angle: 0, lessons: [] }]; } catch(e) {} }
+                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: '标准核心素养', icon: '🧠', radius: 240, angle: 0, lessons: [] }];
                 const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, subjects: newSubjects };
                 this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 启动部署，构建专属星系"; $('plan-btn').disabled = false;
                 Swal.fire({ title: '铸造成功！', text: '您的专属知识星系已部署！', icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '🚀 前往探索舱' }).then(() => { this.state.activeGalaxyId = ng.id; this.renderForgeList(); this.switchView('classroom'); this.promptParentLock(); });
@@ -554,102 +709,4 @@
             renderForgeList() {
                 const c = $('forge-list'); c.innerHTML = '';
                 this.state.galaxies.forEach(g => {
-                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex flex-col relative group">
-                        <button onclick="App.deleteGalaxy('${g.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
-                        <div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-3xl border border-slate-600 shadow-inner">🔮</div><div class="pr-6"><h3 class="font-bold text-lg text-white">${g.title}</h3><span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">${g.baseStandard || 'Custom'}</span></div></div>
-                        <p class="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含核心学科与探索节点。可通过引擎进行深度定制和真实资料投喂。</p>
-                        <button onclick="App.editCurriculum('${g.id}')" class="w-full py-3 bg-slate-800 hover:bg-blue-600 text-slate-300 rounded-xl text-sm font-bold transition border border-slate-700 shadow-md">⚙️ 配置大纲与排课</button>
-                    </div>`;
-                });
-            },
-
-            // =============== 🚀 3D 星球与 Canvas 渲染 ================
-            getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
-            renderGalaxy() {
-                const c = $('galaxy-container'); c.innerHTML = '';
-                this.state.galaxies.forEach(g => {
-                    const isActive = g.id === this.state.activeGalaxyId;
-                    const style = isActive ? `left: 50%; top: 50%; transform: translate(${this.state.panX||0}px, ${this.state.panY||0}px) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(0px, 0px) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
-                    let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-all ease-[cubic-bezier(0.25,1,0.5,1)] group" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
-                    html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto" style="left: 0; top: 0; transform: translate(-50%, -50%);"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
-                    
-                    if (!isActive) {
-                        html += `<div class="absolute pointer-events-none z-50 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="transform: scale(8.333); bottom: 140px;">
-                                    <span class="bg-slate-900/95 text-amber-300 px-4 py-1.5 rounded-xl border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.8)] text-[10px] font-black uppercase flex items-center gap-2 whitespace-nowrap">🔥 <span>${g.title}</span></span>
-                                 </div>`;
-                    }
-
-                    if (isActive && g.subjects) {
-                        html += `<div class="absolute pointer-events-none" style="left:0; top:0;">`;
-                        g.subjects.forEach((s, i) => {
-                            const isFree = i === 0 || this.state.isPro;
-                            html += `<div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" style="left: ${Math.cos(s.angle) * s.radius}px; top: ${Math.sin(s.angle) * s.radius}px; transform: translate(-50%, -50%);" onclick="App.openMission('${s.title}', ${isFree})">
-                                ${isFree ? '<div class="free-badge">OPEN</div>' : '<div class="energy-lock">🔒</div>'}
-                                <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl ${isFree?'':'planet-locked'}" style="${this.getPlanetStyle(i)}">${s.icon}</div>
-                                <span class="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 group-hover:border-cyan-400 transition whitespace-nowrap">${s.title}</span>
-                            </div>`;
-                        });
-                        html += `</div>`;
-                    }
-                    html += `</div>`; c.innerHTML += html;
-                });
-            },
-            activateGalaxy(id) { this.state.activeGalaxyId = id; this.state.panX = 0; this.state.panY = 0; this.renderGalaxy(); },
-            openMission(sTitle, isFree) {
-                if (isFree) { Swal.fire({ title: '🚧 星球建设中', html: `<div class="text-left"><p class="text-sm text-slate-300 mb-3">全息课程 <b>《${sTitle}》</b> 还在施工哦！</p><p class="text-xs text-slate-400">指挥官还没有为你部署专属任务。</p></div>`, icon: 'info', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#475569', confirmButtonText: '去玩危机演习 🎮', cancelButtonText: '留在星域' }).then((r) => { if (r.isConfirmed) window.location.href = `simulator.html?mission=${encodeURIComponent(sTitle)}`; }); } 
-                else { Swal.fire({ title: '引力场锁定', text: '指挥官，此星域需要 PRO 级算力解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); }
-            },
-            
-            initNetworkCanvas() {
-                this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
-                const res = () => { 
-                    this.canvas.width = Math.max(300, window.innerWidth - 320); 
-                    this.canvas.height = window.innerHeight; 
-                }; 
-                window.addEventListener('resize', res); res();
-                
-                const w = this.canvas.width;
-                const h = this.canvas.height;
-                const pC = Math.floor(w / 8), sC = Math.floor(w / 4);
-                this.particles = []; this.stars = [];
-                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
-                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*w, y: (Math.random()-0.5)*h, z: Math.random()*w });
-                
-                if(this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
-                const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim();
-                
-                const vp = $('galaxy-viewport');
-                vp.addEventListener('mousedown', e => { if(e.target.closest('.planet-core, .planet-3d, button')) return; this.state.isPan=true; this.state.sx=(e.clientX||0)-(this.state.panX||0); this.state.sy=(e.clientY||0)-(this.state.panY||0); });
-                window.addEventListener('mousemove', e => { 
-                    const rect = this.canvas.getBoundingClientRect();
-                    this.state.mx = (e.clientX||0) - rect.left; 
-                    this.state.my = (e.clientY||0) - rect.top; 
-                    if(this.state.isPan){ this.state.panX=e.clientX-this.state.sx; this.state.panY=e.clientY-this.state.sy; this.renderGalaxy(); } 
-                });
-                window.addEventListener('mouseup', () => this.state.isPan=false);
-            },
-            drawNetwork() {
-                if(!this.ctx || !this.canvas || !$('view-classroom').classList.contains('active')) return;
-                const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
-                this.stars.forEach(s => { 
-                    s.z -= 1.5; 
-                    if(s.z <= 0) { s.z = w; s.x = (Math.random()-0.5)*w; s.y = (Math.random()-0.5)*h; } 
-                    let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; 
-                    if(sx>=0 && sx<=w && sy>=0 && sy<=h && r > 0) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } 
-                });
-                this.particles.forEach((p, i) => { 
-                    p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
-                    this.particles.slice(i+1).forEach(p2 => { 
-                        let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
-                        if(d<220) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/220)})`; this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p2.x,p2.y); this.ctx.stroke(); } 
-                    }); 
-                    if(mx>0) { let dm = Math.hypot(p.x-mx, p.y-my); if(dm<250) { this.ctx.beginPath(); this.ctx.strokeStyle=`rgba(34,211,238,${0.3*(1-dm/250)})`; this.ctx.moveTo(p.x,p.y); this.ctx.lineTo(mx,my); this.ctx.stroke(); } } 
-                });
-                if (this.state.activeGalaxyId) { const ag = this.state.galaxies.find(g => g.id === this.state.activeGalaxyId); if(!ag || !ag.subjects) return; let cx = w/2 + (this.state.panX||0); let cy = h/2 + (this.state.panY||0); ag.subjects.forEach(s => { let px = cx + Math.cos(s.angle)*s.radius; let py = cy + Math.sin(s.angle)*s.radius; this.ctx.beginPath(); this.ctx.strokeStyle='rgba(147,51,234,0.3)'; this.ctx.moveTo(cx, cy); this.ctx.lineTo(px, py); this.ctx.stroke(); }); }
-            }
-        };
-
-        window.onload = () => App.init();
-    </script>
-</body>
-</html>
+                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border border-slate-700 hover:border-blue-500/50 transition-all flex

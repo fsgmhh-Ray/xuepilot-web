@@ -29,11 +29,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
-        .magic-btn { position: relative; overflow: hidden; }
-        .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
-        .magic-btn:hover::after { opacity: 1; transform: scale(1); }
-        
-        /* API 测试状态动画 */
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.9); border-radius: 0.75rem 0.75rem 0 0; }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-top: none; border-radius: 0 0 0.75rem 0.75rem; background: rgba(0,0,0,0.3); color: #e2e8f0; }
+        .ql-editor { min-height: 300px; }
+
         .status-pulse { width: 10px; height: 10px; border-radius: 50%; }
         .ping-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
         .ping-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
@@ -43,6 +42,10 @@
         .ai-message { font-size: 0.9rem; line-height: 1.6; }
         .ai-message strong { color: #cbd5e1; }
         .ai-message p { margin-bottom: 0.75rem; }
+        
+        .magic-btn { position: relative; overflow: hidden; }
+        .magic-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: opacity 0.3s, transform 0.3s; }
+        .magic-btn:hover::after { opacity: 1; transform: scale(1); }
     </style>
     <script>
         // 绝对免疫存储拦截的虚拟内存池
@@ -501,18 +504,20 @@
             initNetworkCanvas() {
                 this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');
                 const res = () => { 
-                    const rect = this.canvas.getBoundingClientRect();
-                    this.canvas.width = rect.width || (window.innerWidth - 320); 
-                    this.canvas.height = rect.height || window.innerHeight; 
+                    this.canvas.width = Math.max(300, window.innerWidth - 320); 
+                    this.canvas.height = window.innerHeight; 
                 }; 
                 window.addEventListener('resize', res); res();
                 
-                const pC = Math.floor(this.canvas.width / 8), sC = Math.floor(this.canvas.width / 4);
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                const pC = Math.floor(w / 8), sC = Math.floor(w / 4);
                 this.particles = []; this.stars = [];
-                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
-                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*this.canvas.width, y: (Math.random()-0.5)*this.canvas.height, z: Math.random()*this.canvas.width });
+                for(let i=0; i<pC; i++) this.particles.push({ x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+                for(let i=0; i<sC; i++) this.stars.push({ x: (Math.random()-0.5)*w, y: (Math.random()-0.5)*h, z: Math.random()*w });
                 
-                const anim = () => { this.drawNetwork(); requestAnimationFrame(anim); }; anim();
+                if(this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                const anim = () => { this.drawNetwork(); this.animationFrameId = requestAnimationFrame(anim); }; anim();
                 
                 const vp = $('galaxy-viewport');
                 vp.addEventListener('mousedown', e => { if(e.target.closest('.planet-core, .planet-3d, button')) return; this.state.isPan=true; this.state.sx=(e.clientX||0)-(this.state.panX||0); this.state.sy=(e.clientY||0)-(this.state.panY||0); });
@@ -527,7 +532,12 @@
             drawNetwork() {
                 if(!this.ctx || !this.canvas || !$('view-classroom').classList.contains('active')) return;
                 const w = this.canvas.width, h = this.canvas.height, mx = this.state.mx||0, my = this.state.my||0; this.ctx.clearRect(0, 0, w, h); this.ctx.fillStyle = "#fff";
-                this.stars.forEach(s => { s.z -= 1.5; if(s.z <= 0) s.z = w; let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; if(sx>=0 && sx<=w && sy>=0 && sy<=h) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } });
+                this.stars.forEach(s => { 
+                    s.z -= 1.5; 
+                    if(s.z <= 0) { s.z = w; s.x = (Math.random()-0.5)*w; s.y = (Math.random()-0.5)*h; } 
+                    let sx = (s.x / s.z) * (w / 2) + w / 2; let sy = (s.y / s.z) * (h / 2) + h / 2; let r = (1 - s.z / w) * 1.5; 
+                    if(sx>=0 && sx<=w && sy>=0 && sy<=h && r > 0) { this.ctx.beginPath(); this.ctx.arc(sx, sy, r, 0, Math.PI*2); this.ctx.fill(); } 
+                });
                 this.particles.forEach((p, i) => { 
                     p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
                     this.particles.slice(i+1).forEach(p2 => { 

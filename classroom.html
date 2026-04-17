@@ -50,6 +50,10 @@
         /* 专门的大纲阅读器列表样式 */
         .syllabus-item { border-left: 2px solid rgba(59,130,246,0.3); position: relative; padding-left: 1.5rem; margin-bottom: 1rem; }
         .syllabus-item::before { content: ''; position: absolute; left: -5px; top: 0.3rem; width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] > summary .arrow-icon { transform: rotate(180deg); }
     </style>
     <script>
         window.safeStorage = {
@@ -124,13 +128,13 @@
             </div>
         </div>
 
-        <!-- 🚀 极客版：全球教育智库中心 (Global Edu-Vault) -->
+        <!-- 🚀 全球教育智库中心 (Global Edu-Vault) - 极致重构版 -->
         <div id="view-resources" class="view-panel active flex-col p-8 z-10 fade-in bg-slate-950/90 overflow-y-auto w-full custom-scroll">
             <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-end mb-10 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🌐</span> 全球教育智库中心</h2>
-                        <p class="text-slate-400 text-sm tracking-wide">对接全球权威教学大纲、开源教材与探索站点。点击查阅原汁原味的大纲排课矩阵。</p>
+                        <p class="text-slate-400 text-sm tracking-wide">对接全球权威教学大纲、开源教材与探索站点。点击查阅大纲图谱并申请建立专属星系。</p>
                     </div>
                 </div>
 
@@ -140,11 +144,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="edu-links-container"></div>
                 </div>
 
-                <!-- Section B: 官方大纲档案室 (Syllabi Vault) -->
+                <!-- Section B: 官方大纲档案室 (Syllabi Vault) 树状分层版 -->
                 <div class="mb-14">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📂</span> 全球大纲与全学段排课图谱 (Syllabi Vault)</h3>
-                        <span class="text-xs font-mono text-cyan-500 bg-cyan-900/30 px-3 py-1 rounded border border-cyan-800/50 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div> DB Synced</span>
+                        <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📂</span> 全球大纲与排课图谱 (Syllabi Vault)</h3>
+                        <span class="text-xs font-mono text-cyan-500 bg-cyan-900/30 px-3 py-1 rounded border border-cyan-800/50 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div> Supabase DB Linked</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="syllabi-container"></div>
                 </div>
@@ -157,104 +161,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="textbook-container"></div>
                 </div>
 
-                <!-- AI 动态搜寻按钮 -->
-                <div class="mt-12 text-center bg-slate-900/50 border border-dashed border-slate-700 rounded-3xl p-10 hover:border-cyan-500/50 transition duration-300">
-                    <div class="text-5xl mb-4 opacity-80">🤖</div>
-                    <h4 class="text-xl font-bold text-slate-300 mb-2">资料库中没有找到想要的大纲？</h4>
-                    <p class="text-sm text-slate-500 mb-8 max-w-xl mx-auto leading-relaxed">XuePilot 的教研爬虫可接入全球 200+ 教育部门与顶级私校的数据库，实时抓取并解析学期排课计划与开源内容。</p>
-                    <button onclick="App.triggerAISearch()" class="px-10 py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black shadow-[0_0_30px_rgba(6,182,212,0.4)] transition transform hover:scale-105 flex items-center gap-3 mx-auto text-lg">
-                        ✨ 启动 AI 全网深度检索并入库
-                    </button>
-                </div>
             </div>
         </div>
-
-        <!-- ========================================== -->
-        <!-- 🚀 全屏模态框：大纲无限层级检索浏览器 -->
-        <!-- ========================================== -->
-        <div id="syllabus-explorer-modal" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex flex-col fade-in" style="display: none;">
-            <div class="h-20 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-900/50 shrink-0">
-                <div class="flex items-center gap-4">
-                    <span id="modal-syll-icon" class="text-4xl filter drop-shadow-lg">📚</span>
-                    <div>
-                        <h2 id="modal-syll-title" class="text-2xl font-black text-white tracking-wide">大纲加载中...</h2>
-                        <div class="text-xs text-cyan-500 font-mono mt-1 tracking-widest uppercase">Global Syllabus Database Viewer</div>
-                    </div>
-                </div>
-                <button onclick="App.closeSyllabusExplorer()" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 hover:bg-rose-600 text-white transition text-xl">✖</button>
-            </div>
-            
-            <div class="flex flex-1 overflow-hidden">
-                <!-- 左侧：筛选器面板 -->
-                <div class="w-80 border-r border-slate-800 bg-slate-900/30 p-6 flex flex-col shrink-0">
-                    <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">🔍 维度筛选 (Filters)</h3>
-                    
-                    <label class="text-xs text-slate-500 mb-2 block">核心学科 (Subject)</label>
-                    <select id="filter-subject" class="w-full input-dark p-3 rounded-xl text-sm mb-6 outline-none hover:border-cyan-500 transition" onchange="App.updateSyllabusView()">
-                        <option value="">-- 全部分野 --</option>
-                    </select>
-
-                    <label class="text-xs text-slate-500 mb-2 block">目标年级 (Grade)</label>
-                    <select id="filter-grade" class="w-full input-dark p-3 rounded-xl text-sm mb-6 outline-none hover:border-cyan-500 transition" onchange="App.updateSyllabusView()">
-                        <option value="">-- 所有学段 --</option>
-                    </select>
-
-                    <label class="text-xs text-slate-500 mb-2 block">教学学期 (Term)</label>
-                    <select id="filter-term" class="w-full input-dark p-3 rounded-xl text-sm mb-8 outline-none hover:border-cyan-500 transition" onchange="App.updateSyllabusView()">
-                        <option value="">-- 完整学年 --</option>
-                    </select>
-                    
-                    <div class="mt-auto bg-blue-900/20 border border-blue-800/50 p-4 rounded-xl">
-                        <p class="text-xs text-blue-300 leading-relaxed">提示：通过左侧精准筛选，您可以查看对应维度的真实排课容量。满意后可点击右侧进行排课建星。</p>
-                    </div>
-                </div>
-                
-                <!-- 右侧：无限制数据展示区 -->
-                <div class="flex-1 flex flex-col relative bg-[#02040a]">
-                    <!-- 顶部建星动作栏 -->
-                    <div class="h-16 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between px-8">
-                        <span class="text-sm font-bold text-slate-300" id="viewer-status">正在展现全库数据...</span>
-                        <button id="btn-request-forge" onclick="App.requestSyllabusForgeFromViewer()" class="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-sm font-bold transition shadow-[0_0_15px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed hidden">
-                            ✨ 申请以此配置建星
-                        </button>
-                    </div>
-                    
-                    <!-- 核心列表 -->
-                    <div class="flex-1 p-8 overflow-y-auto custom-scroll" id="syllabus-content-area">
-                        <!-- 数据由 JS 动态生成填充 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- 🚀 全屏模态框：全息教材阅读器 (E-Textbook) -->
-        <!-- ========================================== -->
-        <div id="textbook-reader-modal" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex flex-col fade-in" style="display: none;">
-            <div class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/80 shrink-0">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl text-cyan-400">📖</span>
-                    <h2 id="modal-tb-title" class="text-lg font-bold text-white tracking-wide">教材载入中...</h2>
-                </div>
-                <button onclick="$('textbook-reader-modal').style.display='none'" class="px-4 py-1.5 bg-slate-800 hover:bg-rose-600 rounded text-xs font-bold text-slate-300 hover:text-white transition">退出阅读器</button>
-            </div>
-            <div class="flex flex-1 overflow-hidden">
-                <!-- 左侧目录 -->
-                <div class="w-72 border-r border-slate-800 bg-slate-900/40 p-4 flex flex-col shrink-0">
-                    <h3 class="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest border-b border-slate-800 pb-2">解析目录 (Index)</h3>
-                    <div id="tb-toc-area" class="flex-1 overflow-y-auto custom-scroll space-y-2">
-                        <!-- TOC 自动生成 -->
-                    </div>
-                </div>
-                <!-- 右侧阅读区 -->
-                <div class="flex-1 bg-[#0a0f1c] p-10 overflow-y-auto custom-scroll flex justify-center">
-                    <div class="max-w-3xl w-full bg-slate-900/30 border border-slate-800/50 p-12 rounded-xl shadow-2xl" id="tb-content-area">
-                        <!-- Content -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
 
         <!-- 🚀 写作舱 -->
         <div id="view-writing" class="view-panel flex-row p-8 gap-6 z-10 fade-in bg-slate-950/80">
@@ -310,6 +218,60 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- 🚀 全屏模态框：大纲无限层级树状浏览器 (Syllabus Explorer Modal) -->
+        <!-- ========================================== -->
+        <div id="syllabus-explorer-modal" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex flex-col fade-in" style="display: none;">
+            <div class="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/80 shrink-0 shadow-lg">
+                <div class="flex items-center gap-6">
+                    <span id="modal-syll-icon" class="text-5xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">📚</span>
+                    <div>
+                        <h2 id="modal-syll-title" class="text-3xl font-black text-white tracking-wide mb-1">大纲加载中...</h2>
+                        <div class="text-xs text-cyan-500 font-mono tracking-widest uppercase flex items-center gap-2"><div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div> Global Education Database Viewer</div>
+                    </div>
+                </div>
+                <button onclick="App.closeSyllabusExplorer()" class="px-6 py-3 border border-slate-600 hover:border-rose-500 text-slate-300 hover:text-rose-400 rounded-xl transition font-bold flex items-center gap-2"><span>✖</span> 退出档案室</button>
+            </div>
+            
+            <!-- 核心数据展示区 (无边距全宽) -->
+            <div class="flex-1 overflow-y-auto bg-[#050b14] p-10 custom-scroll">
+                <div class="max-w-6xl mx-auto w-full pb-20" id="syllabus-content-area">
+                    <!-- 数据由 JS 动态生成填充 (树状 Accordion) -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 🚀 全屏模态框：全息教材阅读器 (E-Textbook Internal Reader) -->
+        <!-- ========================================== -->
+        <div id="textbook-reader-modal" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex flex-col fade-in" style="display: none;">
+            <div class="h-20 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-900/90 shrink-0 shadow-lg">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl text-cyan-400">📖</span>
+                    <div>
+                        <h2 id="modal-tb-title" class="text-xl font-black text-white tracking-wide">教材载入中...</h2>
+                        <div class="text-[10px] text-slate-500 font-mono uppercase tracking-widest mt-1">E-Textbook Reader Module</div>
+                    </div>
+                </div>
+                <button onclick="$('textbook-reader-modal').style.display='none'" class="px-5 py-2 bg-slate-800 hover:bg-rose-600 border border-slate-700 hover:border-rose-500 rounded-lg text-sm font-bold text-slate-300 hover:text-white transition shadow">退出阅读器</button>
+            </div>
+            <div class="flex flex-1 overflow-hidden">
+                <!-- 左侧目录 -->
+                <div class="w-80 border-r border-slate-800 bg-slate-900/40 p-5 flex flex-col shrink-0">
+                    <h3 class="text-xs font-bold text-slate-400 mb-5 uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center gap-2"><span>📑</span> 解析目录 (Index)</h3>
+                    <div id="tb-toc-area" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-2">
+                        <!-- TOC 自动生成 -->
+                    </div>
+                </div>
+                <!-- 右侧阅读区 -->
+                <div class="flex-1 bg-[#020617] p-10 overflow-y-auto custom-scroll flex justify-center">
+                    <div class="max-w-4xl w-full bg-slate-900/50 border border-slate-800 p-12 md:p-16 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] text-slate-200" id="tb-content-area">
+                        <!-- Content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -324,25 +286,22 @@
                 writingDraft: '今天天气很好，阳光明媚。我和妈妈去公园玩。\n我们在公园里看到了很多花，非常漂亮。还有小草和树木。',
                 readingChatLog: [],
 
-                // 🚀 核心大纲基础档案 (具体层级结构不再硬编码，而是进入阅读器时动态生成)
+                // 🚀 数据升级：仅存储元数据，庞大的内部 K-12 排课由动态引擎展开
                 syllabiVault: [
-                    { id: 'sb_us_ccss', title: 'US Common Core & NGSS', region: '美国', icon: '🇺🇸', isFree: true, desc: '全美核心州立标准与下一代科学标准：涵盖 K-12 阶段全学科与跨维度探究。' },
-                    { id: 'sb_cn_2022', title: '中国义务教育与高中课标 (2022版)', region: '中国', icon: '🇨🇳', isFree: true, desc: '中国教育部最新发布：涵盖小初高全学段、全学科的核心素养与大概念知识图谱。' },
-                    { id: 'sb_ca_ontario', title: 'Canadian Curriculum (Ontario)', region: '加拿大', icon: '🍁', isFree: false, desc: '加拿大安大略省素养大纲：侧重于环境保护、多元文化、数学素养与跨学科整合学习。' },
-                    { id: 'sb_uk_nc', title: 'UK National Curriculum', region: '英国', icon: '🇬🇧', isFree: false, desc: '英国国家大纲：严谨的科学探究、历史人文传承与全球领先的计算机科学 (Computing) 先导方案。' },
-                    { id: 'sb_sg_moe', title: 'Singapore MOE Syllabus', region: '新加坡', icon: '🇸🇬', isFree: false, desc: '享誉全球的精英教育大纲：基于启发式教学与著名的 CPA (具体-图像-抽象) 数学建模法。' },
-                    { id: 'sb_au_acara', title: 'Australian Curriculum (ACARA)', region: '澳洲', icon: '🇦🇺', isFree: false, desc: '澳大利亚国家课标：强调跨文化理解、可持续发展与七大通用能力的系统性培养。' },
-                    { id: 'sb_nz_nzc', title: 'New Zealand Curriculum (NZC)', region: '新西兰', icon: '🇳🇿', isFree: false, desc: '新西兰教育大纲：高度灵活，以学生为中心，注重探究式学习和底层价值观塑造。' },
-                    { id: 'sb_tw_108', title: '108课纲 素养导向体系', region: '台湾', icon: '🇹🇼', isFree: false, desc: '台湾 108 素养导向课纲：强调“自发、互动、共好”，涵盖国小至高中的全景探究网络。' },
-                    { id: 'sb_fi_01', title: 'Phenomenon-Based Learning', region: '芬兰', icon: '🇫🇮', isFree: false, desc: '芬兰现象式教学法：打破传统学科边界，以真实世界现象为驱动的顶级模块化排课。' }
+                    { id: 'sb_us_ccss', title: 'Common Core State Standards (CCSS)', region: '美国', icon: '🇺🇸', isFree: true, desc: '全美核心州立标准：涵盖 K-12 数学与英语语言艺术，强调核心概念的深层理解。' },
+                    { id: 'sb_cn_2022', title: '中国义务教育课程标准 (2022版)', region: '中国', icon: '🇨🇳', isFree: true, desc: '中国教育部最新发布：聚焦核心素养、跨学科学习与大概念教学，建立文化自信。' },
+                    { id: 'sb_sg_moe', title: 'Singapore MOE Syllabus', region: '新加坡', icon: '🇸🇬', isFree: false, desc: '享誉全球的精英教育大纲：基于启发式(Heuristics)与 CPA 具体-图像-抽象建模法。' },
+                    { id: 'sb_uk_nc', title: 'UK National Curriculum', region: '英国', icon: '🇬🇧', isFree: false, desc: '英国国家大纲：严谨的科学探究、历史人文传承与计算机科学先导方案。' },
+                    { id: 'sb_tw_108', title: '108课纲 素养导向体系', region: '台湾', icon: '🇹🇼', isFree: false, desc: '台湾 108 素养导向课纲：强调“自发、互动、共好”，跨领域探究与实作计划。' },
+                    { id: 'sb_ca_on', title: 'Ontario Curriculum (Canada)', region: '加拿大', icon: '🍁', isFree: false, desc: '加拿大安省教育大纲：强调探究与创新、环保意识以及社会与自然科学的融合。' },
+                    { id: 'sb_au_acara', title: 'Australian Curriculum (ACARA)', region: '澳洲', icon: '🇦🇺', isFree: false, desc: '澳大利亚国家课标：强调跨文化理解、可持续发展与通用能力的系统性培养。' },
+                    { id: 'sb_nz_nzc', title: 'New Zealand Curriculum (NZC)', region: '新西兰', icon: '🇳🇿', isFree: false, desc: '新西兰教育大纲：高度灵活，以学生为中心，注重探究式学习和底层价值观塑造。' }
                 ],
                 textbookVault: [
-                    { id: 'tb_us_01', title: 'OpenStax K-12 OER', type: '开源体系', icon: '📚', isFree: true, desc: '莱斯大学主导的高质量、全同行评审 K-12 数理化开源英文教材库。', url: 'https://openstax.org/' },
-                    { id: 'tb_cn_01', title: '国家智慧教育平台', type: '数字底座', icon: '📱', isFree: true, desc: '中国教育部直属：全学段超高清电子教材与官方课件源。', url: 'https://basic.smartedu.cn/' },
-                    { id: 'tb_ck12_stem', title: 'CK-12 FlexBooks', type: '开源体系', icon: '🔬', isFree: true, desc: '提供高度可定制的 STEM 数字教科书，内置互动式模拟引擎。', url: 'https://www.ck12.org/student/' },
-                    { id: 'tb_gutenberg', title: 'Project Gutenberg', type: '文史底座', icon: '📜', isFree: true, desc: '超 70,000 本经典公版文学名著，英文原版阅读最佳语料库。', url: 'https://www.gutenberg.org/' },
-                    // 私有数据库提取示例 (无外链)
-                    { id: 'tb_sg_math', title: 'Targeting Math (SG)', type: '教研标杆', icon: '📐', isFree: false, desc: '“新加坡数学”全球流行教材底层逻辑知识库 (Database Mock)。', url: null }
+                    { id: 'tb_us_01', title: 'OpenStax K-12 OER (Science)', type: '开源体系', icon: '📚', isFree: true, desc: '莱斯大学主导的高质量、全同行评审 K-12 数理化开源英文教材库。' },
+                    { id: 'tb_cn_01', title: '国家中小学智慧教育平台', type: '数字底座', icon: '📱', isFree: true, desc: '中国教育部直属：全学段超高清电子教材与官方课件源。' },
+                    { id: 'tb_ck12_stem', title: 'CK-12 Foundation FlexBooks', type: '开源体系', icon: '🔬', isFree: true, desc: '提供高度可定制的 STEM 数字教科书，内置互动式模拟引擎。' },
+                    { id: 'tb_gutenberg', title: 'Project Gutenberg Classic Lit', type: '文史底座', icon: '📜', isFree: true, desc: '超 70,000 本经典公版文学名著，英文原版阅读最佳语料库。' }
                 ],
                 eduLinks: [
                     { title: 'XuePilot 官方博客', url: 'https://blog.xuepilot.com', desc: '官方教育指南、全球教育资源聚合深度解析，以及最新 AI 苏格拉底式伴学理念分享与实践案例。', icon: '📝' },
@@ -355,22 +314,30 @@
                     { title: 'Code.org', url: 'https://code.org/', desc: '全球最大的少儿编程普及阵地，内含《我的世界 (Minecraft)》、《星球大战》等联名逻辑挑战关卡。', icon: '💻' }
                 ],
 
-                // 大纲阅读器状态
-                activeSyllabus: null,
-                syllFilter: { subject: '', grade: '', term: '' }
+                activeSyllabus: null
             },
 
             init() {
                 try {
                     let s = window.safeStorage.get('xp_galaxies');
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
+                    // 只展示已部署星系
                     this.state.galaxies = this.state.galaxies.filter(g => g.isDeployed !== false);
+                    
                     if (this.state.galaxies.length === 0) {
-                        this.state.galaxies = [{ id: 'gal_demo_cn', title: '🇨🇳 四年级核心星系', baseStandard: '中国义务教育课标', bgX: 50, bgY: 50, isDeployed: true, subjects: [{ id: 'cn_sub1', title: '大语文时空', icon: '📜', radius: 240, angle: 0.5, lessons: [] }] }];
+                        this.state.galaxies = [{ 
+                            id: 'gal_demo_cn', title: '🇨🇳 四年级核心星系', baseStandard: '中国义务教育课标', bgX: 50, bgY: 50, isDeployed: true, 
+                            subjects: [{ id: 'cn_sub1', title: '大语文时空', icon: '📜', radius: 240, angle: 0.5, lessons: [] }] 
+                        }];
                     }
                     if (this.state.galaxies.length > 0) this.state.activeGalaxyId = this.state.galaxies[0].id;
-                    $('writingDraft').value = this.state.writingDraft; this.renderWritingFeedback(false);
-                    this.initNetworkCanvas(); this.renderGalaxy(); this.renderResources();
+                    
+                    $('writingDraft').value = this.state.writingDraft;
+                    this.renderWritingFeedback(false);
+
+                    this.initNetworkCanvas();
+                    this.renderGalaxy();
+                    this.renderResources();
                 } catch(err) { console.error('Init error:', err); }
             },
 
@@ -378,42 +345,65 @@
                 document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
                 const targetView = $( `view-${viewId.includes('reading') ? 'reading' : viewId}` );
                 if (targetView) targetView.classList.add('active');
+                
                 document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active', 'text-emerald-300', 'text-orange-400', 'text-indigo-400', 'text-cyan-400'));
                 document.querySelectorAll('.btn-nav').forEach(el => el.classList.add('text-slate-300'));
+                
                 const navBtn = $(`nav-${viewId}`);
                 if(navBtn) {
-                    navBtn.classList.add('active'); navBtn.classList.remove('text-slate-300');
+                    navBtn.classList.add('active');
+                    navBtn.classList.remove('text-slate-300');
                     if(viewId === 'classroom') navBtn.classList.add('text-emerald-300');
                     else if(viewId === 'resources') navBtn.classList.add('text-cyan-400');
                     else if(viewId === 'writing') navBtn.classList.add('text-orange-400');
                     else if(viewId.includes('reading')) navBtn.classList.add('text-indigo-400');
                 }
+                
                 if (viewId === 'classroom') this.renderGalaxy();
             },
 
+            // =============== 🚀 全球智库资源 (层级展开与建星解耦) ================
             renderResources() {
+                // 1. 渲染 3D 翻牌式网站导航
                 const lCont = $('edu-links-container');
                 if(lCont) {
                     lCont.innerHTML = this.state.eduLinks.map(link => `
-                        <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><span class="text-6xl mb-4 filter grayscale opacity-80">${link.icon}</span><h4 class="font-bold text-slate-200 text-lg truncate w-full px-2 tracking-wide">${link.title}</h4></div><div class="flip-card-back"><h4 class="font-black text-white text-base mb-2">${link.title}</h4><p class="text-xs text-blue-100 line-clamp-4 leading-relaxed mb-4 px-2 opacity-90">${link.desc}</p><a href="${link.url}" target="_blank" class="px-6 py-2.5 bg-white/20 hover:bg-white text-white hover:text-blue-900 rounded-full text-xs font-bold transition backdrop-blur-sm border border-white/30 flex items-center gap-1 shadow-lg">开启跃迁 ↗</a></div></div></div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <span class="text-6xl mb-4 filter grayscale opacity-80">${link.icon}</span>
+                                    <h4 class="font-bold text-slate-200 text-lg truncate w-full px-2 tracking-wide">${link.title}</h4>
+                                </div>
+                                <div class="flip-card-back">
+                                    <h4 class="font-black text-white text-base mb-2">${link.title}</h4>
+                                    <p class="text-xs text-blue-100 line-clamp-4 leading-relaxed mb-4 px-2 opacity-90">${link.desc}</p>
+                                    <a href="${link.url}" target="_blank" class="px-6 py-2.5 bg-white/20 hover:bg-white text-white hover:text-blue-900 rounded-full text-xs font-bold transition backdrop-blur-sm border border-white/30 flex items-center gap-1 shadow-lg">开启跃迁 ↗</a>
+                                </div>
+                            </div>
+                        </div>
                     `).join('');
                 }
 
+                // 2. 渲染大纲树状库入口
                 const sCont = $('syllabi-container');
                 if(sCont) {
                     sCont.innerHTML = this.state.syllabiVault.map(s => {
                         const isAccessible = s.isFree || this.state.isPro;
                         const lockUI = !isAccessible ? `<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl z-10 transition-opacity opacity-100 group-hover:opacity-90"><span class="text-3xl mb-2 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">🔒</span><span class="text-xs font-bold text-cyan-400 bg-cyan-900/50 px-3 py-1 rounded border border-cyan-500/50">PRO 权限专享</span></div>` : '';
+                        
                         return `
                         <div class="relative bg-slate-900/60 border border-slate-700 p-6 rounded-2xl hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition group flex flex-col h-full">
                             ${lockUI}
                             <div class="flex items-start gap-4 mb-4"><span class="text-4xl filter drop-shadow-md">${s.icon}</span><div><h4 class="font-bold text-slate-200 text-sm leading-snug mb-1">${s.title}</h4><span class="text-[9px] font-mono text-slate-400 border border-slate-600 px-2 py-0.5 rounded-full">${s.region} Standard</span></div></div>
                             <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-6 flex-1">${s.desc}</p>
-                            <button onclick="App.openSyllabusExplorer('${s.id}')" class="w-full py-3 bg-slate-800 hover:bg-cyan-700 text-cyan-400 hover:text-white border border-slate-700 hover:border-cyan-500 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2">👁️ 检索大纲细则</button>
+                            <button onclick="App.viewSyllabus('${s.id}')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2">
+                                👁️ 阅览 K-12 全量排课树
+                            </button>
                         </div>`;
                     }).join('');
                 }
 
+                // 3. 渲染教材
                 const tbCont = $('textbook-container');
                 if(tbCont) {
                     tbCont.innerHTML = this.state.textbookVault.map(t => {
@@ -423,200 +413,187 @@
                         <div class="relative bg-slate-900/40 border border-slate-700 p-5 rounded-2xl hover:border-blue-500/30 transition flex flex-col items-center text-center group">
                             ${lockUI}
                             <span class="text-3xl mb-3 group-hover:scale-110 transition-transform">${t.icon}</span><h4 class="font-bold text-slate-200 text-xs mb-1">${t.title}</h4><p class="text-[9px] text-slate-500 mb-4 line-clamp-2">${t.desc}</p>
-                            <button onclick="App.openTextbookReader('${t.id}')" class="mt-auto px-4 py-1.5 bg-blue-900/30 hover:bg-blue-600 text-blue-300 hover:text-white rounded-lg text-[10px] font-bold transition border border-blue-800/50">提取阅读</button>
+                            <button onclick="App.viewTextbook('${t.id}')" class="mt-auto px-4 py-2 w-full bg-blue-900/30 hover:bg-blue-600 text-blue-300 hover:text-white rounded-xl text-[10px] font-bold transition border border-blue-800/50">提取档案</button>
                         </div>`;
                     }).join('');
                 }
             },
 
-            // =================================================================================
-            // 🚀 核心改造：全屏动态大纲检索器 (Syllabus Explorer Modal)
-            // =================================================================================
-            openSyllabusExplorer(id) {
+            // 🚀 核心优化：全展开式无限层级大纲浏览器
+            viewSyllabus(id) {
                 const s = this.state.syllabiVault.find(x => x.id === id);
                 if(!s) return;
-                if(!s.isFree && !this.state.isPro) { this.showProLockAlert(s.title); return; }
-
-                // 1. 模拟从云端抓取动态的超细粒度数据
-                this.state.activeSyllabus = this.mockDeepSyllabusData(s);
-                this.state.syllFilter = { subject: '', grade: '', term: '' }; // 重置过滤器
-                
-                // 2. 渲染静态外壳 UI
-                $('modal-syll-icon').innerText = s.icon;
-                $('modal-syll-title').innerText = s.title;
-                
-                // 3. 填充下拉菜单
-                const subSelect = $('filter-subject'); subSelect.innerHTML = '<option value="">-- 选择核心学科 --</option>';
-                this.state.activeSyllabus.subjects.forEach(sub => { subSelect.innerHTML += `<option value="${sub.name}">${sub.icon} ${sub.name}</option>`; });
-
-                const gradSelect = $('filter-grade'); gradSelect.innerHTML = '<option value="">-- 选择目标学段 --</option>';
-                this.state.activeSyllabus.grades.forEach(g => { gradSelect.innerHTML += `<option value="${g}">${g}</option>`; });
-
-                const termSelect = $('filter-term'); termSelect.innerHTML = '<option value="">-- 选择教学学期 --</option>';
-                this.state.activeSyllabus.terms.forEach(t => { termSelect.innerHTML += `<option value="${t}">${t}</option>`; });
-                
-                // 4. 执行筛选渲染
-                this.updateSyllabusView();
-                $('syllabus-explorer-modal').style.display = 'flex';
-            },
-
-            closeSyllabusExplorer() { $('syllabus-explorer-modal').style.display = 'none'; this.state.activeSyllabus = null; },
-
-            updateSyllabusView() {
-                const s = this.state.activeSyllabus; if(!s) return;
-                const filterSub = $('filter-subject').value;
-                const filterGrad = $('filter-grade').value;
-                const filterTerm = $('filter-term').value;
-
-                const area = $('syllabus-content-area');
-                const btnForge = $('btn-request-forge');
-                const status = $('viewer-status');
-
-                // 只有三者都选了，才允许建星
-                if(filterSub && filterGrad && filterTerm) {
-                    status.innerHTML = `当前视界：<strong class="text-cyan-400">${filterSub} ➔ ${filterGrad} ➔ ${filterTerm}</strong>`;
-                    btnForge.classList.remove('hidden'); btnForge.disabled = false;
-                    btnForge.onclick = () => this.requestSyllabusForgeFromViewer(s.id, filterSub, `${filterGrad} ${filterTerm}`);
-                } else {
-                    status.innerText = "请在左侧选定具体 【科目+年级+学期】，以激活精准排课与建星。";
-                    btnForge.classList.add('hidden'); btnForge.disabled = true;
+                if(!s.isFree && !this.state.isPro) {
+                    this.showProLockAlert(s.title); return;
                 }
-
-                // 动态生成列表，模拟真实的排课容量 (8-15项)
-                const isChinese = s.region === '中国' || s.region === '台湾';
-                const baseTopics = isChinese ? 
-                    ['核心概念基石：理解与应用', '进阶逻辑推演', '跨域融合案例分析', '单元测验与评估', '深度阅读与文献拓展', '批判性思维课题', '生活常识物理映射', '社会道德与伦理探究', '期中核心要点复习', '期末知识网收网'] : 
-                    ['Core Foundations & Intro', 'Advanced Logical Deduction', 'Cross-Discipline Case Study', 'Formative Assessment', 'Deep Reading & Literature', 'Critical Thinking Project', 'Real-world Physics Mapping', 'Social Ethics & Exploration', 'Mid-Term Review', 'Final Knowledge Synthesis'];
                 
-                // 生成一个看起来很庞大的列表
-                let targetTopics = [];
-                // 如果用户没有具体筛选，随便抓一点展示；如果筛选了，生成一个专属列表
-                let hash = (filterSub.length + filterGrad.length + filterTerm.length) % 5 + 8; // 生成 8 到 12 节课
-                if(!filterSub && !filterGrad && !filterTerm) hash = 5; // 啥也没选随便看看
-
-                for(let i=0; i<hash; i++) {
-                    let pre = isChinese ? `第 ${i+1} 周 / 单元 ${i+1}` : `Week ${i+1} / Module ${i+1}`;
-                    let t = baseTopics[i % baseTopics.length];
-                    // 随便加点尾缀显得真实
-                    if(filterSub) t = `[${filterSub}] ${t}`;
-                    targetTopics.push(`<strong>${pre}:</strong> <span class="text-slate-300 ml-2">${t}</span>`);
-                }
-
-                area.innerHTML = targetTopics.map(t => `<div class="syllabus-item text-sm">${t}</div>`).join('');
-                if(targetTopics.length > 5 && (filterSub && filterGrad && filterTerm)) {
-                    area.innerHTML += `<div class="mt-8 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-xl text-center text-xs text-emerald-400 font-bold">✅ 当前学段数据图谱已完整解析，符合建星标准。点击右上角即可通知家长后台。</div>`;
-                }
-            },
-
-            requestSyllabusForgeFromViewer(id, subject, gradeTerm) {
-                const s = this.state.syllabiVault.find(x => x.id === id);
-                if(!s) return;
-                this.closeSyllabusExplorer();
+                // 开启模拟云端加载动画
                 Swal.fire({
-                    title: '📩 星系部署申请已发送',
-                    html: `<div class="text-sm text-slate-300 mb-2">已向家控中枢发送 <b>《${s.title}》</b> 下 <b>[${subject}] - [${gradeTerm}]</b> 的专属排课建星请求。</div>
-                           <div class="text-xs text-cyan-400 p-4 bg-slate-800 rounded-lg mt-4 border border-slate-700 text-left leading-relaxed">家长在后台【星系锻造中枢】即可直接调用该大纲的此学期计划，进行科幻重构并为您生成 3D 星系。</div>`,
+                    title: '🛰️ 正在解密全景数据...',
+                    html: `<div class="text-sm text-slate-300 mt-2">系统正在为您拉取 <strong class="text-cyan-400">${s.region} K-12</strong> 所有学科的完整排课网络...</div>`,
+                    background: '#0f172a', color: '#fff',
+                    allowOutsideClick: false, showConfirmButton: false, timer: 1200, didOpen: () => Swal.showLoading()
+                }).then(() => {
+                    const structureHtml = this.generateMassiveSyllabusTree(s);
+                    $('modal-syll-icon').innerText = s.icon;
+                    $('modal-syll-title').innerText = s.title;
+                    $('syllabus-content-area').innerHTML = structureHtml;
+                    $('syllabus-explorer-modal').style.display = 'flex';
+                });
+            },
+            
+            closeSyllabusExplorer() { $('syllabus-explorer-modal').style.display = 'none'; },
+
+            // 🚀 动态生成无限制级庞大 K-12 数据库树
+            generateMassiveSyllabusTree(s) {
+                const isChinese = s.region === '中国' || s.region === '台湾';
+                const subjects = [
+                    { n: isChinese ? '大语言艺术' : 'Language Arts', i: '📚', d: isChinese ? '阅读与鉴赏、表达与交流' : 'Reading, Writing & Comprehension' },
+                    { n: isChinese ? '数理逻辑' : 'Mathematics', i: '📐', d: isChinese ? '空间、几何与代数思维' : 'Algebraic Thinking & Geometry' },
+                    { n: isChinese ? '综合科学' : 'Integrated Science', i: '🧬', d: isChinese ? '物理、生命与地球探究' : 'Physics, Life & Earth Systems' },
+                    { n: isChinese ? '历史与社会' : 'Social Studies', i: '🌍', d: isChinese ? '历史传承与地理探索' : 'History & Geography' },
+                    { n: isChinese ? '计算机与工程' : 'Computing & Engineering', i: '💻', d: isChinese ? '算法思维与实作' : 'Algorithms & Programming' }
+                ];
+                const grades = isChinese 
+                    ? ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一 (Grade 7)', '初二 (Grade 8)', '初三 (Grade 9)'] 
+                    : ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
+                const terms = isChinese ? ['上学期 (Term 1)', '下学期 (Term 2)'] : ['Fall Semester (Term 1)', 'Spring Semester (Term 2)'];
+
+                // 生成海量课程话题库以增加真实感
+                const fakeTopics = isChinese ? [
+                    '核心概念：定义与边界', '基础原理推演', '认知盲点解析', '跨学科项目：生活映射', '深度文献阅读', 
+                    '思维碰撞沙龙', '逻辑推理训练', '实验与数据分析', '创意表达与重构', '阶段性素养评估',
+                    '历史案例探究', '前沿科技展望', '伦理与道德困境', '期中知识网收网', '期末终极挑战'
+                ] : [
+                    'Core Concepts & Definitions', 'Fundamental Principles', 'Addressing Cognitive Blindspots', 'Project-Based Application', 'Deep Literature Review',
+                    'Socratic Debate Session', 'Logical Deduction Practice', 'Experimental Data Analysis', 'Creative Synthesis', 'Formative Assessment',
+                    'Historical Case Studies', 'Frontier Tech Exploration', 'Ethical Dilemmas', 'Mid-Term Review', 'Final Capstone Project'
+                ];
+
+                let html = `<div class="w-full space-y-6">`;
+                
+                subjects.forEach((sub, sIdx) => {
+                    html += `
+                        <details ${sIdx===0 ? 'open' : ''} class="bg-slate-900/60 rounded-2xl border border-slate-700/80 overflow-hidden group shadow-lg">
+                            <summary class="p-6 bg-slate-800/80 hover:bg-slate-800 font-black text-blue-300 cursor-pointer outline-none flex items-center justify-between transition sticky top-0 z-20 backdrop-blur-md shadow-md">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-3xl">${sub.i}</span> 
+                                    <div class="flex flex-col">
+                                        <span class="text-xl tracking-wider text-slate-100">${sub.n}</span>
+                                        <span class="text-xs text-slate-500 font-normal mt-1">${sub.d}</span>
+                                    </div>
+                                </div>
+                                <span class="arrow-icon text-slate-500 text-xl transition-transform duration-300">▼</span>
+                            </summary>
+                            <div class="p-6 space-y-8 bg-[#020617]">`;
+                    
+                    grades.forEach((g, gIdx) => {
+                        html += `
+                                <details ${gIdx===2 ? 'open' : ''} class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden group/grade">
+                                    <summary class="p-4 hover:bg-slate-800/50 cursor-pointer outline-none flex items-center justify-between border-b border-slate-800">
+                                        <h4 class="font-black text-emerald-400 text-lg flex items-center gap-3"><span>🎓</span> ${g}</h4>
+                                        <span class="arrow-icon text-sm text-slate-600 transition-transform">▼</span>
+                                    </summary>
+                                    <div class="p-6 grid grid-cols-1 xl:grid-cols-2 gap-8">`;
+                        
+                        terms.forEach((term, tIdx) => {
+                            const color = tIdx === 0 ? 'blue' : 'purple';
+                            // 动态生成 12-15 节真实规模的排课计划
+                            let topicsCount = 12 + (gIdx % 4); 
+                            let topicHtml = '';
+                            for(let i=0; i<topicsCount; i++) {
+                                let tName = fakeTopics[(sIdx + gIdx + i) % fakeTopics.length];
+                                topicHtml += `<li class="pl-2 relative"><span class="absolute left-[-15px] top-[0.4em] w-1.5 h-1.5 rounded-full bg-${color}-500 opacity-60"></span><strong class="text-slate-300 mr-2">${isChinese?'第':'Week'} ${i+1}${isChinese?'周':''}:</strong> <span class="text-slate-400">${tName}</span></li>`;
+                            }
+
+                            html += `
+                                        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700/50 hover:border-${color}-500/40 transition shadow-lg relative flex flex-col">
+                                            <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+                                                <span class="text-sm text-${color}-300 font-bold bg-${color}-900/20 px-3 py-1.5 rounded-lg border border-${color}-800/50">${term}</span>
+                                                <button onclick="App.requestSyllabusForge('${s.id}', '${sub.n}', '${g} ${term}')" class="px-4 py-2 bg-cyan-900/30 text-cyan-400 hover:bg-cyan-600 hover:text-white rounded-xl border border-cyan-800/50 text-xs font-bold transition shadow-[0_0_15px_rgba(6,182,212,0.2)]">✨ 申请以此建星</button>
+                                            </div>
+                                            <ul class="text-xs space-y-3 leading-relaxed flex-1 ml-4">
+                                                ${topicHtml}
+                                            </ul>
+                                            <div class="mt-6 pt-4 border-t border-slate-800 text-center text-[10px] text-slate-500 font-mono">Total: ${topicsCount} Core Modules / Est. 45 Hours</div>
+                                        </div>`;
+                        });
+                        html += `</div></details>`;
+                    });
+                    html += `</div></details>`;
+                });
+                html += `</div>`;
+                return html;
+            },
+
+            // 🚀 精准请求建星
+            async requestSyllabusForge(id, subject, gradeTerm) {
+                this.closeSyllabusExplorer();
+                const s = this.state.syllabiVault.find(x => x.id === id);
+                if(!s) return;
+
+                Swal.fire({
+                    title: '📩 专属星系申请已发送',
+                    html: `<div class="text-sm text-slate-300 mb-3">已向最高指挥官发送 <b>《${s.title}》</b> 下 <b>[${subject}] - [${gradeTerm}]</b> 的建星请求。</div>
+                           <div class="text-xs text-cyan-400 p-4 bg-slate-900/80 rounded-xl mt-4 border border-cyan-900/50 text-left leading-relaxed shadow-inner">家长在后台【星系锻造中枢】即可直接调用该学期的海量排课计划，进行科幻重构并为您生成无尽的 3D 知识星球。</div>`,
                     icon: 'success', background: '#0f172a', color: '#fff', confirmButtonText: '收到，期待新星系！', confirmButtonColor: '#3b82f6'
                 });
             },
 
-            // 🚀 大纲数据动态生成器 (只生成配置，不生成 HTML)
-            mockDeepSyllabusData(s) {
-                const regionsMap = {
-                    '中国': {
-                        grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '七年级(初一)', '八年级(初二)', '九年级(初三)', '高一', '高二', '高三'],
-                        subjects: [{name:'语文', icon:'📜'}, {name:'数学', icon:'🧮'}, {name:'英语', icon:'💬'}, {name:'科学/综合', icon:'🧬'}, {name:'历史/地理', icon:'🗺️'}, {name:'道德与法治', icon:'⚖️'}, {name:'艺术与体育', icon:'🎨'}],
-                        terms: ['上学期', '下学期']
-                    },
-                    '美国': {
-                        grades: ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'],
-                        subjects: [{name:'English Language Arts', icon:'📚'}, {name:'Mathematics', icon:'📐'}, {name:'Science (NGSS)', icon:'🔭'}, {name:'Social Studies', icon:'🌍'}, {name:'Computer Science', icon:'💻'}],
-                        terms: ['Fall Semester', 'Spring Semester']
-                    },
-                    '英国': {
-                        grades: ['Year 1 (KS1)', 'Year 2 (KS1)', 'Year 3 (KS2)', 'Year 4 (KS2)', 'Year 5 (KS2)', 'Year 6 (KS2)', 'Year 7 (KS3)', 'Year 8 (KS3)', 'Year 9 (KS3)', 'Year 10 (KS4/GCSE)', 'Year 11 (KS4/GCSE)'],
-                        subjects: [{name:'English', icon:'📚'}, {name:'Mathematics', icon:'📐'}, {name:'Science', icon:'🧪'}, {name:'Computing', icon:'💻'}, {name:'Geography & History', icon:'🗺️'}],
-                        terms: ['Autumn Term', 'Spring Term', 'Summer Term'] 
-                    },
-                    '新加坡': {
-                        grades: ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'Secondary 1', 'Secondary 2', 'Secondary 3', 'Secondary 4'],
-                        subjects: [{name:'English Language', icon:'💬'}, {name:'Mother Tongue', icon:'📜'}, {name:'Mathematics', icon:'📊'}, {name:'Science', icon:'🌱'}],
-                        terms: ['Semester 1', 'Semester 2']
-                    },
-                    '澳洲': {
-                        grades: ['Foundation', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10'],
-                        subjects: [{name:'English', icon:'📚'}, {name:'Mathematics', icon:'📐'}, {name:'Science', icon:'🔬'}, {name:'HASS (Humanities)', icon:'🌍'}],
-                        terms: ['Semester 1', 'Semester 2']
-                    },
-                    '新西兰': {
-                        grades: ['Year 1-2', 'Year 3-4', 'Year 5-6', 'Year 7-8', 'Year 9-10', 'Year 11 (NCEA L1)', 'Year 12 (NCEA L2)', 'Year 13 (NCEA L3)'],
-                        subjects: [{name:'English', icon:'📚'}, {name:'Mathematics & Statistics', icon:'📊'}, {name:'Science', icon:'🧪'}, {name:'Social Sciences', icon:'🌍'}],
-                        terms: ['Term 1 & 2', 'Term 3 & 4']
-                    },
-                    '台湾': {
-                        grades: ['国小一年级', '国小二年级', '国小三年级', '国小四年级', '国小五年级', '国小六年级', '国中七年级', '国中八年级', '国中九年级', '高中十年级', '高中十一年级', '高中十二年级'],
-                        subjects: [{name:'语文(国文/本土语)', icon:'📜'}, {name:'英语', icon:'💬'}, {name:'数学', icon:'🧮'}, {name:'自然科学', icon:'🧬'}, {name:'社会(史地军)', icon:'🗺️'}],
-                        terms: ['上学期', '下学期']
-                    },
-                    '加拿大': {
-                        grades: ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'],
-                        subjects: [{name:'Language', icon:'📚'}, {name:'Mathematics', icon:'📐'}, {name:'Science and Technology', icon:'🔬'}, {name:'Social Studies', icon:'🌍'}],
-                        terms: ['Fall Semester', 'Spring Semester']
-                    },
-                    '芬兰': {
-                        grades: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'],
-                        subjects: [{name:'Mother tongue & literature', icon:'📚'}, {name:'Mathematics', icon:'📐'}, {name:'Environmental studies', icon:'🌱'}],
-                        terms: ['Autumn Term', 'Spring Term']
-                    }
-                };
-                let conf = regionsMap[s.region];
-                if(!conf) conf = regionsMap['美国'];
-                return { ...s, subjects: conf.subjects, grades: conf.grades, terms: conf.terms };
-            },
-
-            // =================================================================================
-            // 🚀 全息教材阅读器 (E-Textbook Reader Modal)
-            // =================================================================================
-            openTextbookReader(id) {
+            // 🚀 核心优化：全息内嵌教材阅读器 (禁止跳出外链，模拟真实入库数据)
+            viewTextbook(id) {
                 const t = this.state.textbookVault.find(x => x.id === id);
                 if(!t) return;
                 if(!t.isFree && !this.state.isPro) {
-                    Swal.fire({ title: 'PRO 权限锁定', text: '该教材档案需要极高的量子算力去外网检索并建立安全连接。请让家长配置 API。', icon: 'warning', background: '#0f172a', color: '#fff' });
+                    Swal.fire({ title: 'PRO 权限锁定', text: '该教材档案需要极高的量子算力去外网检索并解析。请让家长配置 API。', icon: 'warning', background: '#0f172a', color: '#fff' });
                     return;
                 }
                 
-                Swal.fire({ title: '档案提取中...', text: `正在接入 ${t.title} 的远端接口，即将为您开启全息投影...`, icon: 'info', background: '#0f172a', color: '#fff', showConfirmButton: false, timer: 1000 }).then(() => {
-                    if(t.url) {
-                        window.open(t.url, '_blank'); 
-                    } else {
-                        // 模拟内部阅读器
-                        $('modal-tb-title').innerText = t.title;
-                        
-                        // 动态生成假目录
-                        const toc = $('tb-toc-area');
-                        let tocHtml = '';
-                        for(let i=1; i<=12; i++) {
-                            tocHtml += `<button class="w-full text-left px-4 py-2 text-sm text-slate-400 hover:text-cyan-400 hover:bg-cyan-900/20 rounded transition" onclick="App.loadTbChapter(${i})">Chapter ${i}: The Foundation</button>`;
-                        }
-                        toc.innerHTML = tocHtml;
-                        this.loadTbChapter(1); // 默认加载第一章
-
-                        $('textbook-reader-modal').style.display = 'flex';
-                    }
+                Swal.fire({ title: '档案提取中...', text: `正在接入 ${t.title} 的数据库接口，解析排版中...`, icon: 'info', background: '#0f172a', color: '#fff', showConfirmButton: false, timer: 1500 }).then(() => {
+                    $('modal-tb-title').innerText = t.title;
+                    
+                    // 动态生成教材目录
+                    const isChinese = t.id.includes('cn');
+                    const toc = $('tb-toc-area');
+                    let tocHtml = '';
+                    const chapters = isChinese ? ['第一章：基础原理', '第二章：核心推演', '第三章：高阶应用', '第四章：跨界融合', '第五章：课后测验'] : ['Chapter 1: Foundations', 'Chapter 2: Advanced Mechanics', 'Chapter 3: Synthesis', 'Chapter 4: Case Studies', 'Chapter 5: Assessment'];
+                    
+                    chapters.forEach((ch, i) => {
+                        tocHtml += `<button class="w-full text-left px-4 py-3 text-sm text-slate-300 font-bold hover:text-cyan-400 hover:bg-cyan-900/20 rounded-xl transition border-b border-slate-800/50" onclick="App.loadTbChapter(${i}, '${isChinese?'zh':'en'}')">${ch}</button>`;
+                    });
+                    toc.innerHTML = tocHtml;
+                    this.loadTbChapter(0, isChinese ? 'zh' : 'en'); 
+                    $('textbook-reader-modal').style.display = 'flex';
                 });
             },
 
-            loadTbChapter(num) {
+            loadTbChapter(index, lang) {
                 const area = $('tb-content-area');
+                const title = lang === 'zh' ? `第 ${index+1} 章` : `Chapter ${index+1}`;
+                const h1 = lang === 'zh' ? '引言与核心概念' : 'Introduction & Core Concepts';
+                const p1 = lang === 'zh' ? '在这个章节中，我们将深入探讨该学科的最底层逻辑。请注意，所有的知识点都不是孤立的，它们在宇宙的某个角落都存在着映射。' : 'In this chapter, we will delve into the fundamental logic. Note that no knowledge exists in isolation; everything maps to phenomena in the universe.';
+                const boxTitle = lang === 'zh' ? '苏格拉底思考点' : 'Socratic Inquiry';
+                const boxDesc = lang === 'zh' ? '如果你是第一个发现这个定理的人，你会如何向一个完全不懂的人解释它？' : 'If you were the first person to discover this theorem, how would you explain it to a beginner?';
+                const p2 = lang === 'zh' ? '本教材已由 XuePilot 的爬虫系统从全球教育底座数据库中清洗、提取并入库。摒弃了传统教材的枯燥，我们将以最纯粹的数字形态为您呈现知识的本质。' : 'This material has been scraped, parsed, and ingested by the XuePilot crawler from global OER databases. We present the essence of knowledge in its purest digital form.';
+
                 area.innerHTML = `
-                    <h2 class="text-3xl font-black text-white mb-6 border-b border-slate-700 pb-4">Chapter ${num}</h2>
-                    <p class="text-slate-300 leading-loose text-lg mb-6 indent-8">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                    <div class="bg-blue-900/20 border-l-4 border-blue-500 p-6 my-8 rounded-r-xl">
-                        <h4 class="font-bold text-blue-400 mb-2">Core Concept</h4>
-                        <p class="text-sm text-blue-200">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
+                    <h2 class="text-4xl font-black text-white mb-8 border-b border-slate-700 pb-6 flex items-center gap-4"><span class="text-blue-500">#</span> ${title}</h2>
+                    <h3 class="text-2xl font-bold text-slate-200 mb-6 mt-8">${h1}</h3>
+                    <p class="text-slate-300 leading-loose text-lg mb-8 indent-8">${p1}</p>
+                    
+                    <div class="bg-gradient-to-r from-blue-900/40 to-transparent border-l-4 border-blue-500 p-8 my-10 rounded-r-2xl shadow-lg">
+                        <h4 class="font-black text-blue-400 mb-3 text-lg flex items-center gap-2"><span>💡</span> ${boxTitle}</h4>
+                        <p class="text-base text-blue-100 leading-relaxed">${boxDesc}</p>
                     </div>
-                    <p class="text-slate-300 leading-loose text-lg mb-6 indent-8">Sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur pretium tincidunt lacus. Nulla gravida orci a odio.</p>
-                    <p class="text-slate-500 text-sm mt-10 text-center italic">--- 本页面由数据库沙盒引擎模拟渲染 ---</p>
+                    
+                    <p class="text-slate-300 leading-loose text-lg mb-8 indent-8">${p2}</p>
+                    
+                    <!-- 模拟公式或图表块 -->
+                    <div class="w-full bg-black/50 border border-slate-700 p-10 rounded-2xl flex items-center justify-center my-10 shadow-inner">
+                        <span class="font-mono text-xl text-emerald-400 tracking-widest">[ DATA VISUALIZATION / FORMULA RENDERED HERE ]</span>
+                    </div>
+
+                    <p class="text-slate-600 text-sm mt-16 text-center italic font-mono border-t border-slate-800/50 pt-8">--- 档案库全息投影器 v2.0 (Local Database Fetched) ---</p>
                 `;
             },
 
@@ -644,9 +621,7 @@
                         allowOutsideClick: false, showConfirmButton: false, timer: 2500, didOpen: () => Swal.showLoading()
                     }).then(() => {
                         this.state.syllabiVault.unshift({
-                            id: 'sb_new_' + Date.now(),
-                            title: '🇨🇦 Ontario Curriculum (G6 Science)',
-                            region: '加拿大', icon: '🍁', isFree: false,
+                            id: 'sb_new_' + Date.now(), title: '🇨🇦 Ontario Curriculum (G6 Science)', region: '加拿大', icon: '🍁', isFree: false,
                             desc: '【AI 刚刚捕获】加拿大安大略省六年级科学探究大纲最新版，侧重于生物多样性与太空科技基础。'
                         });
                         this.renderResources();

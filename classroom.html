@@ -76,9 +76,15 @@
             </button>
             
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">全球教育网关</div>
-            <button onclick="App.switchView('resources')" id="nav-resources" class="btn-nav active py-3 mb-4 text-cyan-400">
+            <button onclick="App.switchView('resources')" id="nav-resources" class="btn-nav active py-3 mb-2 text-cyan-400">
                 <span class="mr-3 text-2xl">🌐</span> 
                 <div class="flex flex-col"><span class="text-sm font-black text-white">全球教育智库</span><span class="text-[10px] text-cyan-500 font-normal mt-0.5 leading-snug">真实大纲与权威探索站点库</span></div>
+            </button>
+            
+            <!-- 🚀 新增：专属阅读器跃迁入口，单独开一栏 -->
+            <button onclick="window.location.href='reader.html'" id="nav-reader" class="btn-nav py-3 mb-4 text-slate-300">
+                <span class="mr-3 text-2xl">📖</span> 
+                <div class="flex flex-col"><span class="text-sm font-black text-white">全息伴读阅读器</span><span class="text-[10px] text-blue-400 font-normal mt-0.5 leading-snug">独立阅读舱与沉浸式图文流</span></div>
             </button>
 
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项集训营</div>
@@ -86,12 +92,15 @@
                 <span class="mr-3 text-xl">🎮</span><div class="flex flex-col"><span class="text-sm">危机救援演习</span><span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">在科幻实战中练就大局观</span></div>
             </a>
             
-            <!-- 🚀 修改：直接跃迁至伴读舱，物理隔离 -->
-            <button onclick="window.location.href='reader.html?mode=en'" class="btn-nav py-3 text-slate-300">
-                <span class="mr-3 text-xl">🔤</span><div class="flex flex-col"><span class="text-sm">英文魔法书</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">跃迁至全息伴读舱</span></div>
+            <!-- 🚀 恢复：独立的 AI 伴读与写作舱 (保留最初功能结构) -->
+            <button onclick="App.switchView('writing')" id="nav-writing" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">✍️</span><div class="flex flex-col"><span class="text-sm">启发写作舱</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">苏格拉底提问重塑逻辑链</span></div>
             </button>
-            <button onclick="window.location.href='reader.html?mode=zh'" class="btn-nav py-3 text-slate-300">
-                <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">跃迁至全息伴读舱</span></div>
+            <button onclick="App.openReading('en')" id="nav-reading-en" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">🔤</span><div class="flex flex-col"><span class="text-sm">英文魔法书</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">构建母语级思维脉络</span></div>
+            </button>
+            <button onclick="App.openReading('zh')" id="nav-reading-zh" class="btn-nav py-3 text-slate-300">
+                <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力</span></div>
             </button>
 
             <div class="mt-auto pt-4 border-t border-slate-800/50">
@@ -234,6 +243,19 @@
                     else if(viewId === 'resources') navBtn.classList.add('text-cyan-400');
                 }
                 if (viewId === 'classroom') this.renderGalaxy();
+            },
+            
+            // 🚀 恢复：独立的伴读模块防呆占位（防止无对应 HTML 页面时报错）
+            openReading(lang) {
+                const title = lang === 'en' ? '英文魔法书' : '大语文时光机';
+                Swal.fire({
+                    title: `${title} 升级中`,
+                    text: '该专属 AI 伴读舱体正在重构中，请等待最高指挥官部署。',
+                    icon: 'info',
+                    background: '#0f172a',
+                    color: '#fff',
+                    confirmButtonColor: '#3b82f6'
+                });
             },
 
             renderResources() {

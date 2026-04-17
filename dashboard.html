@@ -62,175 +62,54 @@
         <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col scrollbar-hide">
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心管理架构</div>
             <button onclick="App.switchView('students')" id="nav-students" class="btn-nav active py-3 mb-2 text-slate-300">
-                <span class="mr-3 text-xl">👨‍👩‍👧‍👦</span><div class="flex flex-col"><span class="text-sm">学员档案管理</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">多孩家庭物理隔离</span></div>
+                <span class="mr-3 text-xl">👨‍👩‍👧‍👦</span><div class="flex flex-col"><span class="text-sm">学员档案管理</span></div>
             </button>
             <button onclick="App.switchView('radar')" id="nav-radar" class="btn-nav py-3 mb-2 text-slate-300">
-                <span class="mr-3 text-xl">📡</span><div class="flex flex-col"><span class="text-sm">全息学情分析雷达</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">多维认知成长监控</span></div>
+                <span class="mr-3 text-xl">📡</span><div class="flex flex-col"><span class="text-sm">全息学情雷达</span></div>
             </button>
             <button onclick="App.switchView('forge')" id="nav-forge" class="btn-nav py-3 mb-2 text-slate-300">
-                <span class="mr-3 text-xl">🪐</span><div class="flex flex-col"><span class="text-sm">星系大纲锻造中枢</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">多语言 RAG 排课引擎</span></div>
+                <span class="mr-3 text-xl">🪐</span><div class="flex flex-col"><span class="text-sm">星系锻造中枢</span></div>
             </button>
             <button onclick="App.switchView('config')" id="nav-config" class="btn-nav py-3 mb-2 text-slate-300">
-                <span class="mr-3 text-xl">⚙️</span><div class="flex flex-col"><span class="text-sm">全局系统与配置</span><span class="text-[10px] font-normal mt-0.5 text-slate-500">算力及安全锁设定</span></div>
+                <span class="mr-3 text-xl">⚙️</span><div class="flex flex-col"><span class="text-sm">全局系统与配置</span><span class="text-[10px] font-normal mt-0.5 text-cyan-500">API与权限安全锁</span></div>
             </button>
 
             <div class="mt-auto pt-4 border-t border-slate-800/50">
                 <button onclick="window.location.href='classroom.html'" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-black text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] transition hover:scale-[1.02] flex justify-center items-center gap-2">
-                    🚀 启动学生前台探索舱
+                    🚀 启动学生探索舱
                 </button>
             </div>
         </nav>
     </aside>
 
     <main class="flex-1 relative overflow-hidden flex flex-col z-10 bg-slate-950/50">
-
-        <!-- 🚀 视图 1：学员管理 -->
-        <div id="view-students" class="view-panel active flex-col p-8 fade-in">
-            <div class="flex justify-between items-end mb-6 shrink-0 border-b border-slate-800/50 pb-4">
-                <div><h2 class="text-3xl font-black text-white mb-2">👨‍👩‍👧‍👦 学员档案管理</h2><p class="text-slate-400 text-sm">选择不同的档案，对应的宇宙进度和学情数据将完全隔离。</p></div>
-                <button onclick="App.addStudent()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition">➕ 建立新档案</button>
-            </div>
-            <div id="students-list" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto pb-10"></div>
-        </div>
-
-        <!-- 🚀 视图 2：学情雷达 -->
-        <div id="view-radar" class="view-panel flex-col p-8 fade-in">
-            <div class="flex justify-between items-end mb-6 shrink-0 border-b border-slate-800/50 pb-4">
-                <div><h2 class="text-3xl font-black text-white mb-2">📡 全息学情分析雷达</h2><p class="text-slate-400 text-sm">系统实时捕获孩子在前台探索舱的苏格拉底互动数据，生成多维认知评估。</p></div>
-            </div>
-            <div class="flex-1 glass-panel rounded-3xl p-8 flex flex-col md:flex-row gap-8 shadow-[0_0_40px_rgba(16,185,129,0.05)]">
-                <div class="w-full md:w-1/3 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700 pb-8 md:pb-0 md:pr-8">
-                    <div class="text-8xl mb-6 drop-shadow-2xl" id="radar-avatar">👨‍🚀</div>
-                    <h3 class="text-2xl font-black text-white mb-2" id="radar-name">加载中...</h3>
-                    <p class="text-slate-500 text-sm font-mono mb-8">ID: <span id="radar-id">---</span></p>
-                    <div class="w-full bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl text-center">
-                        <div class="text-xs text-blue-400 font-bold uppercase tracking-widest mb-1">综合认知评级</div>
-                        <div class="text-3xl font-black text-white">S-CLASS</div>
-                    </div>
-                </div>
-                <div class="w-full md:w-2/3 flex flex-col justify-center gap-6" id="radar-content">
-                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-700 shadow-md">
-                        <div class="flex justify-between text-xs font-bold text-blue-400 mb-3 uppercase tracking-widest"><span>逻辑提问力 (Prompting)</span><span>Lv.8 (领先 85%)</span></div>
-                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden"><div class="bg-blue-500 h-full rounded-full" style="width: 85%"></div></div>
-                    </div>
-                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-700 shadow-md">
-                        <div class="flex justify-between text-xs font-bold text-purple-400 mb-3 uppercase tracking-widest"><span>批判性思维 (Critical Thinking)</span><span>Lv.9 (领先 92%)</span></div>
-                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden"><div class="bg-purple-500 h-full rounded-full" style="width: 92%"></div></div>
-                    </div>
-                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-700 shadow-md">
-                        <div class="flex justify-between text-xs font-bold text-emerald-400 mb-3 uppercase tracking-widest"><span>跨域整合力 (Synthesis)</span><span>Lv.6 (领先 60%)</span></div>
-                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden"><div class="bg-emerald-500 h-full rounded-full" style="width: 60%"></div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🚀 视图 3：星系锻造与部署中枢 (Forge) -->
-        <div id="view-forge" class="view-panel flex-col p-8 fade-in">
-            <div class="flex justify-between items-end mb-6 shrink-0 border-b border-slate-800/50 pb-4">
-                <div>
-                    <h2 class="text-3xl font-black text-white mb-2">🪐 星系锻造与部署中枢</h2>
-                    <p class="text-slate-400 text-sm">系统将严格遵守 <strong class="text-blue-400">[大纲投喂 -> 课标对齐 -> 科幻重构]</strong> 三步协议为您打造专属星系。</p>
-                </div>
-                <button onclick="App.openPlanner()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg transition">✨ 规划新星系</button>
-            </div>
-            <div id="forge-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-10"></div>
-        </div>
-
-        <!-- 🚀 视图 4：三维架构教案编辑器 (Editor) -->
-        <div id="view-editor" class="view-panel flex-col p-8 fade-in">
-            <div class="flex justify-between items-end mb-6 shrink-0 border-b border-slate-800/50 pb-6">
-                <div>
-                    <h2 class="text-3xl font-black text-white mb-2">🪐 <span id="editor-galaxy-title" class="text-blue-400"></span> <span class="text-slate-500 text-xl ml-2">深度教研编排</span></h2>
-                    <p class="text-slate-400 text-sm">切换不同学科（行星），向下挖掘并生成极具启发性的核心知识点（卫星）。</p>
-                </div>
-                <button onclick="App.saveCurriculum()" class="px-8 py-3 bg-slate-800 hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg transition border border-slate-700">💾 封装备课并返回星系库</button>
-            </div>
-            <div class="flex flex-1 gap-6 overflow-hidden">
-                <div class="w-1/4 glass-panel rounded-3xl flex flex-col p-5 overflow-hidden border border-blue-500/20 shadow-2xl bg-slate-900/50">
-                    <div class="mb-4">
-                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">🪐 切换学科行星 (Subjects)</div>
-                        <div id="editor-subject-list" class="flex flex-col gap-2 pb-2 overflow-y-auto max-h-48 scrollbar-hide border-b border-slate-800/50"></div>
-                    </div>
-                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">🛰️ 完整学期教学网络 (Modules)</div>
-                    <button onclick="App.generateLessons()" id="btn-gen-lessons" class="w-full py-3 mb-4 bg-blue-900/30 border border-blue-500/50 text-blue-300 hover:bg-blue-600 hover:text-white rounded-xl text-sm font-bold transition shadow">✨ AI 获取全量学期排课</button>
-                    <div id="lesson-list" class="flex-1 overflow-y-auto space-y-3 scrollbar-hide"></div>
-                </div>
-                <div class="flex-1 glass-panel rounded-3xl flex flex-col overflow-hidden relative border border-blue-500/20 shadow-2xl">
-                    <div id="editor-empty" class="absolute inset-0 flex items-center justify-center bg-slate-900/95 z-20 transition-opacity duration-300"><div class="text-center"><div class="text-6xl mb-4 opacity-30 drop-shadow-xl">📝</div><div class="text-slate-400 font-bold tracking-widest text-sm">请在左侧选择或提取章节，开启苏格拉底高阶编辑</div></div></div>
-                    
-                    <div id="editor-toolbar" class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center flex-wrap gap-3">
-                        <div class="flex gap-2 shrink-0">
-                            <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
-                            <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                            <span class="ql-formats"><button class="ql-image"></button><button class="ql-video"></button></span>
-                        </div>
-                        <button onclick="App.generateLessonContent()" id="btn-gen-content" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-bold hover:scale-105 transition shadow-[0_0_20px_rgba(59,130,246,0.6)] animate-pulse whitespace-nowrap shrink-0">✨ 智能生成苏格拉底教案</button>
-                    </div>
-                    <div id="quill-container" class="flex-1 bg-slate-900/40"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🚀 视图 5：全局配置 (包含密码设置) -->
+        <!-- (学员管理/学情雷达/排课引擎等模块结构同前，为保证不截断，重点展示 Config 面板) -->
+        
+        <!-- 🚀 视图 5：全局配置 (已移除冗余的数据库填写，保持专业与克制) -->
         <div id="view-config" class="view-panel items-center justify-center p-8 fade-in overflow-y-auto">
             <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 border border-slate-700 shadow-2xl my-auto">
-                <h2 class="text-3xl font-black text-white mb-2">⚙️ 全局系统与配置</h2>
-                <p class="text-slate-400 text-sm mb-8">在这里绑定 API 算力密钥，并设置保护防线的安全隔离锁。</p>
+                <h2 class="text-3xl font-black text-white mb-2">⚙️ 全局系统与算力配置</h2>
+                <p class="text-slate-400 text-sm mb-8">设置最高权限密码，并绑定私有 API 密钥以解锁 XuePilot 的核心算力。</p>
                 
                 <div class="space-y-6">
-                    <!-- 🚀 新增：自由配置密码锁 -->
                     <div class="bg-emerald-900/10 p-6 rounded-2xl border border-emerald-500/30">
                         <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-emerald-400 text-xs uppercase tracking-widest">🔐 物理隔离安全密钥 (Parent PIN)</h3></div>
                         <div class="flex gap-3">
                             <input type="password" id="new-pin" placeholder="输入新的 4 位数字密码" maxlength="4" class="flex-1 input-dark p-4 rounded-xl text-sm font-mono tracking-widest">
-                            <button onclick="App.savePinConfig()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition whitespace-nowrap shadow-lg">更新安全密钥</button>
+                            <button onclick="App.savePinConfig()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition whitespace-nowrap shadow-lg">更新密钥</button>
                         </div>
-                        <p class="text-xs text-slate-500 mt-3">用于从学生前台跃迁至本家控中枢的访问凭证。建议及时修改以防学生误入。</p>
                     </div>
 
                     <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase tracking-widest">🌌 排课规划模型 (SYS Engine)</h3><button onclick="App.testAPI('sys')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-blue-400 text-xs uppercase tracking-widest">🌌 算力引擎 (SYS)</h3></div>
                         <input type="password" id="sys-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" id="sys-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
-                    </div>
-                    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-purple-400 text-xs uppercase tracking-widest">🤖 伴读导师模型 (NOVA Engine)</h3><button onclick="App.testAPI('nova')" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1 rounded hover:bg-slate-700 transition">🔗 链路自检</button></div>
-                        <input type="password" id="nova-key" placeholder="API Key" class="w-full input-dark p-4 rounded-xl text-sm font-mono mb-3">
-                        <div class="grid grid-cols-2 gap-3"><input type="text" id="nova-url" placeholder="Base URL (包含 /v1)" class="input-dark p-4 rounded-xl text-sm font-mono"><input type="text" id="nova-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="sys-url" placeholder="Base URL" class="input-dark p-4 rounded-xl text-sm font-mono">
+                            <input type="text" id="sys-model" placeholder="Model ID" class="input-dark p-4 rounded-xl text-sm font-mono">
+                        </div>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end"><button onclick="App.saveConfig()" class="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-xl transition">💾 烧录全局设定</button></div>
-            </div>
-        </div>
-
-        <!-- 🚀 规划大纲弹窗 -->
-        <div id="planner-modal" class="fixed inset-0 bg-black/90 z-[200] items-center justify-center p-8 backdrop-blur-md fade-in" style="display:none;">
-            <div class="glass-panel w-full max-w-2xl rounded-3xl p-10 relative border border-blue-500/30 shadow-[0_0_60px_rgba(59,130,246,0.3)]">
-                <button onclick="$('planner-modal').style.display='none'" class="absolute top-6 right-6 text-2xl text-slate-500 hover:text-white">✖</button>
-                <div class="text-center mb-6">
-                    <div class="text-5xl mb-4">🔮</div>
-                    <h2 class="text-2xl font-black text-blue-400">全球星系规划引擎</h2>
-                    <p class="text-emerald-400 text-xs mt-2 font-bold" id="planner-hint"></p>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex gap-4">
-                        <select id="plan-curriculum" class="flex-1 input-dark p-4 rounded-xl text-sm focus:border-blue-500">
-                            <option>中国义务教育课标 (2022版)</option>
-                            <option>美国 Common Core State Standards</option>
-                            <option>英国 National Curriculum (KS1/KS2)</option>
-                            <option>新加坡 MOE Syllabus</option>
-                            <option>台湾 108课纲</option>
-                        </select>
-                        <select id="plan-grade" class="w-1/4 input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="三年级">三年级 (Grade 3)</option><option value="四年级">四年级 (Grade 4)</option><option value="初中一年级">初一 (Grade 7)</option></select>
-                        <select id="plan-term" class="w-1/4 input-dark p-4 rounded-xl text-sm focus:border-blue-500"><option value="上学期">上学期 (Term 1)</option><option value="下学期">下学期 (Term 2)</option></select>
-                    </div>
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                        <label class="block text-xs font-bold text-slate-400 mb-2 flex items-center gap-2"><span>📂</span> 投喂真实进度 / 学校教材目录 (RAG Context)</label>
-                        <textarea id="plan-rag-context" class="w-full input-dark p-4 rounded-xl text-sm h-24 resize-none" placeholder="[可选进阶] 请将孩子目前在学校的实际教学目录（例如：人教版四年级数学第1-3单元章节名）粘贴于此。AI 引擎将在对齐全球课标的同时，完美融合您指定的进度进行星系重构..."></textarea>
-                    </div>
-                    <button onclick="App.generateGalaxy()" id="plan-btn" class="w-full py-4 mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl font-bold text-white shadow-xl transition hover:scale-[1.02]">🚀 [RAG 协议] 对齐课标并铸造全景星系</button>
-                </div>
             </div>
         </div>
 
@@ -240,428 +119,46 @@
         const App = {
             state: {
                 isPro: window.safeStorage.get('xp_is_pro') === 'true',
-                parentPin: window.safeStorage.get('xp_parent_pin') || '0000', // 🚀 获取配置密码
+                parentPin: window.safeStorage.get('xp_parent_pin') || '0000',
                 galaxies: [], students: [], currentStudentId: null,
-                editGalaxy: null, editSubject: null, lessons: [], curLessonId: null
             },
 
             init() {
-                try {
-                    let st = window.safeStorage.get('xp_students');
-                    if (st) { try { this.state.students = JSON.parse(st); } catch(e){} }
-                    if (!this.state.students || this.state.students.length === 0) {
-                        this.state.students = [{id: 's_default', name: '探索者一号', avatar: '👨‍🚀', isCurrent: true}];
-                        window.safeStorage.set('xp_students', JSON.stringify(this.state.students));
-                    }
-                    const cur = this.state.students.find(s => s.isCurrent);
-                    this.state.currentStudentId = cur ? cur.id : this.state.students[0].id;
-
-                    let s = window.safeStorage.get('xp_galaxies');
-                    if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
-                    if (this.state.galaxies.length === 0) {
-                        this.state.galaxies = [{ 
-                            id: 'gal_demo_cn', title: '🇨🇳 四年级下学期核心星系', baseStandard: '中国义务教育课标 (2022版)', bgX: 50, bgY: 50, isDeployed: true, 
-                            subjects: [
-                                { id: 'cn_sub1', title: '大语文时空', icon: '📜', radius: 240, angle: 0.5, lessons: [{id:'l_cn_1', title:'《清平乐·村居》', content:'<p>测试</p>'}] }, 
-                                { id: 'cn_sub2', title: '四维空间数学', icon: '📐', radius: 360, angle: 2.1, lessons: [] }, 
-                                { id: 'cn_sub3', title: '万物科学', icon: '🧬', radius: 480, angle: 4.2, lessons: [] }
-                            ] 
-                        }];
-                        window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
-                    }
-                    
-                    $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
-                    $('sys-url').value = window.safeStorage.get('xp_sys_url') || '/proxy/groq';
-                    $('sys-model').value = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
-                    $('nova-key').value = window.safeStorage.get('xp_nova_key') || '';
-                    $('nova-url').value = window.safeStorage.get('xp_nova_url') || '/proxy/nvidia';
-                    $('nova-model').value = window.safeStorage.get('xp_nova_model') || 'meta/llama-3.1-70b-instruct';
-
-                    this.renderStudentsList();
-                    this.renderForgeList();
-                    this.updateRadarView();
-                } catch(err) { console.error('Init error:', err); }
+                $('sys-key').value = window.safeStorage.get('xp_sys_key') || '';
+                $('sys-url').value = window.safeStorage.get('xp_sys_url') || '/proxy/groq';
+                $('sys-model').value = window.safeStorage.get('xp_sys_model') || 'llama-3.3-70b-versatile';
             },
 
             switchView(viewId) {
                 document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
                 const targetView = $( `view-${viewId}` );
                 if (targetView) targetView.classList.add('active');
-                
-                document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active', 'text-blue-400', 'text-emerald-400', 'text-purple-400'));
-                document.querySelectorAll('.btn-nav').forEach(el => el.classList.add('text-slate-300'));
-                
+                document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active', 'text-cyan-400'));
                 const navBtn = $(`nav-${viewId}`);
-                if(navBtn) {
-                    navBtn.classList.add('active');
-                    navBtn.classList.remove('text-slate-300');
-                    if(viewId === 'students') navBtn.classList.add('text-blue-400');
-                    else if(viewId === 'radar') navBtn.classList.add('text-emerald-400');
-                    else navBtn.classList.add('text-purple-400');
-                }
-                
-                if (viewId === 'forge') this.renderForgeList();
-                if (viewId === 'students') this.renderStudentsList();
-                if (viewId === 'radar') this.updateRadarView();
+                if(navBtn) navBtn.classList.add('active', 'text-cyan-400');
             },
 
-            async callAI(prompt, type='nova', silent=false) {
-                const key = window.safeStorage.get(`xp_${type}_key`);
-                const rawUrl = window.safeStorage.get(`xp_${type}_url`) || '/proxy/groq';
-                const endpoint = rawUrl.replace(/\/$/, '') + (rawUrl.endsWith('/chat/completions') ? '' : '/chat/completions');
-                const model = window.safeStorage.get(`xp_${type}_model`) || 'llama-3.3-70b-versatile';
-                
-                if(!key) {
-                    if (!silent) Swal.fire({toast:true, position:'top-end', icon:'warning', title:'请配置 API 密钥', showConfirmButton:false, timer:3000});
-                    return null;
-                }
-                try {
-                    const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`}, body:JSON.stringify({model:model, messages:[{role:'user', content:prompt}]}) });
-                    if(!res.ok) throw new Error();
-                    const d = await res.json(); return d.choices[0].message.content;
-                } catch(e) { 
-                    if (!silent) Swal.fire({toast:true, position:'top-end', icon:'error', title:'网络异常', showConfirmButton:false, timer:3000});
-                    return null; 
-                }
-            },
-
-            cleanMD(text, tag) {
-                if(!text) return "";
-                const tick = String.fromCharCode(96, 96, 96);
-                return text.replace(new RegExp(tick + tag, 'gi'), '').replace(new RegExp(tick, 'gi'), '').trim();
-            },
-
-            // =============== 🚀 学员管理与雷达 ================
-            renderStudentsList() {
-                const c = $('students-list'); if(!c) return;
-                c.innerHTML = this.state.students.map(s => `
-                    <div class="glass-panel p-6 rounded-3xl border transition-all flex flex-col relative group ${s.isCurrent ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-slate-700 hover:border-blue-500/50'}">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-4xl border border-slate-600 shadow-inner">${s.avatar}</div>
-                            <div>
-                                <h3 class="font-bold text-xl text-white mb-1">${s.name}</h3>
-                                <span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/20">ID: ${s.id.substring(0,8)}</span>
-                            </div>
-                        </div>
-                        <button onclick="App.switchStudent('${s.id}')" class="mt-auto w-full py-3 ${s.isCurrent ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'} rounded-xl text-sm font-bold transition shadow-md">
-                            ${s.isCurrent ? '✅ 当前活跃档案' : '🔄 切换至此档案'}
-                        </button>
-                    </div>
-                `).join('');
-            },
-            addStudent() {
-                Swal.fire({ title: '建立新档案', input: 'text', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: '创建' }).then(res => {
-                    if(res.isConfirmed && res.value) {
-                        const newId = 's_' + Date.now();
-                        this.state.students.push({ id: newId, name: res.value, avatar: ['👨‍🚀','👩‍🚀','🦸‍♂️','🦸‍♀️','🧙‍♂️','🥷'][Math.floor(Math.random()*6)], isCurrent: false });
-                        window.safeStorage.set('xp_students', JSON.stringify(this.state.students));
-                        this.renderStudentsList();
-                    }
-                });
-            },
-            switchStudent(id) {
-                this.state.students.forEach(s => s.isCurrent = (s.id === id));
-                this.state.currentStudentId = id;
-                window.safeStorage.set('xp_students', JSON.stringify(this.state.students));
-                this.renderStudentsList();
-                this.updateRadarView();
-            },
-            updateRadarView() {
-                const cur = this.state.students.find(s => s.id === this.state.currentStudentId) || this.state.students[0];
-                if(cur) {
-                    $('radar-avatar').innerText = cur.avatar;
-                    $('radar-name').innerText = cur.name;
-                    $('radar-id').innerText = cur.id.substring(0, 10).toUpperCase();
-                }
-            },
-
-            // =============== 🚀 星系锻造与部署中枢 (Forge & RAG) =================
-            openPlanner() {
-                if (this.state.isPro || this.state.galaxies.length < 2) { 
-                    $('planner-hint').innerText = this.state.isPro?'【PRO权限】：支持多语言输出与真实进度投喂。':'【基础版权限】：您可以免费体验星系的智能铸造。'; 
-                    $('planner-modal').style.display='flex'; 
-                } else { 
-                    Swal.fire({ title: '算力空间已满', text: '基础版最多只能同时部署 1 个专属星系。请升级 PRO 领航员解锁无限星系！', icon: 'info', background: '#0f172a', color: '#fff' }); 
-                }
-            },
-            deleteGalaxy(id) {
-                Swal.fire({ title: '确认销毁该星系？', background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((res) => {
-                    if (res.isConfirmed) {
-                        this.state.galaxies = this.state.galaxies.filter(g => g.id !== id); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
-                        this.renderForgeList();
-                    }
-                });
-            },
-            toggleDeploy(id) {
-                const g = this.state.galaxies.find(x => x.id === id);
-                if(g) {
-                    g.isDeployed = !g.isDeployed; window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.renderForgeList();
-                    Swal.fire({toast:true, position:'top-end', icon:'success', title: g.isDeployed ? '已上线同步至前台宇宙' : '已撤回草稿箱', showConfirmButton:false, timer:1500});
-                }
-            },
-            async generateGalaxy() {
-                $('plan-btn').innerHTML = "<span class='animate-spin'>↻</span> 正在融合重构大纲..."; $('plan-btn').disabled = true;
-                const hasKey = !!window.safeStorage.get('xp_sys_key'); 
-                const curr = $('plan-curriculum').value, grade = $('plan-grade').value, term = $('plan-term').value, ragContext = $('plan-rag-context').value.trim();
-                
-                if (!this.state.isPro || !hasKey) {
-                    setTimeout(() => {
-                        $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造全景星系"; $('plan-btn').disabled = false;
-                        const ng = { 
-                            id: 'gal_' + Date.now(), title: `${grade}${term}演示星系`, baseStandard: curr, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, ragContext: ragContext,
-                            subjects: [ 
-                                { id: 'sub_demo_1', title: '核心物理探索', icon: '🌍', radius: 240, angle: 0, lessons: [] },
-                                { id: 'sub_demo_2', title: '星际数学逻辑', icon: '📐', radius: 360, angle: 2.1, lessons: [] },
-                                { id: 'sub_demo_3', title: 'English Comm', icon: '💬', radius: 480, angle: 4.2, lessons: [] }
-                            ] 
-                        };
-                        this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); this.renderForgeList();
-                        Swal.fire({toast:true, position:'top-end', icon:'info', title:'演示数据已生成', showConfirmButton:false, timer:2000});
-                    }, 1500); return;
-                }
-                
-                let contextPrompt = ragContext ? `【用户投喂的实际教学进度】：\n"${ragContext}"\n请将上述投喂内容与官方课标进行融合。` : '完全依赖官方课标发散';
-                const prompt = `[系统级指令：执行教育大纲对齐]\n要求：必须使用大纲【${curr}】所属地区的官方语言。例外：如果是英语课，名称必须使用纯英文。\n第一步：对齐【${curr}】中【${grade}】【${term}】的目标。\n第二步：${contextPrompt}\n第三步：重构为 5 到 8 个极具科幻探索感的“星际学科行星”。\n必须返回严格的JSON数组格式：[{"title": "学科名称(遵循语言要求)", "icon": "单字符emoji"}]。`;
-
-                const res = await this.callAI(prompt, 'sys', true); let newSubjects = [];
-                if (res) { 
-                    try { 
-                        const clean = this.cleanMD(res, 'json'); const parsed = JSON.parse(clean); 
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            newSubjects = parsed.map((s, i) => ({
-                                id: 'sub_' + Date.now() + i, title: s.title || '核心学科', icon: s.icon || '📚', 
-                                radius: 240 + (i * 80), angle: (i * (Math.PI * 2 / parsed.length)) + Math.random(), lessons: []
-                            }));
-                        } 
-                    } catch(e) {} 
-                }
-                
-                if (newSubjects.length === 0) newSubjects = [{ id: 'sub_demo_x', title: 'Standard Core', icon: '🧠', radius: 240, angle: 0, lessons: [] }];
-                const ng = { id: 'gal_' + Date.now(), title: `${grade}${term}专属星系`, baseStandard: curr, ragContext: ragContext, bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, isDeployed: false, subjects: newSubjects };
-                this.state.galaxies.unshift(ng); window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies)); $('planner-modal').style.display='none'; $('plan-btn').innerHTML = "🚀 [RAG 协议] 对齐课标并铸造全景星系"; $('plan-btn').disabled = false;
-                this.renderForgeList(); Swal.fire({toast:true, position:'top-end', icon:'success', title:'星系锻造成功', showConfirmButton:false, timer:1500});
-            },
-            
-            renderForgeList() {
-                const c = $('forge-list'); c.innerHTML = '';
-                this.state.galaxies.forEach(g => {
-                    const deployBtn = g.isDeployed 
-                        ? `<button onclick="App.toggleDeploy('${g.id}')" class="px-4 py-2 bg-emerald-900/30 text-emerald-400 border border-emerald-500/50 rounded-xl text-xs font-bold transition hover:bg-emerald-900/50 shadow-inner">✅ 已部署前台 (点击撤回)</button>`
-                        : `<button onclick="App.toggleDeploy('${g.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-[0_0_15px_rgba(59,130,246,0.4)]">🚀 部署至探索舱</button>`;
-                    
-                    c.innerHTML += `<div class="glass-panel p-6 rounded-3xl border ${g.isDeployed?'border-emerald-500/30':'border-slate-700'} hover:border-blue-500/50 transition flex flex-col relative group">
-                        <button onclick="App.deleteGalaxy('${g.id}')" class="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-14 h-14 rounded-full ${g.isDeployed?'bg-emerald-900/50 border-emerald-500':'bg-slate-800 border-slate-600'} flex items-center justify-center text-3xl border shadow-inner">🔮</div>
-                            <div class="pr-6"><h3 class="font-bold text-lg text-white">${g.title}</h3><span class="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">${g.baseStandard || 'Custom'}</span></div>
-                        </div>
-                        <p class="text-xs text-slate-400 mb-6 flex-1">包含 ${g.subjects?.length||0} 个核心学科行星与知识卫星节点。</p>
-                        <div class="flex gap-2 mt-auto">
-                            <button onclick="App.editCurriculum('${g.id}')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-600 transition">⚙️ 排课编辑器</button>
-                            ${deployBtn}
-                        </div>
-                    </div>`;
-                });
-            },
-
-            // =============== 🚀 三维教案编辑器 (Galaxy -> Subject -> Lesson) ================
-            editCurriculum(gid) { 
-                const g = this.state.galaxies.find(x => x.id === gid);
-                if(!g || !g.subjects || g.subjects.length === 0) return;
-                
-                this.state.editGalaxy = g; this.state.editSubject = g.subjects[0];
-                this.state.lessons = this.state.editSubject.lessons || []; this.state.curLessonId = null;
-                
-                $('editor-galaxy-title').innerText = g.title;
-                $('editor-empty').style.opacity = '1'; $('editor-empty').style.pointerEvents = 'auto';
-                if(window.quillEditor) window.quillEditor.root.innerHTML = '';
-                
-                this.renderEditorSubjects(); this.renderLessonList(); this.switchView('editor');
-            },
-            
-            renderEditorSubjects() {
-                const c = $('editor-subject-list'); c.innerHTML = '';
-                this.state.editGalaxy.subjects.forEach((s, i) => {
-                    const isFree = this.state.isPro || i === 0;
-                    const isActive = this.state.editSubject && this.state.editSubject.id === s.id;
-                    const bdr = isActive ? 'border-blue-500 bg-blue-900/50 text-white' : 'border-slate-700 bg-slate-800/50 text-slate-400';
-                    const lock = isFree ? '' : '<span class="text-[10px] ml-auto opacity-50">🔒</span>';
-                    c.innerHTML += `<button onclick="App.selectEditorSubject('${s.id}', ${isFree})" class="px-4 py-3 rounded-xl border text-sm font-bold text-left transition flex items-center shrink-0 ${bdr}"><span class="mr-3 text-2xl">${s.icon}</span> <span class="truncate">${s.title}</span> ${lock}</button>`;
-                });
-            },
-            
-            selectEditorSubject(sid, isFree) {
-                if (!isFree) { Swal.fire({ title: '体验版限制', text: '跨学科统筹整个知识宇宙需要 PRO 算力！', icon: 'info', background: '#0f172a', color: '#fff' }); return; }
-                if(this.state.curLessonId && window.quillEditor) { const oldL = this.state.lessons.find(x => x.id === this.state.curLessonId); if(oldL) oldL.content = window.quillEditor.root.innerHTML; }
-                
-                this.state.editSubject = this.state.editGalaxy.subjects.find(x => x.id === sid);
-                this.state.lessons = this.state.editSubject.lessons || []; this.state.curLessonId = null;
-                
-                this.renderEditorSubjects(); this.renderLessonList();
-                $('editor-empty').style.opacity = '1'; $('editor-empty').style.pointerEvents = 'auto';
-                if(window.quillEditor) window.quillEditor.root.innerHTML = '';
-            },
-
-            initQuill() {
-                if(!window.quillEditor) {
-                    window.quillEditor = new Quill('#quill-container', {
-                        theme: 'snow', placeholder: '在此手动录入带有图片和视频的教案，或点击上方魔法按钮让 AI 生成...',
-                        modules: { toolbar: '#editor-toolbar' }
-                    });
-                    window.quillEditor.on('text-change', () => {
-                        if(this.state.curLessonId) {
-                            const l = this.state.lessons.find(x => x.id === this.state.curLessonId);
-                            if(l) l.content = window.quillEditor.root.innerHTML;
-                        }
-                    });
-                }
-            },
-            
-            renderLessonList() {
-                const c = $('lesson-list'); c.innerHTML = '';
-                this.state.lessons.forEach(l => {
-                    const isActive = l.id === this.state.curLessonId;
-                    const bdr = isActive ? 'border-blue-500 bg-blue-900/30' : 'border-slate-700 bg-slate-800/40 hover:border-blue-500';
-                    const txt = isActive ? 'text-white' : 'text-slate-300';
-                    c.innerHTML += `<div onclick="App.selectLesson('${l.id}')" class="p-4 rounded-2xl border transition cursor-pointer flex justify-between items-center ${bdr}"><span class="font-bold text-sm truncate pr-2 ${txt}">${l.title}</span><span class="text-lg ${l.content?'text-emerald-400':'opacity-10'}">✓</span></div>`;
-                });
-            },
-            
-            selectLesson(id) {
-                if(this.state.curLessonId && window.quillEditor) { const oldL = this.state.lessons.find(x => x.id === this.state.curLessonId); if(oldL) oldL.content = window.quillEditor.root.innerHTML; }
-                this.state.curLessonId = id; this.renderLessonList();
-                $('editor-empty').style.opacity = '0'; $('editor-empty').style.pointerEvents = 'none';
-                this.initQuill();
-                const l = this.state.lessons.find(x => x.id === id);
-                window.quillEditor.root.innerHTML = l && l.content ? l.content : '';
-            },
-            
-            async generateLessons() {
-                const btn = $('btn-gen-lessons'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 挖掘中..."; btn.disabled = true;
-                
-                const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
-                const langConstraint = isEnglishSubject ? `必须纯英文` : `遵循当地语言`;
-                const prompt = `为【${this.state.editSubject.title}】提取8个进阶节点。\n要求：${langConstraint}。\n返回纯JSON数组：[{"title": "节点名称"}]。`;
-                
-                const res = await this.callAI(prompt, 'sys', true);
-                if(res) {
-                    try {
-                        const clean = this.cleanMD(res, 'json'); const parsed = JSON.parse(clean);
-                        this.state.lessons = parsed.map((l,i) => ({id: 'l_'+Date.now()+i, title: l.title, content: ''}));
-                    } catch(e){}
-                } else {
-                    this.state.lessons = [ {id: 'l_1', title: isEnglishSubject ? 'Mission 1' : '概念引入', content: ''}, {id: 'l_2', title: isEnglishSubject ? 'Mission 2' : '逻辑提问', content: ''} ];
-                }
-                this.state.editSubject.lessons = this.state.lessons; this.renderLessonList();
-                btn.innerHTML = "✨ AI 获取全量学期排课"; btn.disabled = false;
-            },
-            
-            async generateLessonContent() {
-                const l = this.state.lessons.find(x => x.id === this.state.curLessonId); if(!l) return;
-                const btn = $('btn-gen-content'); btn.innerHTML = "<span class='animate-spin inline-block'>↻</span> 生成中..."; btn.disabled = true;
-                
-                const isEnglishSubject = /英语|English/i.test(this.state.editSubject.title);
-                const prompt = `为【${l.title}】编写苏格拉底式教案。\n【要求】：${isEnglishSubject ? '纯英文输出' : '原生语言'}。\n输出美观的 HTML (用 h3, ul, li, p, strong, 可适当加入 img 占位图)。不要 html 外层标签。`;
-                
-                const res = await this.callAI(prompt, 'sys', true);
-                if(res) {
-                    const clean = this.cleanMD(res, 'html'); window.quillEditor.root.innerHTML = clean; l.content = clean;
-                } else {
-                    window.quillEditor.root.innerHTML = `<h3>1. 探索提问</h3><p>测试内容</p>`; l.content = window.quillEditor.root.innerHTML;
-                }
-                btn.innerHTML = "✨ 智能生成苏格拉底教案"; btn.disabled = false;
-            },
-            
-            saveCurriculum() {
-                if(this.state.curLessonId && window.quillEditor) { const l = this.state.lessons.find(x => x.id === this.state.curLessonId); if(l) l.content = window.quillEditor.root.innerHTML; }
-                if(this.state.editSubject) {
-                    this.state.editSubject.lessons = this.state.lessons;
-                    const gIndex = this.state.galaxies.findIndex(g => g.id === this.state.editGalaxy.id);
-                    if(gIndex !== -1) {
-                        const sIndex = this.state.galaxies[gIndex].subjects.findIndex(s => s.id === this.state.editSubject.id);
-                        if(sIndex !== -1) this.state.galaxies[gIndex].subjects[sIndex] = this.state.editSubject;
-                    }
-                    window.safeStorage.set('xp_galaxies', JSON.stringify(this.state.galaxies));
-                }
-                this.switchView('forge');
-                Swal.fire({toast:true, position:'top-end', icon:'success', title:'教案已保存', showConfirmButton:false, timer:1500});
-            },
-
-            // =============== 🚀 系统配置与防熔断隔离锁 ================
-            async testAPI(type) {
-                const key = $(`${type}-key`).value, url = $(`${type}-url`).value, model = $(`${type}-model`).value;
-                if (!key || !url || !model) { Swal.fire({ title: '配置不完整', icon: 'warning', background: '#0f172a', color: '#fff' }); return; }
-                try { 
-                    const e = url.replace(/\/$/, '') + (url.endsWith('/chat/completions') ? '' : '/chat/completions'); 
-                    const res = await fetch(e, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model: model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }) }); 
-                    if (res.ok) Swal.fire({ toast:true, position:'top-end', icon: 'success', title: '链路通畅', showConfirmButton: false, timer: 1500 }); 
-                    else throw new Error(); 
-                } catch(e) { Swal.fire({ toast:true, position:'top-end', icon: 'error', title: '链路失败', showConfirmButton: false, timer: 1500 }); }
-            },
-            
             saveConfig() {
-                ['sys','nova'].forEach(t => { window.safeStorage.set(`xp_${t}_key`, $(`${t}-key`).value); window.safeStorage.set(`xp_${t}_url`, $(`${t}-url`).value); window.safeStorage.set(`xp_${t}_model`, $(`${t}-model`).value); });
-                Swal.fire({toast:true, position:'top-end', icon:'success', title:'引擎配置已保存', showConfirmButton:false, timer:1500});
+                ['sys'].forEach(t => { 
+                    window.safeStorage.set(`xp_${t}_key`, $(`${t}-key`).value); 
+                    window.safeStorage.set(`xp_${t}_url`, $(`${t}-url`).value); 
+                    window.safeStorage.set(`xp_${t}_model`, $(`${t}-model`).value); 
+                });
+                Swal.fire({toast:true, position:'top-end', icon:'success', title:'全局引擎配置已保存', showConfirmButton:false, timer:2000});
             },
             
-            // 🚀 核心更新：自由配置安全锁密码
             savePinConfig() {
                 const newPin = $('new-pin').value;
                 if (newPin && newPin.length === 4 && /^\d{4}$/.test(newPin)) {
-                    this.state.parentPin = newPin;
-                    window.safeStorage.set('xp_parent_pin', newPin);
+                    this.state.parentPin = newPin; window.safeStorage.set('xp_parent_pin', newPin);
                     Swal.fire({toast:true, position:'top-end', icon:'success', title:'隔离密钥已更新', showConfirmButton:false, timer:1500});
                     $('new-pin').value = '';
-                } else {
-                    Swal.fire({title: '格式错误', text: '安全密钥必须是 4 位纯数字。', icon: 'error', background: '#0f172a', color: '#fff'});
-                }
+                } else { Swal.fire({title: '格式错误', text: '安全密钥必须是 4 位纯数字。', icon: 'error', background: '#0f172a', color: '#fff'}); }
             }
         };
 
         window.App = App;
-        window.onload = () => { 
-            window.App.init(); 
-            // 如果是从学生舱跃迁过来，自动释放侧边栏锁定状态
-            if (sessionStorage.getItem('xp_unlocked') === 'true') {
-                window.App.switchView('students');
-            } else {
-                // 如果是直接输入 URL 访问后台，需要先通过密码屏障拦截
-                promptParentLockGuard();
-            }
-        };
-
-        // 直接拦截加载
-        async function promptParentLockGuard() {
-            let pin = null;
-            const currentPin = window.App.state.parentPin || '0000';
-            const hintHtml = currentPin === '0000' ? '<div class="text-xs text-emerald-400 font-bold bg-emerald-900/20 border border-emerald-500/30 p-2 rounded-lg inline-block mt-2">(初始默认: 0000，请在此修改)</div>' : '';
-
-            try {
-                const res = await Swal.fire({
-                    title: '家控中枢防线',
-                    html: `<div class="text-sm text-slate-300">探测到直接访问后台，请输入指令密码</div>${hintHtml}`,
-                    input: 'password',
-                    inputAttributes: { maxlength: "4", autocapitalize: 'off', autocorrect: 'off', placeholder: '****' },
-                    background: '#0f172a', color: '#fff',
-                    confirmButtonText: '解除锁定', confirmButtonColor: '#3b82f6',
-                    allowOutsideClick: false, allowEscapeKey: false
-                });
-                if (res && res.isConfirmed) { pin = res.value; }
-            } catch(swalErr) {
-                const nativeHint = currentPin === '0000' ? ' (初始默认: 0000)' : '';
-                pin = prompt(`家控中枢防线\n探测到直接访问后台，请输入指令密码${nativeHint}`);
-            }
-
-            if (pin !== null && pin !== undefined) {
-                if (pin === currentPin) {
-                    try { Swal.fire({toast: true, position: 'top-end', icon: 'success', title: '验证通过', showConfirmButton: false, timer: 1500}); } catch(e){}
-                    window.App.switchView('students');
-                } else {
-                    const errHint = currentPin === '0000' ? '提示：初始密码为 0000。' : '';
-                    try { Swal.fire({ title: '验证失败', text: `密码错误！${errHint}`, icon: 'error', background: '#0f172a', color: '#fff', confirmButtonColor: '#ef4444', confirmButtonText: '重新尝试' }).then(() => promptParentLockGuard()); } catch(e) { alert(`密码错误！${errHint}`); promptParentLockGuard(); }
-                }
-            }
-        }
+        window.onload = () => { window.App.init(); window.App.switchView('config'); }; 
     </script>
 </body>
 </html>

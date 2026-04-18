@@ -139,7 +139,7 @@ function useAuth() {
 }
 
 // ==========================================
-// 4. 3D星系探索舱
+// 4. 3D星系探索舱 (修复并增强背景互动引力)
 // ==========================================
 function ClassroomView({ navigate }) {
     const [galaxies, setGalaxies] = useState([]);
@@ -150,6 +150,9 @@ function ClassroomView({ navigate }) {
     const canvasRef = useRef(null);
     const starsRef = useRef([]);
     const particlesRef = useRef([]);
+    
+    // 🚀 新增：持续追踪鼠标的局部坐标系
+    const mousePosRef = useRef({ x: -1000, y: -1000 });
 
     useEffect(() => {
         const saved = localStorage.getItem('xp_galaxies');
@@ -175,6 +178,11 @@ function ClassroomView({ navigate }) {
         let animId;
         const draw = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = "#fff";
+            
+            // 获取最新鼠标位置
+            const mx = mousePosRef.current.x;
+            const my = mousePosRef.current.y;
+
             starsRef.current.forEach(s => { 
                 s.z -= 1.5; if(s.z <= 0) { s.z = canvas.width; s.x = (Math.random()-0.5)*canvas.width; s.y = (Math.random()-0.5)*canvas.height; } 
                 let sx = (s.x/s.z)*(canvas.width/2)+canvas.width/2, sy = (s.y/s.z)*(canvas.height/2)+canvas.height/2;
@@ -183,12 +191,31 @@ function ClassroomView({ navigate }) {
                     ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill(); 
                 } 
             });
+            
             particlesRef.current.forEach((p, i) => { 
                 p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
                 particlesRef.current.slice(i+1).forEach(p2 => { 
                     let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
                     if(d<220) { ctx.beginPath(); ctx.strokeStyle=`rgba(59,130,246,${0.2*(1-d/220)})`; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); } 
                 }); 
+
+                // 🚀 核心修改：缩短引力距离并减弱跟随力度
+                if (mx > 0 && my > 0) {
+                    let dm = Math.hypot(p.x - mx, p.y - my);
+                    if (dm < 130) { // 将引力距离从 250 缩小到 130
+                        // 绘制极细的淡蓝色鼠标连线
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(34,211,238,${0.3 * (1 - dm / 130)})`;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(mx, my);
+                        ctx.stroke();
+                        
+                        // 吸引物理：加入距离衰减，只产生微弱的跟随拉扯
+                        const pullForce = 0.006 * (1 - dm / 130); 
+                        p.x += (mx - p.x) * pullForce;
+                        p.y += (my - p.y) * pullForce;
+                    }
+                }
             });
             animId = requestAnimationFrame(draw);
         };
@@ -204,21 +231,63 @@ function ClassroomView({ navigate }) {
     return (
         <div className="absolute inset-0 overflow-hidden bg-[#02040a] cursor-grab active:cursor-grabbing" 
              onMouseDown={e=>{setIsDragging(true); setDragStart({x:e.clientX-pan.x, y:e.clientY-pan.y})}}
-             onMouseMove={e=>{if(isDragging) setPan({x:e.clientX-dragStart.x, y:e.clientY-dragStart.y})}}
+             onMouseMove={e=>{
+                 // 🚀 将鼠标相对于容器系定位，256px 是侧边栏 w-64 的宽度
+                 mousePosRef.current = { x: e.clientX - 256, y: e.clientY };
+                 if(isDragging) setPan({x:e.clientX-dragStart.x, y:e.clientY-dragStart.y});
+             }}
+             onMouseLeave={() => { mousePosRef.current = { x: -1000, y: -1000 }; }}
              onMouseUp={()=>setIsDragging(false)}>
             <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0"></canvas>
             <div className="absolute inset-0 z-10 select-none">
                 {galaxies.map(g => {
                     const isActive = g.id === activeGalaxyId;
                     const style = isActive ? { left:'50%', top:'50%', transform:`translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px))` } : { left:`${g.bgX}%`, top:`${g.bgY}%`, transform:'translate(-50%,-50%) scale(0.12)', opacity:0.6 };
+                    
+                    // 计算最大半径以渲染势力范围边界
+                    const maxRadius = g.subjects?.length > 0 ? Math.max(...g.subjects.map(s => Number(s.radius) || 0)) + 100 : 300;
+
                     return (
                         <div key={g.id} className="absolute flex items-center justify-center w-0 h-0 transition-all duration-700 ease-out" style={style}>
-                            <div className="absolute z-30 cursor-pointer" onClick={()=>setActiveGalaxyId(isActive?null:g.id)}>
+                            
+                            {/* 1. 淡淡的球形势力范围 */}
+                            {isActive && (
+                                <div className="absolute pointer-events-none z-0" style={{ 
+                                    width: `${maxRadius * 2}px`, 
+                                    height: `${maxRadius * 2}px`, 
+                                    borderRadius: '50%', 
+                                    background: 'radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.03) 40%, transparent 70%)',
+                                    transform: 'translate(-50%, -50%)'
+                                }}></div>
+                            )}
+
+                            {/* 1. 极细星轨 & 2. 恒星与各行星的丝线连接 */}
+                            {isActive && (
+                                <svg className="absolute overflow-visible pointer-events-none z-10" width="0" height="0">
+                                    {g.subjects?.map((s, i) => (
+                                        <g key={`svg-${i}`}>
+                                            <circle cx="0" cy="0" r={s.radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="4 6" />
+                                            <line x1="0" y1="0" x2={Math.cos(s.angle)*s.radius} y2={Math.sin(s.angle)*s.radius} stroke="rgba(56,189,248,0.4)" strokeWidth="1.5" />
+                                        </g>
+                                    ))}
+                                </svg>
+                            )}
+
+                            <div className="absolute z-30 cursor-pointer group" onClick={()=>setActiveGalaxyId(isActive?null:g.id)}>
                                 <div className="sun-core flex flex-col items-center justify-center" style={{width:isActive?'160px':'250px', height:isActive?'160px':'250px'}}>
                                     <span className={isActive?'text-5xl':'text-9xl'}>🔮</span>
                                     {isActive && <div className="text-[10px] font-black text-amber-200 uppercase mt-4 tracking-widest">{g.title}</div>}
                                 </div>
+                                {/* 3. 悬停在远处缩小星系时，通过反向 scale 显示大号清晰的名称 */}
+                                {!isActive && (
+                                    <div className="absolute top-full mt-10 left-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 flex justify-center" style={{ transform: 'translateX(-50%) scale(8.33)', transformOrigin: 'top center' }}>
+                                        <span className="text-white text-sm font-black tracking-widest bg-slate-900/90 px-6 py-3 rounded-xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.8)] whitespace-nowrap">
+                                            {g.title}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
+                            
                             {isActive && g.subjects?.map((s, i) => (
                                 <div key={i} className="absolute flex flex-col items-center z-20 cursor-pointer group" style={{ left:Math.cos(s.angle)*s.radius, top:Math.sin(s.angle)*s.radius, transform:'translate(-50%, -50%)' }} onClick={()=>navigate('reader', {bookId: s.id || s.title})}>
                                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-2xl transition group-hover:scale-110" style={getPlanetStyle(i)}>{s.icon}</div>
@@ -233,6 +302,8 @@ function ClassroomView({ navigate }) {
     );
 }
 
+// ==========================================
+// 5. 全球教育资源 (保持未动)
 // ==========================================
 // 5. 全球教育资源
 // ==========================================

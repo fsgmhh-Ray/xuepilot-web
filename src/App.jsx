@@ -48,7 +48,7 @@ const GlobalStyles = () => (
 );
 
 // ==========================================
-// 2. 原生全息弹窗 (Swal 模拟器)
+// 2. 原生全息弹窗 (Swal 模拟器 - 修复定义顺序)
 // ==========================================
 export const Swal = {
     fire: (options) => new Promise((resolve) => {
@@ -173,7 +173,7 @@ const ClassroomView = ({ navigate }) => {
                 p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>w) p.vx*=-1; if(p.y<0 || p.y>h) p.vy*=-1; 
                 particles.slice(i+1).forEach(p2 => { 
                     let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
-                    if(d<220) { ctx.beginPath(); ctx.strokeStyle=`rgba(59,130,246,${0.25*(1-d/220)})`; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } 
+                    if(d<220) { ctx.beginPath(); ctx.strokeStyle=`rgba(59,130,246,${0.25*(1-d/220)})`; ctx.lineWidth = 0.5; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); } 
                 }); 
             });
             animId = requestAnimationFrame(draw);
@@ -205,12 +205,18 @@ const ClassroomView = ({ navigate }) => {
                                     {isActive && <div className="text-[10px] font-black text-amber-200 uppercase mt-4 tracking-widest">{g.title}</div>}
                                 </div>
                             </div>
-                            {isActive && g.subjects?.map((s, i) => (
-                                <div key={i} className="absolute flex flex-col items-center z-20 cursor-pointer group" style={{ left:Math.cos(s.angle)*s.radius, top:Math.sin(s.angle)*s.radius, transform:'translate(-50%, -50%)' }} onClick={()=>navigate('reader', {bookId: s.title})}>
-                                    <div className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-2xl transition group-hover:scale-110 ${!isPro && i!==0 ? 'planet-locked':''}`} style={getPlanetStyle(i)}>{s.icon}</div>
-                                    <span className="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 whitespace-nowrap">{s.title}</span>
-                                </div>
-                            ))}
+                            {isActive && g.subjects?.map((s, i) => {
+                                const free = i === 0 || isPro;
+                                return (
+                                    <div key={i} className="absolute flex flex-col items-center z-20 cursor-pointer group" style={{ left:Math.cos(s.angle)*s.radius, top:Math.sin(s.angle)*s.radius, transform:'translate(-50%, -50%)' }} onClick={()=>free ? navigate('resources') : Swal.fire({title:'算力锁定', text:'解锁此区域需要 PRO 级别授权。', icon:'warning'})}>
+                                        <div className="absolute -top-3 -right-3 z-50">
+                                            {free ? <div className="bg-emerald-500 text-[8px] font-black px-1.5 py-0.5 rounded shadow-lg text-white uppercase tracking-tighter">Open</div> : <Lock size={18} className="text-rose-500 fill-rose-500 shadow-xl" />}
+                                        </div>
+                                        <div className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-2xl transition group-hover:scale-110 ${!free ? 'planet-locked':''}`} style={getPlanetStyle(i)}>{s.icon}</div>
+                                        <span className="mt-4 text-[11px] font-bold text-cyan-100 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-cyan-500/30 whitespace-nowrap">{s.title}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     );
                 })}
@@ -255,7 +261,7 @@ const ResourcesView = ({ navigate }) => {
                         <div className="flip-card-back"><p className="text-[10px] line-clamp-4 px-4 text-center">{p.description}</p><a href={p.url} target="_blank" className="mt-4 px-6 py-2 bg-white text-blue-900 rounded-full text-[10px] font-black uppercase tracking-widest">开启跃迁</a></div>
                     </div></div>
                 ))}</div>
-                <h3 className="text-2xl font-black mb-8 text-slate-200">📂 全球课标大纲库</h3>
+                <h3 className="text-2xl font-black mb-8 text-slate-200 uppercase tracking-wider">📂 全球课标大纲库</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">{syllabi.map(s => (
                     <div key={s.id} className="glass-panel p-6 rounded-2xl group border-slate-800 hover:border-cyan-500/50 transition">
                         <div className="flex items-start gap-4 mb-4"><span className="text-4xl">{s.icon}</span><div><h4 className="font-bold text-slate-100">{s.title}</h4><span className="text-[10px] text-cyan-500 font-mono uppercase">{s.region}</span></div></div>
@@ -342,7 +348,7 @@ const ReaderView = ({ routeParams, navigate }) => {
                     <div className="h-16 border-b border-black/5 flex items-center justify-between px-6 text-cyan-400 font-black text-sm uppercase tracking-widest"><span>🤖 NOVA 导师</span><button onClick={()=>setShowNova(false)}><X size={18}/></button></div>
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                         {selection && <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-[11px] italic font-serif leading-relaxed text-slate-400">“{selection}”</div>}
-                        <div className="p-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-[11px] leading-relaxed text-slate-400 italic">指挥官，我已锁定了这段逻辑节点的坐标。请下达推演指令。</div>
+                        <div className="p-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-[11px] leading-relaxed text-slate-400 italic">指挥官，我已锁定了这段逻辑节点的坐标。请开始对话。</div>
                     </div>
                     <div className="p-6 border-t border-black/5"><input type="text" placeholder="对话..." className="w-full bg-black/20 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-cyan-500 transition" /></div>
                 </aside>
@@ -448,19 +454,6 @@ const SimulatorView = () => (
     </div>
 );
 
-const WritingView = () => (
-    <div className="flex-1 flex overflow-hidden bg-[#050505]">
-        <div className="flex-1 flex flex-col border-r border-slate-800">
-            <div className="h-16 border-b border-slate-800 flex items-center px-8 bg-slate-900/50 text-indigo-400 font-black tracking-widest uppercase">✍️ NEURAL_WRITING_CORE</div>
-            <textarea className="flex-1 bg-transparent text-slate-200 p-12 text-xl leading-loose resize-none focus:outline-none custom-scroll placeholder-slate-800" placeholder="流淌思维信号..." />
-        </div>
-        <aside className="w-96 flex flex-col bg-slate-900/30">
-            <div className="h-16 border-b border-slate-800 flex items-center px-6 text-cyan-400 font-mono text-xs tracking-widest uppercase">🤖 MENTOR_SYNC</div>
-            <div className="flex-1 p-6 text-sm text-slate-500 leading-relaxed italic">“我拒绝直接为您生成文本大纲。告诉我，您正在为什么逻辑节点感到困惑？”</div>
-        </aside>
-    </div>
-);
-
 // ==========================================
 // 9. 侧边栏导航
 // ==========================================
@@ -478,8 +471,8 @@ const Sidebar = ({ currentRoute, navigate, auth }) => {
             <div className="h-16 flex items-center px-6 border-b border-slate-800 font-black text-white tracking-widest uppercase text-sm italic"><Rocket className="text-blue-500 mr-3" size={20} /> XuePilot</div>
             <nav className="flex-1 p-4 space-y-6 overflow-y-auto custom-scroll">
                 <div><div className="text-[9px] text-slate-600 font-black px-2 uppercase tracking-widest mb-3 opacity-50">Master_Control</div><NavItem id="dashboard" icon={LayoutDashboard} label="家控中枢" p activeClass="bg-amber-600/20 text-amber-400 border border-amber-500/30" sub="Archives & Matrix" /></div>
-                <div><div className="text-[9px] text-slate-600 font-black px-2 uppercase tracking-widest mb-3 opacity-50">Efficiency</div><NavItem id="classroom" icon={Globe} label="3D星球" activeClass="bg-blue-600/20 text-blue-400 border border-blue-500/30" /><NavItem id="resources" icon={Library} label="教育智库" activeClass="bg-cyan-600/20 text-cyan-400 border border-cyan-500/30" /><NavItem id="reader" icon={BookOpen} label="全息伴读" activeClass="bg-purple-600/20 text-purple-400 border border-purple-500/30" /></div>
-                <div><div className="text-[9px] text-slate-600 font-black px-2 uppercase tracking-widest mb-3 opacity-50">Training</div><NavItem id="simulator" icon={Gamepad2} label="危机救援" activeClass="text-rose-400 bg-rose-900/10" /><NavItem id="writing" icon={PenTool} label="启发写作" activeClass="text-indigo-400 bg-indigo-900/10" /></div>
+                <div><div className="text-[9px] text-slate-600 font-black px-2 uppercase tracking-widest mb-3 opacity-50">Core</div><NavItem id="classroom" icon={Globe} label="3D星球" activeClass="bg-blue-600/20 text-blue-400 border border-blue-500/30" /><NavItem id="resources" icon={Library} label="教育智库" activeClass="bg-cyan-600/20 text-cyan-400 border border-cyan-500/30" /><NavItem id="reader" icon={BookOpen} label="全息伴读" activeClass="bg-purple-600/20 text-purple-400 border border-purple-500/30" /></div>
+                <div><div className="text-[9px] text-slate-600 font-black px-2 uppercase tracking-widest mb-3 opacity-50">Training</div><NavItem id="simulator" icon={Gamepad2} label="危机救援" activeClass="text-rose-400 bg-rose-900/10" /></div>
             </nav>
             <div className="p-4 border-t border-slate-800"><button onClick={() => { sessionStorage.removeItem('xp_user_logged_in'); window.location.reload(); }} className="w-full py-2 text-[10px] font-black text-slate-600 hover:text-rose-500 transition uppercase tracking-[0.2em]">Exit_Gate</button></div>
         </aside>
@@ -493,7 +486,7 @@ export default function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(sessionStorage.getItem('xp_user_logged_in') === 'true');
     const [currentRoute, setCurrentRoute] = useState('classroom');
     const [routeParams, setRouteParams] = useState({});
-    const auth = useAuth(); // 🚀 useAuth 已在本文件中完整定义
+    const auth = useAuth(); 
 
     const navigate = (path, params = {}) => { setCurrentRoute(path); setRouteParams(params); };
 
@@ -513,7 +506,7 @@ export default function App() {
     return (
         <div className="flex h-screen w-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans phi-gradient">
             <GlobalStyles />
-            <GlobalOverlays /> {/* 🚀 GlobalOverlays 已在本文件中完整定义 */}
+            <GlobalOverlays />
             <Sidebar currentRoute={currentRoute} navigate={navigate} auth={auth} />
             <main className="flex-1 relative flex flex-col overflow-hidden border-l border-slate-800 shadow-[-20px_0_50px_black]">
                 {currentRoute === 'dashboard' && <DashboardView />}
@@ -521,7 +514,6 @@ export default function App() {
                 {currentRoute === 'resources' && <ResourcesView navigate={navigate} />}
                 {currentRoute === 'reader' && <ReaderView routeParams={routeParams} navigate={navigate} />}
                 {currentRoute === 'simulator' && <SimulatorView />}
-                {currentRoute === 'writing' && <WritingView />}
             </main>
         </div>
     );

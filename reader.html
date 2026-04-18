@@ -501,13 +501,24 @@
                 },
 
                 // ==========================================
-                // 🚀 NOVA 真实大模型通信系统 (Gemini 2.5 Flash)
+                // 🚀 NOVA 真实大模型通信系统 (支持自定义 API Key)
                 // ==========================================
 
-                // 底层封装：请求 Gemini API
+                // 底层封装：请求大模型 API
                 async callGeminiAPI(currentPrompt, historyList) {
-                    const apiKey = ""; // 执行环境会自动注入
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    // 🚀 架构师升级：从本地存储获取家长配置的 API Key
+                    // 优先使用 NOVA 专属 Key，如果没有则降级使用通用 Key
+                    const apiKey = localStorage.getItem('xp_nova_api_key') || localStorage.getItem('xp_general_api_key');
+                    
+                    if (!apiKey || apiKey.trim() === '') {
+                        Swal.fire({ title: '算力核心缺失', text: '指挥官，请先在家控中枢配置您的 API Key 才能唤醒 NOVA。', icon: 'warning', background: '#0f172a', color: '#fff' });
+                        return "<span class='text-amber-500 font-bold'>[系统警报] 缺少 API Key，NOVA 处于休眠状态。请前往后台配置。</span>";
+                    }
+
+                    // 预留反代地址扩展位（如果白皮书里有配置代理的需求，也可以从这里读）
+                    const proxyUrl = localStorage.getItem('xp_api_proxy') || 'https://generativelanguage.googleapis.com';
+                    const baseUrl = proxyUrl.endsWith('/') ? proxyUrl.slice(0, -1) : proxyUrl;
+                    const url = `${baseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
                     // 将本地历史记录格式化为大模型兼容的格式
                     const contents = [];

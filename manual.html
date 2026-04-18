@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XuePilot - Starship Manual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
+        .glass-panel { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .btn-nav { display: flex; width: 100%; align-items: center; padding: 0.8rem 1rem; margin-bottom: 0.4rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .btn-nav:hover, .btn-nav.active { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
+        .btn-nav.active { box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.8); }
+        
+        .prose h2 { color: #38bdf8; font-weight: 900; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(56,189,248,0.3); padding-bottom: 0.5rem; }
+        .prose h3 { color: #e2e8f0; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .prose p { color: #94a3b8; margin-bottom: 1rem; line-height: 1.6; font-size: 0.875rem;}
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; color: #94a3b8; margin-bottom: 1rem; font-size: 0.875rem;}
+        .prose li { margin-bottom: 0.5rem; }
+        .prose code { background: rgba(0,0,0,0.5); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: #facc15; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
+
+    <!-- 背景粒子网格 -->
+    <div class="absolute inset-0 z-0 opacity-30 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
+
+    <!-- 左侧边栏 -->
+    <aside class="w-[20rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative bg-slate-900/30">
+        <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
+            <div class="flex items-center gap-3 group">
+                <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">🚀</span>
+                <div>
+                    <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 探索舱</span></h1>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col custom-scroll">
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心宇宙探索</div>
+            <button onclick="window.location.href='classroom.html'" class="btn-nav py-3 mb-2 text-slate-300 hover:text-emerald-300 transition"><span class="mr-3 text-2xl">🌌</span><div class="flex flex-col"><span class="text-sm font-black text-white">3D 知识星球</span></div></button>
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">全球教育网关</div>
+            <button onclick="window.location.href='resources.html'" class="btn-nav py-3 mb-2 text-slate-300 hover:text-cyan-400 transition"><span class="mr-3 text-2xl">🌐</span><div class="flex flex-col"><span class="text-sm font-black text-white">全球教育智库</span></div></button>
+            <button onclick="window.location.href='reader.html'" class="btn-nav py-3 mb-4 text-slate-300 hover:text-blue-400 transition"><span class="mr-3 text-2xl">📖</span><div class="flex flex-col"><span class="text-sm font-black text-white">全息伴读阅读器</span></div></button>
+            
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项集训营</div>
+            <a href="simulator.html" class="btn-nav text-slate-300 py-3 hover:text-white transition"><span class="mr-3 text-xl">🎮</span><div class="flex flex-col"><span class="text-sm">危机救援演习</span></div></a>
+            <button onclick="window.location.href='writing.html'" class="btn-nav py-3 text-slate-300 hover:text-white transition"><span class="mr-3 text-xl">✍️</span><div class="flex flex-col"><span class="text-sm">启发写作舱</span></div></button>
+            <button onclick="window.location.href='language.html?tab=english'" class="btn-nav py-3 text-slate-300 hover:text-white transition"><span class="mr-3 text-xl">🔤</span><div class="flex flex-col"><span class="text-sm">英文魔法书</span></div></button>
+            <button onclick="window.location.href='language.html?tab=chinese'" class="btn-nav py-3 text-slate-300 hover:text-white transition"><span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span></div></button>
+
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">系统支持</div>
+            <!-- 当前激活项 -->
+            <button onclick="window.location.href='manual.html'" class="btn-nav active py-3 text-white transition border border-dashed border-slate-500">
+                <span class="mr-3 text-xl">💡</span><div class="flex flex-col"><span class="text-sm font-bold">星舰操作手册</span></div>
+            </button>
+        </nav>
+    </aside>
+
+    <!-- 右侧：手册内容区 (使用 Alpine.js 选项卡) -->
+    <main class="flex-1 flex flex-col z-10 bg-slate-950/80 backdrop-blur-sm relative" x-data="{ activeTab: 'api' }">
+        
+        <!-- 头部 -->
+        <header class="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50 shrink-0">
+            <h2 class="text-3xl font-black text-white flex items-center gap-3">
+                <span class="text-amber-400">💡</span> 联邦指挥官星舰指南
+            </h2>
+            <div class="flex bg-slate-900 border border-slate-800 rounded-xl p-1">
+                <button @click="activeTab = 'intro'" :class="activeTab === 'intro' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'" class="px-5 py-2 rounded-lg text-sm font-bold transition">舱体说明</button>
+                <button @click="activeTab = 'api'" :class="activeTab === 'api' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'" class="px-5 py-2 rounded-lg text-sm font-bold transition flex items-center gap-1">⚡ 核心算力 (API) 部署</button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto custom-scroll p-10">
+            <div class="max-w-4xl mx-auto pb-20 prose">
+                
+                <!-- TAB 1: 舱体说明 -->
+                <div x-show="activeTab === 'intro'" x-cloak class="fade-in">
+                    <h2>🌌 XuePilot 核心教育矩阵全景</h2>
+                    <p>欢迎登舰，指挥官。XuePilot 抛弃了传统枯燥的平铺式教育，采用了 <strong>微前端 (Micro-Frontend) 舱体解耦架构</strong>。每个舱体互不干扰，各自承载不同的心智训练任务。</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
+                            <h3 class="flex items-center gap-2 mt-0"><span class="text-2xl">🌌</span> 3D 知识星球</h3>
+                            <p><strong>功能：</strong>可视化大纲管理中枢。<br>在这里，家控中枢排布的所有课程大纲将化作引力星系。指挥官可以拖拽星空，直观感受知识点之间的网状联系与层级深度。</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
+                            <h3 class="flex items-center gap-2 mt-0"><span class="text-2xl">🌐</span> 全球教育智库</h3>
+                            <p><strong>功能：</strong>教材与数据集散地。<br>秒级直连云端数据库，囊括国际顶尖开源教材、国家统编数据底座以及前沿站点。是进入阅读舱前的资料跳板。</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
+                            <h3 class="flex items-center gap-2 mt-0"><span class="text-2xl">📖</span> 全息伴读阅读器</h3>
+                            <p><strong>功能：</strong>沉浸式高对比度图文流解析。<br>支持划线触发 <b>NOVA 硅基导师</b>，采用苏格拉底提问法，拒绝灌输，通过连环追问重塑您的逻辑闭环。</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 opacity-60">
+                            <h3 class="flex items-center gap-2 mt-0"><span class="text-2xl">🎮</span> 专项集训营 (建设中)</h3>
+                            <p>包含危机救援模拟器、启发写作舱、中英双语共情力沙盒。底层框架已部署，AI 神经元正在陆续接驳中，敬请期待。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: API 配置指南 -->
+                <div x-show="activeTab === 'api'" x-cloak class="fade-in">
+                    <div class="bg-blue-900/10 border border-blue-500/30 p-6 rounded-2xl mb-8">
+                        <h2 class="mt-0 text-blue-400 flex items-center gap-2"><span>⚡</span> 为什么需要配置 API Key？</h2>
+                        <p class="text-slate-300">XuePilot 秉承 <b>Data Sovereignty (数据主权)</b> 与 <b>去中心化</b> 理念。我们不倒卖算力，也不将系统与单一模型绑定。<b>只有配置了 API Key，全息伴读舱里的 NOVA 导师才能真正被唤醒。</b><br>本系统支持无缝接入全球各大厂商的顶级商业模型与开源模型。</p>
+                    </div>
+
+                    <h2>🛠️ 部署步骤与侦测 (仅限 PRO 家长权限)</h2>
+                    <p>请前往 <b>【家控中枢 (Dashboard)】 -> 【算力燃料配置】</b> 区域，将您获取的 Key 填入对应的输入框内。</p>
+                    <div class="bg-slate-800/50 border-l-4 border-emerald-500 p-4 mb-4">
+                        <strong class="text-emerald-400 block mb-1">✅ 关键步骤：连通性侦测</strong>
+                        <p class="mb-0 text-slate-300">参数填入后，请务必点击配置面板旁的 <b>[测试连接]</b> 按钮。系统会向目标节点发射一次微型侦测脉冲。若返回绿灯并收到 AI 应答，即代表燃料通道已贯通，可放心进入阅读舱！</p>
+                    </div>
+
+                    <h2>1. 官方推荐：Google Gemini (全球最强免费多模态)</h2>
+                    <p>XuePilot 底层原生完美支持 Gemini 协议运转。对于海外网络环境良好的用户，这是零成本的最佳选择。</p>
+                    <ul>
+                        <li><b>获取地址：</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-400 underline">Google AI Studio</a></li>
+                        <li><b>费用：</b> 免费档 (Free Tier) 极其宽裕，足以支撑每日高频伴读。</li>
+                        <li><b>配置方法：</b> 直接将 <code>AIzaSy...</code> 开头的 Key 填入，Base URL 留空即可。系统会自动调用原生路由。</li>
+                    </ul>
+
+                    <h2>2. 主流顶配商业模型 (追求极致体验专属)</h2>
+                    <p>对于预算充足、追求地表最强推理能力与体验的指挥官，您完全可以接入各大 AI 巨头的付费大模型，如 <b>OpenAI GPT-4o</b>、<b>Anthropic Claude 3.5 Sonnet</b> 或 <b>DeepSeek Pro</b>。</p>
+                    <ul>
+                        <li><b>适用人群：</b> 愿意为顶级算力付费，希望获得最强逻辑推理深度与全科辅导能力的用户。</li>
+                        <li><b>获取方式：</b> 前往各大家官方开放平台（如 <a href="https://platform.openai.com/" target="_blank" class="text-cyan-400 underline">OpenAI API</a>、<a href="https://console.anthropic.com/" target="_blank" class="text-cyan-400 underline">Anthropic Console</a> 或 <a href="https://platform.deepseek.com/" target="_blank" class="text-cyan-400 underline">DeepSeek 开放平台</a>）绑定信用卡并充值获取 Key。</li>
+                        <li><b>配置说明：</b> 得益于底层的 <b>大统一格式转换网关</b>，您只需贴入对应的 Key 和 Base URL，即可享受与原生协议一样的顺畅体验。</li>
+                    </ul>
+
+                    <h2>3. 第三方镜像/中转站 (国内免翻墙首选)</h2>
+                    <p>如果无法直连海外网络，无论是 Gemini 还是 GPT-4o，我们强烈建议您使用第三方的 API 中转平台（例如 Wildcard、API2D、或者 Github 上的开源代理）。</p>
+                    <ul>
+                        <li><b>如何配置：</b> 
+                            <br>1. 将中转站提供的 Key 填入 <code>API Key</code> 框内。
+                            <br>2. <b>关键：</b>将中转站提供的服务器地址填入 <code>API Base URL (代理节点)</code> 框内。
+                            <br><i>* 例如，您可以填入类似于 <code>https://api.yourproxy.com/v1</code>。系统转换网关会自动处理路由参数。</i>
+                        </li>
+                    </ul>
+
+                    <h2>4. 全球开源/免费算力白嫖指南 (高阶极客)</h2>
+                    <p>作为极客平台，XuePilot 支持您利用业界良心平台提供的免费算力接口。借助底层的 <b>大统一网关</b>，兼容变得前所未有的简单。</p>
+                    
+                    <div class="space-y-4 mt-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                            <h3 class="mt-0 text-emerald-400">🔥 Groq (全球最快推理芯片)</h3>
+                            <p>搭载 Llama 3 顶级开源模型，每秒生成 800 字，响应速度能让 NOVA 导师像真人一样秒回。</p>
+                            <p>地址：<a href="https://console.groq.com/keys" target="_blank" class="text-cyan-400 underline">console.groq.com</a> (完全免费，直接填入 Key 和 Groq 的兼容 URL 即可)</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                            <h3 class="mt-0 text-emerald-400">🇨🇳 硅基流动 (SiliconFlow)</h3>
+                            <p>国内顶级开源算力分发平台。注册即送海量 Token，支持极速运行 <b>DeepSeek-Coder</b>、<b>Qwen2 (通义千问)</b> 等国产神级大模型。无需翻墙，极为稳定。</p>
+                            <p>地址：<a href="https://siliconflow.cn/" target="_blank" class="text-cyan-400 underline">siliconflow.cn</a></p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                            <h3 class="mt-0 text-emerald-400">🟢 Nvidia NIM (英伟达开发者)</h3>
+                            <p>老黄的福利，每天免费额度，同样提供业界最新开源模型的 API 终点。</p>
+                            <p>地址：<a href="https://build.nvidia.com/" target="_blank" class="text-cyan-400 underline">build.nvidia.com</a></p>
+                        </div>
+                    </div>
+
+                    <!-- 🚀 全新上线的大统一转换网关说明 -->
+                    <div class="mt-8 bg-gradient-to-r from-emerald-900/20 to-cyan-900/20 border border-emerald-500/30 p-6 rounded-2xl">
+                        <h3 class="mt-0 text-emerald-400 text-lg font-black flex items-center gap-2"><span>🚀</span> 全新特性上线：大统一格式转换网关</h3>
+                        <p class="text-slate-300 mt-2">
+                            架构师已为您解锁真正的模型自由！系统底层现已内置强大的智能路由转换网关。无论您接入的是原生 <b>Gemini 协议</b>，还是通用的 <b>OpenAI 标准协议 (Chat Completions)</b>（涵盖市面上 99% 的商业与开源模型），系统均会自动识别格式、动态拼装请求载荷，并完成无缝握手。
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

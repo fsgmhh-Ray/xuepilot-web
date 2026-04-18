@@ -76,8 +76,6 @@
             </button>
 
             <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项集训营</div>
-            
-            <!-- 🚀 路由已更新：全部指向真实文件 -->
             <a href="simulator.html" class="btn-nav text-slate-300 py-3 hover:text-white transition">
                 <span class="mr-3 text-xl">🎮</span><div class="flex flex-col"><span class="text-sm">危机救援演习</span><span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">在科幻实战中练就大局观</span></div>
             </a>
@@ -91,6 +89,12 @@
                 <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力</span></div>
             </button>
 
+            <!-- 🚀 架构师新增：系统支持与操作手册入口 -->
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">系统支持</div>
+            <button onclick="window.location.href='manual.html'" class="btn-nav py-3 text-slate-400 hover:text-white transition border border-dashed border-slate-700 hover:border-slate-500">
+                <span class="mr-3 text-xl">💡</span><div class="flex flex-col"><span class="text-sm font-bold">星舰操作手册</span><span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">API 算力配置与全舱体指南</span></div>
+            </button>
+
             <div class="mt-auto pt-4 border-t border-slate-800/50">
                 <button onclick="App.promptParentLock()" class="btn-nav w-full justify-between group py-3 text-slate-500 hover:text-amber-500 transition">
                     <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span><div class="flex flex-col"><span class="text-xs">呼叫家控中枢排课</span></div></div>
@@ -101,11 +105,8 @@
     </aside>
 
     <main class="flex-1 relative overflow-hidden flex flex-col z-10 bg-transparent">
-        <!-- 🚀 纯净的 3D 星空引擎视窗 -->
         <div class="absolute inset-0 overflow-hidden bg-transparent z-10">
             <canvas id="network-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
-            
-            <!-- 星系渲染容器 (支持拖拽) -->
             <div class="absolute inset-0 min-h-full no-select z-10 cursor-move" id="galaxy-viewport">
                 <div id="galaxy-container" class="absolute w-full h-full pointer-events-none"></div>
             </div>
@@ -126,16 +127,11 @@
                 try {
                     let s = window.safeStorage.get('xp_galaxies');
                     if (s) { try { this.state.galaxies = JSON.parse(s); } catch (e) {} }
-                    
-                    // 过滤出已经部署(Deployed)的星系
                     this.state.galaxies = this.state.galaxies.filter(g => g.isDeployed !== false);
-                    if (this.state.galaxies.length > 0) {
-                        this.state.activeGalaxyId = this.state.galaxies[0].id;
-                    }
-                    
+                    if (this.state.galaxies.length > 0) { this.state.activeGalaxyId = this.state.galaxies[0].id; }
                     this.initNetworkCanvas(); 
                     this.renderGalaxy();
-                    this.setupInteractions(); // 激活拖拽引力引擎
+                    this.setupInteractions();
                 } catch(err) { console.error("Galaxy Engine Init Failed", err); }
             },
 
@@ -149,94 +145,34 @@
                 } catch(e) {}
             },
 
-            // 🚀 引力拖拽交互引擎：允许用户平移查看整个星空
             setupInteractions() {
-                const vp = $('galaxy-viewport');
-                if (!vp) return;
-
-                const startDrag = (e) => {
-                    this.state.isPanning = true;
-                    // 兼容鼠标与触摸屏
-                    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                    const pageY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
-                    this.state.startX = pageX - this.state.panX;
-                    this.state.startY = pageY - this.state.panY;
-                };
-
-                const doDrag = (e) => {
-                    if (!this.state.isPanning) return;
-                    e.preventDefault();
-                    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                    const pageY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
-                    this.state.panX = pageX - this.state.startX;
-                    this.state.panY = pageY - this.state.startY;
-                    this.renderGalaxy(); // 拖拽时实时重绘星系
-                };
-
-                const endDrag = () => {
-                    this.state.isPanning = false;
-                };
-
-                // 绑定鼠标事件
-                vp.addEventListener('mousedown', startDrag);
-                window.addEventListener('mousemove', doDrag);
-                window.addEventListener('mouseup', endDrag);
-
-                // 绑定触控事件
-                vp.addEventListener('touchstart', startDrag, {passive: false});
-                window.addEventListener('touchmove', doDrag, {passive: false});
-                window.addEventListener('touchend', endDrag);
+                const vp = $('galaxy-viewport'); if (!vp) return;
+                const startDrag = (e) => { this.state.isPanning = true; const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; const pageY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; this.state.startX = pageX - this.state.panX; this.state.startY = pageY - this.state.panY; };
+                const doDrag = (e) => { if (!this.state.isPanning) return; e.preventDefault(); const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; const pageY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; this.state.panX = pageX - this.state.startX; this.state.panY = pageY - this.state.startY; this.renderGalaxy(); };
+                const endDrag = () => { this.state.isPanning = false; };
+                vp.addEventListener('mousedown', startDrag); window.addEventListener('mousemove', doDrag); window.addEventListener('mouseup', endDrag);
+                vp.addEventListener('touchstart', startDrag, {passive: false}); window.addEventListener('touchmove', doDrag, {passive: false}); window.addEventListener('touchend', endDrag);
             },
 
             getPlanetStyle(i) { const palette = [['#10b981', '#064e3b', '#10b98166'], ['#3b82f6', '#1e3a8a', '#3b82f666'], ['#8b5cf6', '#4c1d95', '#8b5cf666'], ['#f59e0b', '#78350f', '#f59e0b66']]; const c = palette[i % palette.length]; return `background: radial-gradient(circle at 30% 30%, ${c[0]}, ${c[1]}, #000); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 25px ${c[2]}; border: 1px solid rgba(255,255,255,0.1);`; },
             
-            // 🚀 星系渲染核心引擎
             renderGalaxy() {
-                const c = $('galaxy-container'); 
-                if(!c) return; 
-                c.innerHTML = '';
-                
+                const c = $('galaxy-container'); if(!c) return; c.innerHTML = '';
                 const deployedGalaxies = this.state.galaxies.filter(g => g.isDeployed !== false);
-                
-                // 🛑 空轨预警系统：如果家长尚未部署任何星系，显示科幻提示，而不是彻底黑屏
-                if (deployedGalaxies.length === 0) {
-                    c.innerHTML = `
-                        <div class="absolute inset-0 flex flex-col items-center justify-center z-50 text-center pointer-events-none">
-                            <div class="text-7xl mb-6 opacity-20 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">🌌</div>
-                            <h2 class="text-2xl font-black text-slate-400 tracking-widest mb-3 uppercase">星空轨道未检出生命体</h2>
-                            <p class="text-slate-500 text-sm">指挥官，请前往左下方 <span class="text-amber-500 font-bold">[呼叫家控中枢]</span> 锻造并部署您的专属学习星系。</p>
-                        </div>
-                    `;
-                    return;
-                }
+                if (deployedGalaxies.length === 0) { c.innerHTML = `<div class="absolute inset-0 flex flex-col items-center justify-center z-50 text-center pointer-events-none"><div class="text-7xl mb-6 opacity-20 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">🌌</div><h2 class="text-2xl font-black text-slate-400 tracking-widest mb-3 uppercase">星空轨道未检出生命体</h2><p class="text-slate-500 text-sm">指挥官，请前往左下方 <span class="text-amber-500 font-bold">[呼叫家控中枢]</span> 锻造并部署您的专属学习星系。</p></div>`; return; }
+                if (!this.state.activeGalaxyId || !deployedGalaxies.find(g => g.id === this.state.activeGalaxyId)) { this.state.activeGalaxyId = deployedGalaxies[0].id; }
 
-                if (!this.state.activeGalaxyId || !deployedGalaxies.find(g => g.id === this.state.activeGalaxyId)) {
-                    this.state.activeGalaxyId = deployedGalaxies[0].id;
-                }
-
-                // 渲染真实存在的星系
                 deployedGalaxies.forEach(g => {
                     const isActive = g.id === this.state.activeGalaxyId;
-                    
-                    // 如果激活，则放置在屏幕中央并应用拖拽的 panX/panY；如果在后台，则缩小并作为背景星系
-                    const style = isActive 
-                        ? `left: 50%; top: 50%; transform: translate(calc(-50% + ${this.state.panX}px), calc(-50% + ${this.state.panY}px)) scale(1); z-index: 20; opacity: 1;` 
-                        : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
-                    
+                    const style = isActive ? `left: 50%; top: 50%; transform: translate(calc(-50% + ${this.state.panX}px), calc(-50% + ${this.state.panY}px)) scale(1); z-index: 20; opacity: 1;` : `left: ${g.bgX}%; top: ${g.bgY}%; transform: translate(-50%, -50%) scale(0.12); z-index: 10; opacity: 0.6; cursor: pointer; pointer-events: auto;`;
                     let html = `<div class="absolute flex items-center justify-center w-0 h-0 transition-transform ease-[cubic-bezier(0.25,1,0.5,1)] group" style="${style}" ${isActive?'':`onclick="App.activateGalaxy('${g.id}')"`}>`;
-                    
-                    // 恒星内核
                     html += `<div class="absolute z-30 flex flex-col items-center pointer-events-auto"><div class="sun-core flex flex-col items-center justify-center text-center cursor-pointer border-none" style="width: ${isActive?'160px':'250px'}; height: ${isActive?'160px':'250px'};" onclick="App.activateGalaxy(${isActive?'null':`'${g.id}'`})"><div class="mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] ${isActive?'text-5xl':'text-8xl'}">🔮</div>${isActive?`<div class="text-[10px] font-black text-amber-200 uppercase tracking-widest mt-2">${g.title}</div>`:''}</div></div>`;
                     
-                    // 环绕的知识星球 (Missions/Subjects)
                     if (isActive && g.subjects) {
                         html += `<div class="absolute pointer-events-none" style="left:0; top:0;">`;
                         g.subjects.forEach((s, i) => {
                             const isFree = i === 0 || this.state.isPro;
-                            // 行星轨道位置计算
-                            const px = Math.cos(s.angle) * s.radius;
-                            const py = Math.sin(s.angle) * s.radius;
-                            
+                            const px = Math.cos(s.angle) * s.radius; const py = Math.sin(s.angle) * s.radius;
                             html += `<div class="absolute flex flex-col items-center z-20 cursor-pointer pointer-events-auto group" style="left: ${px}px; top: ${py}px; transform: translate(-50%, -50%);" onclick="App.openMission('${s.title}', ${isFree})">
                                 ${isFree ? '<div class="free-badge">OPEN</div>' : '<div class="energy-lock">🔒</div>'}
                                 <div class="w-20 h-20 planet-3d flex items-center justify-center text-4xl transition-transform group-hover:scale-110 shadow-2xl ${isFree?'':'planet-locked'}" style="${this.getPlanetStyle(i)}">${s.icon}</div>
@@ -245,26 +181,12 @@
                         });
                         html += `</div>`;
                     }
-                    html += `</div>`; 
-                    c.innerHTML += html;
+                    html += `</div>`; c.innerHTML += html;
                 });
             },
             
-            activateGalaxy(id) { 
-                this.state.activeGalaxyId = id; 
-                // 切换星系时，视角归中
-                this.state.panX = 0; 
-                this.state.panY = 0; 
-                this.renderGalaxy(); 
-            },
-            
-            openMission(sTitle, isFree) { 
-                if (isFree) { 
-                    window.location.href = `simulator.html?mission=${encodeURIComponent(sTitle)}`; 
-                } else { 
-                    Swal.fire({ title: '引力场锁定', text: '指挥官，此星域需要 PRO 级算力解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); 
-                } 
-            },
+            activateGalaxy(id) { this.state.activeGalaxyId = id; this.state.panX = 0; this.state.panY = 0; this.renderGalaxy(); },
+            openMission(sTitle, isFree) { if (isFree) { window.location.href = `simulator.html?mission=${encodeURIComponent(sTitle)}`; } else { Swal.fire({ title: '引力场锁定', text: '指挥官，此星域需要 PRO 级算力解锁。', icon: 'warning', background: '#0f172a', color: '#fff' }); } },
             
             initNetworkCanvas() {
                 this.canvas = $('network-canvas'); if(!this.canvas) return; this.ctx = this.canvas.getContext('2d');

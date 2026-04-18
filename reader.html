@@ -2,10 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 移动端防缩放，保证触控体验 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XuePilot - Neural Reading Cabin</title>
-    <!-- 引入核心依赖 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -16,34 +14,27 @@
         /* ========================================== */
         [x-cloak] { display: none !important; }
         body { overflow: hidden; -webkit-font-smoothing: antialiased; }
-        
-        /* 字体族定义 */
         .font-sans { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif; }
         .font-serif { font-family: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', Georgia, serif; }
-
-        /* 隐藏滚动条但保留功能 */
         .hide-scroll::-webkit-scrollbar { width: 0px; background: transparent; }
         .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 
         /* ========================================== */
         /* 2. 视觉主题引擎与高对比度绝对统一          */
         /* ========================================== */
-        /* 🚀 架构师补丁：使用 !important 强制击穿所有外来脏代码的内联颜色，保证全文与标题色系绝对一致 */
+        /* 🚀 架构师补丁：使用 inherit !important 强制击穿所有外来脏代码，保证全文与标题色系绝对一致 */
         
-        /* 深邃宇宙 (Dark) - 极高对比度，正文与标题一致纯白 */
         .theme-dark { background-color: #020617; color: #f8fafc; } 
         .theme-dark .reader-bg { background-color: #020617; }
-        .theme-dark .content-engine * { color: #f8fafc !important; } 
+        .theme-dark .content-engine, .theme-dark .content-engine * { color: #f8fafc !important; } 
         
-        /* 泛黄卷宗 (Sepia) - 深褐色墨水质感 */
         .theme-sepia { background-color: #f4ecd8; color: #1a140b; }
         .theme-sepia .reader-bg { background-color: #f4ecd8; }
-        .theme-sepia .content-engine * { color: #1a140b !important; }
+        .theme-sepia .content-engine, .theme-sepia .content-engine * { color: #1a140b !important; }
         
-        /* 防反光纯净白 (Light) - 深沉石板灰 */
         .theme-light { background-color: #ffffff; color: #0f172a; }
         .theme-light .reader-bg { background-color: #ffffff; }
-        .theme-light .content-engine * { color: #0f172a !important; }
+        .theme-light .content-engine, .theme-light .content-engine * { color: #0f172a !important; }
 
         .glass-panel { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
 
@@ -51,7 +42,7 @@
         /* 3. 核心内容渲染引擎 (Content Engine)         */
         /* ========================================== */
         .content-engine { text-align: justify; letter-spacing: 0.03em; }
-        .content-engine p { margin-bottom: 2em; text-indent: 2em; line-height: inherit; font-weight: 500; } /* 提升了字重以增加清晰度 */
+        .content-engine p { margin-bottom: 2em; text-indent: 2em; line-height: inherit; font-weight: 500; }
         .content-engine h1, .content-engine h2, .content-engine h3 { font-weight: 900; margin-top: 2.5em; margin-bottom: 1.2em; line-height: 1.4; text-indent: 0; }
         .content-engine blockquote { 
             border-left: 4px solid #3b82f6 !important; font-style: italic; opacity: 0.85; margin: 2em 0; 
@@ -64,7 +55,6 @@
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 页面翻页反馈动效 */
         .page-turn-left { animation: slideInRight 0.4s ease-out forwards; }
         .page-turn-right { animation: slideInLeft 0.4s ease-out forwards; }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
@@ -74,14 +64,13 @@
 
 <body x-data="readerApp()" x-init="init()" class="transition-colors duration-700 ease-in-out" :class="['theme-' + theme, 'font-' + fontFamily]">
 
-    <!-- 全局 Loading -->
     <div x-show="loading" class="fixed inset-0 z-[200] bg-slate-950 flex flex-col items-center justify-center">
         <div class="text-5xl text-cyan-500 mb-6 animate-pulse">⚛️</div>
         <div class="text-cyan-400 font-mono tracking-widest text-sm animate-pulse" x-text="loadingText"></div>
     </div>
 
     <!-- ========================================================= -->
-    <!-- [视图层 1] 模式 A：档案馆矩阵 (Library) 分类检索          -->
+    <!-- [视图层 1] 伴读舱大厅 (Library)                           -->
     <!-- ========================================================= -->
     <div x-show="viewMode === 'library' && !loading" x-cloak class="h-screen w-screen overflow-y-auto bg-[#020617] p-6 md:p-10 hide-scroll">
         <div class="max-w-7xl mx-auto">
@@ -108,7 +97,7 @@
                 
                 <div class="relative w-full md:w-72 shrink-0">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 opacity-50 text-sm">🔍</span>
-                    <input type="text" x-model="searchQuery" placeholder="搜索书名或内容摘要..." 
+                    <input type="text" x-model="searchQuery" placeholder="搜索书名或摘要..." 
                            class="w-full bg-slate-900/80 border border-slate-700 text-slate-200 text-sm rounded-full py-3 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:bg-slate-800 transition shadow-inner">
                 </div>
             </div>
@@ -137,13 +126,10 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- [视图层 2] 模式 B：沉浸式阅读器视图 (Immersive Reader)  -->
+    <!-- [视图层 2] 沉浸阅读区 (Reader)                          -->
     <!-- ========================================================= -->
     <div x-show="viewMode === 'reader' && !loading" x-cloak class="flex h-screen w-screen overflow-hidden relative reader-bg">
         
-        <!-- --------------------------------------- -->
-        <!-- [沉浸感 HUD] 顶部控制台 (自动隐藏)       -->
-        <!-- --------------------------------------- -->
         <header class="fixed top-0 left-0 w-full h-16 z-40 transition-transform duration-300 glass-panel flex items-center justify-between px-4 md:px-6 shadow-sm border-b"
                 :class="[
                     isScrollingDown ? '-translate-y-full' : 'translate-y-0',
@@ -151,7 +137,7 @@
                 ]">
             
             <div class="flex items-center gap-2 md:gap-4">
-                <!-- 返回伴读舱大厅 -->
+                <!-- 🚀 返回大厅逻辑已确认绑定 -->
                 <button @click="exitReaderToLibrary()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-xl" title="返回伴读舱大厅">⬅</button>
                 <button @click="showToc = true" class="px-3 md:px-4 py-2 rounded-xl font-bold text-sm hover:bg-black/10 transition flex items-center gap-2">
                     📑 <span class="hidden md:inline">目录</span>
@@ -170,7 +156,6 @@
                 
                 <button @click="showSettings = !showSettings" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-lg font-serif">Aa</button>
 
-                <!-- 设置下拉面板 -->
                 <div x-show="showSettings" @click.away="showSettings = false" x-transition.opacity class="absolute top-14 right-0 w-72 md:w-80 glass-panel bg-slate-900/95 border border-slate-700 rounded-3xl shadow-2xl p-6 z-50 text-slate-200">
                     <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">环境主题 (Theme)</h4>
                     <div class="flex gap-2 mb-6">
@@ -193,9 +178,7 @@
             </div>
         </header>
 
-        <!-- --------------------------------------- -->
-        <!-- [组件 2.2] 左侧目录抽屉 (TOC Drawer)      -->
-        <!-- --------------------------------------- -->
+        <!-- 左侧目录抽屉 -->
         <div x-show="showToc" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="showToc = false"></div>
         <div class="fixed top-0 bottom-0 left-0 w-full md:w-80 z-50 transition-transform duration-300 flex flex-col shadow-2xl glass-panel border-r"
              :class="[
@@ -217,20 +200,19 @@
         </div>
 
         <!-- --------------------------------------- -->
-        <!-- 🚀 架构师补丁：全局浮动翻页键 (所有屏幕设备强制显示) -->
+        <!-- 🚀 需求补丁：贴边悬浮翻页键 (动态计算间距)  -->
         <!-- --------------------------------------- -->
+        <!-- 左侧：计算屏幕宽度的50%减去文章容器宽度的一半(约384px)，再减去按键自身宽度即可紧贴文章 -->
         <button @click="loadChapter(currentChapterIdx - 1)" x-show="currentChapterIdx > 0" 
-                class="fixed left-2 md:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-16 md:w-12 md:h-24 rounded-2xl glass-panel flex items-center justify-center opacity-30 hover:opacity-100 hover:scale-110 transition-all text-xl md:text-2xl border border-current shadow-lg" title="上一章">
+                class="fixed left-2 md:left-[calc(50%-440px)] top-1/2 -translate-y-1/2 z-30 w-10 h-24 md:w-12 md:h-32 rounded-2xl glass-panel flex items-center justify-center opacity-40 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-xl" title="上一章">
             〈
         </button>
+        <!-- 右侧：同理紧贴右侧 -->
         <button @click="loadChapter(currentChapterIdx + 1)" x-show="currentChapterIdx < chapters.length - 1" 
-                class="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-16 md:w-12 md:h-24 rounded-2xl glass-panel flex items-center justify-center opacity-30 hover:opacity-100 hover:scale-110 transition-all text-xl md:text-2xl border border-current shadow-lg" title="下一章">
+                class="fixed right-2 md:right-[calc(50%-440px)] top-1/2 -translate-y-1/2 z-30 w-10 h-24 md:w-12 md:h-32 rounded-2xl glass-panel flex items-center justify-center opacity-40 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-xl" title="下一章">
             〉
         </button>
 
-        <!-- --------------------------------------- -->
-        <!-- [核心视图] 沉浸阅读区 (支持触控滑动翻书)  -->
-        <!-- --------------------------------------- -->
         <main x-ref="readerScroll" 
               @scroll="handleScroll" 
               @touchstart="handleTouchStart"
@@ -247,7 +229,6 @@
                     </div>
                 </article>
                 
-                <!-- 底部翻章触控区 -->
                 <div class="mt-auto border-t pt-8 flex gap-4 text-sm font-bold" :class="theme === 'dark' ? 'border-slate-800' : 'border-opacity-10 border-current'">
                     <button @click="loadChapter(currentChapterIdx - 1)" x-show="currentChapterIdx > 0" class="flex-1 py-6 rounded-3xl bg-black/5 hover:bg-black/10 transition flex flex-col items-center justify-center gap-1">
                         <span class="opacity-50 text-[10px] uppercase tracking-widest">Previous</span>
@@ -261,9 +242,7 @@
             </div>
         </main>
 
-        <!-- --------------------------------------- -->
-        <!-- [交互层] 右侧 NOVA 伴读舱 (Socratic AI)  -->
-        <!-- --------------------------------------- -->
+        <!-- 右侧 NOVA 伴读舱 (Socratic AI) -->
         <div x-show="showNova" x-transition.opacity class="fixed inset-0 z-40 bg-black/60 md:hidden" @click="showNova = false"></div>
         <aside class="fixed top-0 bottom-0 right-0 w-full md:w-[400px] z-50 transition-transform duration-300 flex flex-col shadow-2xl border-l glass-panel"
                :class="[
@@ -306,9 +285,7 @@
             </div>
         </aside>
 
-        <!-- --------------------------------------- -->
-        <!-- [交互层] 划线气泡 (Tooltip)               -->
-        <!-- --------------------------------------- -->
+        <!-- 划线气泡 (Tooltip) -->
         <div x-show="showTooltip" x-cloak class="fixed z-[100] tooltip-pop pointer-events-auto"
              :style="`left: ${tooltipX}px; top: ${tooltipY}px;`">
             <button @click="invokeNova()" class="px-5 py-3 bg-slate-900/95 backdrop-blur-md text-cyan-400 hover:text-white hover:bg-slate-800 text-xs font-black tracking-widest uppercase rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-cyan-500/50 flex items-center gap-2 group transition-all">
@@ -334,7 +311,6 @@
                 isScrollingDown: false, lastScrollTop: 0,
                 pageTurnAnim: 'fade-in', 
                 
-                // 触控引擎状态
                 touchStartX: 0, touchEndX: 0, touchThreshold: 80,
                 
                 selectionText: '', showTooltip: false, tooltipX: 0, tooltipY: 0,
@@ -388,11 +364,9 @@
                     this.touchEndX = e.changedTouches[0].screenX;
                     const swipeDist = this.touchStartX - this.touchEndX;
                     
-                    // 向左划 (翻下一页)
                     if (swipeDist > this.touchThreshold && this.currentChapterIdx < this.chapters.length - 1) {
                         this.loadChapter(this.currentChapterIdx + 1, 'next');
                     }
-                    // 向右划 (翻上一页)
                     if (swipeDist < -this.touchThreshold && this.currentChapterIdx > 0) {
                         this.loadChapter(this.currentChapterIdx - 1, 'prev');
                     }
@@ -477,6 +451,7 @@
                     setTimeout(() => { if(this.$refs.readerScroll) this.$refs.readerScroll.scrollTop = 0; }, 100);
                 },
 
+                // 🚀 返回阅读舱大厅
                 exitReaderToLibrary() {
                     this.viewMode = 'library';
                     try { const newUrl = new URL(window.location); newUrl.searchParams.delete('bookId'); window.history.pushState({}, '', newUrl); } catch(e) {}

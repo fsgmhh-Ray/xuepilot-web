@@ -139,7 +139,7 @@ function useAuth() {
 }
 
 // ==========================================
-// 4. 3D星系探索舱 (修复并增强背景互动引力)
+// 4. 星际教室 (ClassroomView - 恢复视觉系统与加强引力)
 // ==========================================
 function ClassroomView({ navigate }) {
     const [galaxies, setGalaxies] = useState([]);
@@ -151,7 +151,7 @@ function ClassroomView({ navigate }) {
     const starsRef = useRef([]);
     const particlesRef = useRef([]);
     
-    // 🚀 新增：持续追踪鼠标的局部坐标系
+    // 持续追踪鼠标的局部坐标系
     const mousePosRef = useRef({ x: -1000, y: -1000 });
 
     useEffect(() => {
@@ -194,24 +194,26 @@ function ClassroomView({ navigate }) {
             
             particlesRef.current.forEach((p, i) => { 
                 p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1; 
+                
+                // 粒子间连线
                 particlesRef.current.slice(i+1).forEach(p2 => { 
                     let d = Math.hypot(p.x-p2.x, p.y-p2.y); 
                     if(d<220) { ctx.beginPath(); ctx.strokeStyle=`rgba(59,130,246,${0.2*(1-d/220)})`; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); } 
                 }); 
 
-                // 🚀 核心修改：缩短引力距离并减弱跟随力度
+                // 🚀 核心修改：适当加大鼠标引力距离和跟随力度
                 if (mx > 0 && my > 0) {
                     let dm = Math.hypot(p.x - mx, p.y - my);
-                    if (dm < 130) { // 将引力距离从 250 缩小到 130
-                        // 绘制极细的淡蓝色鼠标连线
+                    if (dm < 200) { // 引力距离加大到 200
+                        // 绘制鼠标连线
                         ctx.beginPath();
-                        ctx.strokeStyle = `rgba(34,211,238,${0.3 * (1 - dm / 130)})`;
+                        ctx.strokeStyle = `rgba(34,211,238,${0.3 * (1 - dm / 200)})`;
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(mx, my);
                         ctx.stroke();
                         
-                        // 吸引物理：加入距离衰减，只产生微弱的跟随拉扯
-                        const pullForce = 0.006 * (1 - dm / 130); 
+                        // 吸引物理：稍微加强跟随拉扯力，但保持平滑衰减
+                        const pullForce = 0.015 * (1 - dm / 200); 
                         p.x += (mx - p.x) * pullForce;
                         p.y += (my - p.y) * pullForce;
                     }
@@ -232,25 +234,27 @@ function ClassroomView({ navigate }) {
         <div className="absolute inset-0 overflow-hidden bg-[#02040a] cursor-grab active:cursor-grabbing" 
              onMouseDown={e=>{setIsDragging(true); setDragStart({x:e.clientX-pan.x, y:e.clientY-pan.y})}}
              onMouseMove={e=>{
-                 // 🚀 将鼠标相对于容器系定位，256px 是侧边栏 w-64 的宽度
+                 // 鼠标坐标修正：减去侧边栏的宽度 256px
                  mousePosRef.current = { x: e.clientX - 256, y: e.clientY };
                  if(isDragging) setPan({x:e.clientX-dragStart.x, y:e.clientY-dragStart.y});
              }}
              onMouseLeave={() => { mousePosRef.current = { x: -1000, y: -1000 }; }}
              onMouseUp={()=>setIsDragging(false)}>
+            
             <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0"></canvas>
+            
             <div className="absolute inset-0 z-10 select-none">
                 {galaxies.map(g => {
                     const isActive = g.id === activeGalaxyId;
                     const style = isActive ? { left:'50%', top:'50%', transform:`translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px))` } : { left:`${g.bgX}%`, top:`${g.bgY}%`, transform:'translate(-50%,-50%) scale(0.12)', opacity:0.6 };
                     
-                    // 计算最大半径以渲染势力范围边界
+                    // 🚀 计算当前星系最大半径，用于渲染势力范围背景
                     const maxRadius = g.subjects?.length > 0 ? Math.max(...g.subjects.map(s => Number(s.radius) || 0)) + 100 : 300;
 
                     return (
                         <div key={g.id} className="absolute flex items-center justify-center w-0 h-0 transition-all duration-700 ease-out" style={style}>
                             
-                            {/* 1. 淡淡的球形势力范围 */}
+                            {/* 🚀 1. 恢复：淡淡的球形势力范围 */}
                             {isActive && (
                                 <div className="absolute pointer-events-none z-0" style={{ 
                                     width: `${maxRadius * 2}px`, 
@@ -261,7 +265,7 @@ function ClassroomView({ navigate }) {
                                 }}></div>
                             )}
 
-                            {/* 1. 极细星轨 & 2. 恒星与各行星的丝线连接 */}
+                            {/* 🚀 2. 恢复：极细虚线星轨 & 恒星与行星丝线连接 */}
                             {isActive && (
                                 <svg className="absolute overflow-visible pointer-events-none z-10" width="0" height="0">
                                     {g.subjects?.map((s, i) => (
@@ -278,7 +282,8 @@ function ClassroomView({ navigate }) {
                                     <span className={isActive?'text-5xl':'text-9xl'}>🔮</span>
                                     {isActive && <div className="text-[10px] font-black text-amber-200 uppercase mt-4 tracking-widest">{g.title}</div>}
                                 </div>
-                                {/* 3. 悬停在远处缩小星系时，通过反向 scale 显示大号清晰的名称 */}
+                                
+                                {/* 🚀 3. 恢复：悬停在远处星系上时浮出放大清晰的名称 */}
                                 {!isActive && (
                                     <div className="absolute top-full mt-10 left-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 flex justify-center" style={{ transform: 'translateX(-50%) scale(8.33)', transformOrigin: 'top center' }}>
                                         <span className="text-white text-sm font-black tracking-widest bg-slate-900/90 px-6 py-3 rounded-xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.8)] whitespace-nowrap">
@@ -288,6 +293,7 @@ function ClassroomView({ navigate }) {
                                 )}
                             </div>
                             
+                            {/* 行星挂载渲染 */}
                             {isActive && g.subjects?.map((s, i) => (
                                 <div key={i} className="absolute flex flex-col items-center z-20 cursor-pointer group" style={{ left:Math.cos(s.angle)*s.radius, top:Math.sin(s.angle)*s.radius, transform:'translate(-50%, -50%)' }} onClick={()=>navigate('reader', {bookId: s.id || s.title})}>
                                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-2xl transition group-hover:scale-110" style={getPlanetStyle(i)}>{s.icon}</div>
@@ -304,8 +310,6 @@ function ClassroomView({ navigate }) {
 
 // ==========================================
 // 5. 全球教育资源 (保持未动)
-// ==========================================
-// 5. 全球教育资源
 // ==========================================
 function ResourcesView({ navigate }) {
     const [textbooks, setTextbooks] = useState([]);
@@ -399,7 +403,7 @@ function ResourcesView({ navigate }) {
 }
 
 // ==========================================
-// 6. 教育图书资料
+// 6. 教育图书资料 (保持未动)
 // ==========================================
 function ReaderView({ routeParams, navigate }) {
     const [viewMode, setViewMode] = useState('library'); 
@@ -560,10 +564,10 @@ function ReaderView({ routeParams, navigate }) {
 }
 
 // ==========================================
-// 7. 🚀 危机救援演习 (SimulatorView - 彻底全量对接交互视频)
+// 7. 危机救援演习 (保持未动)
 // ==========================================
 function SimulatorView() {
-    const [status, setStatus] = useState('lobby'); // 'lobby', 'playing'
+    const [status, setStatus] = useState('lobby'); 
     const [ageGroup, setAgeGroup] = useState('mid');
     const [step, setStep] = useState(1);
     const [showHUD, setShowHUD] = useState(false);
@@ -572,7 +576,6 @@ function SimulatorView() {
     const [hudAlert, setHudAlert] = useState({ show: false, message: '' });
     const videoRef = useRef(null);
 
-    // 基于您的规则，严格划分三阶段逻辑，支持视频进度触发
     const scripts = {
         young: {
             1: { phase: "🧠 提问引导 (Step 1)", ai: "小指挥官，前方糖果城堡被陨石挡住了！我们要怎么进去？", options: [{ text: "使用引力光束移开陨石", isCorrect: true }, { text: "用飞船上的大炮轰碎", isCorrect: false, feedback: "糟糕！爆炸的高温会烤化巧克力城堡的。" }] },
@@ -595,11 +598,11 @@ function SimulatorView() {
         setAgeGroup(age);
         setStep(1);
         setStatus('playing');
-        setShowHUD(false); // 隐藏HUD，等待当前视频播放完毕再弹出
+        setShowHUD(false); 
     };
 
     const handleVideoEnded = () => {
-        setShowHUD(true); // 视频播完，准确时机弹出界面与交互
+        setShowHUD(true); 
     };
 
     useEffect(() => {
@@ -634,13 +637,10 @@ function SimulatorView() {
             return;
         }
         
-        // 进入下一阶段
         setStep(s => s + 1);
         setShowHUD(false); 
-        // 状态更新后，video标签由于 src 变更，会自动加载下一段并 autoPlay
     };
 
-    // 动态生成对应的视频地址
     const videoUrl = `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${ageGroup}_step${step}.mp4`;
 
     if (status === 'lobby') {
@@ -677,7 +677,6 @@ function SimulatorView() {
     return (
         <div className="flex-1 flex flex-col bg-black relative overflow-hidden animate-[fadeIn_0.5s]">
             
-            {/* 1. 全屏互动视频引擎 */}
             <div className="absolute inset-0 z-0 bg-black">
                 <video 
                     ref={videoRef}
@@ -687,16 +686,13 @@ function SimulatorView() {
                     onEnded={handleVideoEnded}
                     className={`w-full h-full object-cover transition-all duration-1000 ${showHUD ? 'opacity-40 blur-sm scale-105' : 'opacity-100 scale-100'}`}
                 />
-                {/* 增加科幻扫描线网格蒙版 */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none z-10"></div>
             </div>
 
-            {/* 2. 左上角返回控制 */}
             <button onClick={() => setStatus('lobby')} className="absolute top-8 left-8 z-40 px-4 py-2 bg-black/50 hover:bg-black/80 border border-white/20 text-white rounded-lg text-xs font-mono uppercase tracking-widest backdrop-blur transition flex items-center gap-2">
                 <ChevronLeft size={16}/> 终止任务
             </button>
 
-            {/* 3. 互动战术面板 (HUD) - 仅在视频播放结束时显现 */}
             <div className={`relative z-30 flex-1 flex flex-col justify-end pb-16 px-10 items-center pointer-events-none transition-opacity duration-700 ${showHUD ? 'opacity-100' : 'opacity-0'}`}>
                 
                 {hudAlert.show && (
@@ -763,15 +759,13 @@ function WritingView() {
 }
 
 // ==========================================
-// 9. 🚀 双语伴读舱 (去除双语切换按钮版)
+// 9. 双语伴读舱 (保持未动)
 // ==========================================
-function LanguageView({ tab }) {
-    // 根据传入的 tab 属性 ('en' 或 'cn')，直接渲染对应的纯净界面
+function LanguageView({ tab, navigate }) {
     return (
         <div className="flex-1 flex flex-col bg-slate-950 relative overflow-hidden animate-[fadeIn_0.5s_ease-out]">
             <header className="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50 shrink-0">
                 <h2 className="text-3xl font-black text-white">{tab === 'en' ? '🔤 AI英文伴读' : '📜 AI中文伴读'}</h2>
-                {/* 🚀 已移除：双语切换按钮组 */}
             </header>
 
             {tab === 'cn' && (
@@ -802,66 +796,407 @@ function LanguageView({ tab }) {
 }
 
 // ==========================================
-// 10. 家控中枢 (DashboardView - 保持未动)
+// 10. 家控中枢 (保持未动)
 // ==========================================
 const DashboardView = () => {
     const [activeTab, setActiveTab] = useState('builder');
+    const [viewMode, setViewMode] = useState('list'); 
+    
     const [galaxies, setGalaxies] = useState([]);
     const [activeGalId, setActiveGalId] = useState(null);
-    const [config, setConfig] = useState({ apiKey: localStorage.getItem('xp_nova_api_key') || '', apiProxy: localStorage.getItem('xp_api_proxy') || '', apiModel: localStorage.getItem('xp_api_model') || 'gemini-2.5-flash-preview-09-2025', isPro: localStorage.getItem('xp_is_pro') === 'true', parentPin: localStorage.getItem('xp_parent_pin') || '0000' });
+    
+    const [showPlanner, setShowPlanner] = useState(false);
+    const [planForm, setPlanForm] = useState({ curr: '义务教育新课标', grade: '三年级', term: '上学期', ragContext: '' });
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const [editGalaxy, setEditGalaxy] = useState(null);
+    const [editSubject, setEditSubject] = useState(null);
+    const [lessons, setLessons] = useState([]);
+    const [curLessonId, setCurLessonId] = useState(null);
+    const [isGenLessons, setIsGenLessons] = useState(false);
+    const [isGenContent, setIsGenContent] = useState(false);
+    
+    const quillRef = useRef(null);
+    const quillInstance = useRef(null);
+
+    const [config, setConfig] = useState({ 
+        apiKey: localStorage.getItem('xp_nova_api_key') || '', 
+        apiProxy: localStorage.getItem('xp_api_proxy') || '', 
+        apiModel: localStorage.getItem('xp_api_model') || 'gemini-2.5-flash-preview-09-2025', 
+        isPro: localStorage.getItem('xp_is_pro') === 'true', 
+        parentPin: localStorage.getItem('xp_parent_pin') || '0000' 
+    });
+
+    useEffect(() => {
+        if (!document.getElementById('quill-css')) {
+            const link = document.createElement('link'); link.id = 'quill-css'; link.rel = 'stylesheet'; link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css'; document.head.appendChild(link);
+        }
+        if (!document.getElementById('quill-js')) {
+            const script = document.createElement('script'); script.id = 'quill-js'; script.src = 'https://cdn.quilljs.com/1.3.6/quill.min.js'; document.head.appendChild(script);
+        }
+    }, []);
 
     useEffect(() => {
         const saved = localStorage.getItem('xp_galaxies');
-        if(saved) { const p = JSON.parse(saved); setGalaxies(p); if(p.length > 0) setActiveGalId(p[0].id); }
-        else { const d = [{ id:'g1', title:'认知觉醒星系', isDeployed:true, bgX:50, bgY:50, subjects:[{title:'语言逻辑', icon:'📝', angle:0, radius:130}] }]; setGalaxies(d); setActiveGalId('g1'); }
+        if(saved) { 
+            const p = JSON.parse(saved); setGalaxies(p); 
+            if(p.length > 0) setActiveGalId(p[0].id); 
+        } else { 
+            const d = [{ id:'g1', title:'认知觉醒星系', baseStandard: '义务教育新课标', isDeployed:true, bgX:50, bgY:50, subjects:[{id: 's1', title:'语言逻辑', icon:'📝', angle:0, radius:130, lessons: []}] }]; 
+            setGalaxies(d); setActiveGalId('g1'); 
+        }
     }, []);
 
     const updateGalaxies = (g) => { setGalaxies(g); localStorage.setItem('xp_galaxies', JSON.stringify(g)); };
     const saveConfig = (k, v) => { setConfig({...config, [k]: v}); localStorage.setItem(`xp_${k==='apiKey'?'nova_api_key':(k==='parentPin'?'parent_pin':(k==='isPro'?'is_pro':k))}`, v); };
+
+    const deleteGalaxy = (id) => {
+        SwalMock.fire({ title: '确认销毁该星系？', text: '该操作不可逆转！', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((res) => {
+            if (res.isConfirmed) { 
+                const newG = galaxies.filter(g => g.id !== id); 
+                updateGalaxies(newG); 
+                if (activeGalId === id) setActiveGalId(newG.length > 0 ? newG[0].id : null);
+            }
+        });
+    };
+
+    const toggleDeploy = (id) => {
+        const newG = galaxies.map(g => g.id === id ? { ...g, isDeployed: !g.isDeployed } : g);
+        updateGalaxies(newG);
+        const g = newG.find(x => x.id === id);
+        SwalMock.fire({toast:true, position:'top-end', icon:'success', title: g.isDeployed ? '已上线同步至前台宇宙' : '已撤回草稿箱', showConfirmButton:false, timer:1500});
+    };
+
+    const openPlanner = () => {
+        if (config.isPro || galaxies.length < 2) {
+            setShowPlanner(true);
+        } else {
+            SwalMock.fire({ title: '算力空间已满', text: '基础版最多只能同时部署 1 个专属星系。请升级 PRO 解锁无限星系！', icon: 'info' });
+        }
+    };
+
+    const generateGalaxy = () => {
+        setIsGenerating(true);
+        setTimeout(() => {
+            const ng = { 
+                id: 'gal_' + Date.now(), 
+                title: `${planForm.grade}${planForm.term}专属星系`, 
+                baseStandard: planForm.curr, 
+                bgX: Math.random() * 60 + 20, bgY: Math.random() * 60 + 20, 
+                isDeployed: false, 
+                ragContext: planForm.ragContext,
+                subjects: [ 
+                    { id: 'sub_' + Date.now() + '1', title: '核心物理探索', icon: '🌍', radius: 240, angle: 0, lessons: [] }, 
+                    { id: 'sub_' + Date.now() + '2', title: '星际数学逻辑', icon: '📐', radius: 360, angle: 2.1, lessons: [] }, 
+                    { id: 'sub_' + Date.now() + '3', title: 'English Comm', icon: '💬', radius: 480, angle: 4.2, lessons: [] } 
+                ] 
+            };
+            const newG = [ng, ...galaxies];
+            updateGalaxies(newG);
+            setActiveGalId(ng.id);
+            setShowPlanner(false); setIsGenerating(false);
+            SwalMock.fire({toast:true, position:'top-end', icon:'success', title:'星系锻造成功', showConfirmButton:false, timer:1500});
+        }, 1500);
+    };
+
+    const openEditor = (gId) => {
+        const g = galaxies.find(x => x.id === gId);
+        if(!g || !g.subjects || g.subjects.length === 0) return;
+        setEditGalaxy(g); 
+        setEditSubject(g.subjects[0]); 
+        setLessons(g.subjects[0].lessons || []); 
+        setCurLessonId(null);
+        setViewMode('editor');
+    };
+
+    const selectEditorSubject = (sid, isFree) => {
+        if (!isFree) { SwalMock.fire({ title: '体验版限制', text: '跨学科统筹整个知识宇宙需要 PRO 算力！', icon: 'info' }); return; }
+        if(curLessonId && quillInstance.current) {
+            const currentHtml = quillInstance.current.root.innerHTML;
+            setLessons(prev => prev.map(l => l.id === curLessonId ? { ...l, content: currentHtml } : l));
+        }
+        const s = editGalaxy.subjects.find(x => x.id === sid);
+        setEditSubject(s); setLessons(s.lessons || []); setCurLessonId(null);
+    };
+
+    const selectLesson = (id) => {
+        if(curLessonId && quillInstance.current) {
+            const currentHtml = quillInstance.current.root.innerHTML;
+            setLessons(prev => prev.map(l => l.id === curLessonId ? { ...l, content: currentHtml } : l));
+        }
+        setCurLessonId(id);
+    };
+
+    const generateLessons = () => {
+        setIsGenLessons(true);
+        setTimeout(() => {
+            const isEnglish = /英语|English/i.test(editSubject.title);
+            const newLessons = [ {id: 'l_'+Date.now()+'1', title: isEnglish ? 'Mission 1' : '概念引入', content: ''}, {id: 'l_'+Date.now()+'2', title: isEnglish ? 'Mission 2' : '逻辑提问', content: ''} ];
+            setLessons(newLessons);
+            setIsGenLessons(false);
+        }, 1000);
+    };
+
+    const generateLessonContent = () => {
+        setIsGenContent(true);
+        setTimeout(() => {
+            const isEnglish = /英语|English/i.test(editSubject.title);
+            const clean = `<h3>1. ${isEnglish ? 'Socratic Inquiry' : '探索提问'}</h3><p>${isEnglish ? 'Socrates once said...' : '苏格拉底曾说：未经审视的知识不值得学习。请思考，这段逻辑的核心矛盾是什么？'}</p>`;
+            if (quillInstance.current) { quillInstance.current.root.innerHTML = clean; }
+            setLessons(prev => prev.map(l => l.id === curLessonId ? { ...l, content: clean } : l));
+            setIsGenContent(false);
+        }, 1200);
+    };
+
+    const saveCurriculum = () => {
+        let finalLessons = [...lessons];
+        if (curLessonId && quillInstance.current) {
+            finalLessons = finalLessons.map(l => l.id === curLessonId ? { ...l, content: quillInstance.current.root.innerHTML } : l);
+            setLessons(finalLessons);
+        }
+        
+        if (editGalaxy && editSubject) {
+            const updatedGalaxies = galaxies.map(g => {
+                if (g.id === editGalaxy.id) {
+                    return { ...g, subjects: g.subjects.map(s => s.id === editSubject.id ? { ...s, lessons: finalLessons } : s) };
+                }
+                return g;
+            });
+            updateGalaxies(updatedGalaxies);
+        }
+        setViewMode('list'); setCurLessonId(null);
+        SwalMock.fire({toast:true, position:'top-end', icon:'success', title:'教案已保存', showConfirmButton:false, timer:1500});
+    };
+
+    const performSaveConfig = () => {
+        localStorage.setItem('xp_nova_api_key', config.apiKey);
+        localStorage.setItem('xp_api_proxy', config.apiProxy);
+        localStorage.setItem('xp_api_model', config.apiModel);
+        SwalMock.fire({toast:true, position:'top-end', icon:'success', title:'全局引擎配置已保存', showConfirmButton:false, timer:2000});
+    };
+
+    const performSavePinConfig = () => {
+        if (config.parentPin && config.parentPin.length === 4 && /^\d{4}$/.test(config.parentPin)) {
+            localStorage.setItem('xp_parent_pin', config.parentPin);
+            SwalMock.fire({toast:true, position:'top-end', icon:'success', title:'隔离密钥已更新', showConfirmButton:false, timer:1500});
+        } else {
+            SwalMock.fire({title: '格式错误', text: '安全密钥必须是 4 位纯数字。', icon: 'error'});
+        }
+    };
+
+    useEffect(() => {
+        if (viewMode === 'editor' && curLessonId && window.Quill && quillRef.current) {
+            if (!quillInstance.current) {
+                quillInstance.current = new window.Quill(quillRef.current, {
+                    theme: 'snow',
+                    placeholder: '在此手动录入带有图片和视频的教案，或点击上方魔法按钮让 AI 生成...',
+                    modules: { toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike', 'blockquote'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image'], ['clean'] ] }
+                });
+                quillInstance.current.on('text-change', () => {
+                    if (quillInstance.current.lessonId) {
+                        setLessons(prev => prev.map(l => l.id === quillInstance.current.lessonId ? { ...l, content: quillInstance.current.root.innerHTML } : l));
+                    }
+                });
+            }
+            if (quillInstance.current.lessonId !== curLessonId) {
+                const lesson = lessons.find(l => l.id === curLessonId);
+                quillInstance.current.root.innerHTML = lesson?.content || '';
+                quillInstance.current.lessonId = curLessonId;
+            }
+        }
+    }, [viewMode, curLessonId, lessons]);
+
     const curGal = galaxies.find(x => x.id === activeGalId);
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#02040a] overflow-hidden">
-            <header className="h-16 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-900/40 backdrop-blur-md">
+            <header className="h-16 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-900/40 backdrop-blur-md shrink-0">
                 <h2 className="text-xl font-black text-white uppercase tracking-widest"><ShieldAlert className="text-amber-500" size={20} /> Command_Deck</h2>
-                <div className="flex bg-slate-950 border border-slate-800 rounded-2xl p-1">{['builder', 'api', 'security'].map(t => (<button key={t} onClick={()=>setActiveTab(t)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab===t?'bg-blue-600 text-white shadow-lg':'text-slate-500 hover:text-slate-200'}`}>{t}</button>))}</div>
+                <div className="flex bg-slate-950 border border-slate-800 rounded-2xl p-1">
+                    <button onClick={()=>setActiveTab('builder')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab==='builder'?'bg-blue-600 text-white shadow-lg':'text-slate-500 hover:text-slate-200'}`}>星系锻造与部署中枢</button>
+                    <button onClick={()=>setActiveTab('api')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab==='api'?'bg-blue-600 text-white shadow-lg':'text-slate-500 hover:text-slate-200'}`}>算力与系统配置</button>
+                </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-10 custom-scroll animate-[fadeIn_0.5s]">
-                {activeTab === 'builder' && (
-                    <div className="flex gap-8 h-full min-h-[500px]">
-                        <div className="w-1/3 glass-panel border-slate-800 rounded-[2rem] p-6 flex flex-col">
-                            <div className="flex justify-between mb-6 text-slate-500 text-[10px] font-black uppercase tracking-widest"><span>Deploy_List</span><button onClick={()=>updateGalaxies([...galaxies,{id:Date.now(), title:'新星系', isDeployed:false, bgX:50, bgY:50, subjects:[] }])} className="text-blue-400 hover:text-blue-300 transition-colors"><Plus size={18}/></button></div>
-                            <div className="space-y-3 flex-1 overflow-y-auto custom-scroll">{galaxies.map(g => (
-                                <div key={g.id} onClick={()=>setActiveGalId(g.id)} className={`p-4 rounded-2xl cursor-pointer border transition-all ${activeGalId===g.id?'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-xl':'bg-slate-800/50 border-transparent text-slate-500'}`}>{g.title} {g.isDeployed && <Check size={14} className="text-emerald-500 ml-auto" />}</div>
-                            ))}</div>
-                        </div>
-                        <div className="flex-1 glass-panel border-slate-800 rounded-[2rem] p-10">
-                            {curGal ? (
-                                <div className="space-y-10">
-                                    <div className="flex justify-between items-center border-b border-slate-800 pb-8"><input type="text" value={curGal.title} onChange={e=>updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,title:e.target.value}:x))} className="bg-transparent text-2xl font-black text-amber-200 focus:outline-none" /><label className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest"><input type="checkbox" checked={curGal.isDeployed} onChange={e=>updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,isDeployed:e.target.checked}:x))} className="w-4 h-4 rounded bg-slate-800" /> DEPLOY</label></div>
-                                    <div className="space-y-4">{curGal.subjects.map((sub, i)=>(
-                                        <div key={i} className="flex gap-4 items-center bg-slate-950/50 p-4 rounded-2xl border border-slate-800 relative group">
-                                            <input type="text" value={sub.icon} onChange={e=>{const n=[...curGal.subjects];n[i].icon=e.target.value;updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,subjects:n}:x))}} className="w-10 bg-slate-900 border-none rounded-xl text-center text-xl h-10"/>
-                                            <input type="text" value={sub.title} onChange={e=>{const n=[...curGal.subjects];n[i].title=e.target.value;updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,subjects:n}:x))}} className="flex-1 bg-slate-900 border-none rounded-xl p-2.5 text-sm text-white font-bold"/>
-                                            <div className="flex gap-2"><div className="flex flex-col"><label className="text-[8px] text-slate-500 mb-1 uppercase tracking-tighter">Angle</label><input type="number" step="0.1" value={sub.angle} onChange={e=>{const n=[...curGal.subjects];n[i].angle=parseFloat(e.target.value);updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,subjects:n}:x))}} className="w-16 bg-slate-900 rounded-lg p-1.5 text-[10px] font-mono"/></div><div className="flex flex-col"><label className="text-[8px] text-slate-500 mb-1 uppercase tracking-tighter">Radius</label><input type="number" value={sub.radius} onChange={e=>{const n=[...curGal.subjects];n[i].radius=parseInt(e.target.value);updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,subjects:n}:x))}} className="w-16 bg-slate-900 rounded-lg p-1.5 text-[10px] font-mono"/></div></div>
-                                        </div>
-                                    ))}</div>
-                                    <button onClick={()=>updateGalaxies(galaxies.map(x=>x.id===curGal.id?{...x,subjects:[...x.subjects,{title:'新星球',icon:'🪐',angle:0,radius:120}]}:x))} className="w-full py-4 border-2 border-dashed border-slate-700 rounded-2xl text-slate-500 font-black uppercase text-xs hover:border-blue-500 hover:text-blue-400 transition-all">+ Add_New_Planet</button>
+            
+            <div className="flex-1 overflow-hidden relative">
+                {activeTab === 'builder' && viewMode === 'list' && (
+                    <div className="h-full p-10 overflow-y-auto custom-scroll animate-[fadeIn_0.5s]">
+                        <div className="max-w-6xl mx-auto pb-20">
+                            <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                                <h3 className="text-2xl font-black text-white tracking-widest uppercase">🌌 星系锻造与部署中枢</h3>
+                                <button onClick={openPlanner} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 transition">
+                                    <Sparkles size={16}/> 智能排课
+                                </button>
+                            </div>
+                            <div className="flex gap-8 min-h-[500px]">
+                                <div className="w-1/3 flex flex-col bg-transparent">
+                                    <div className="space-y-4" id="forge-list">
+                                        {galaxies.map(g => (
+                                            <div key={g.id} onClick={()=>setActiveGalId(g.id)} className={`glass-panel p-6 rounded-3xl border ${g.isDeployed?'border-emerald-500/30':'border-slate-700'} hover:border-blue-500/50 transition flex flex-col relative group cursor-pointer ${activeGalId===g.id?'ring-2 ring-blue-500 shadow-xl':''}`}>
+                                                <button onClick={(e) => { e.stopPropagation(); deleteGalaxy(g.id); }} className="absolute top-4 right-4 text-slate-500 hover:text-rose-500 transition text-lg">✖</button>
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className={`w-14 h-14 rounded-full ${g.isDeployed?'bg-emerald-900/50 border border-emerald-500':'bg-slate-800 border border-slate-600'} flex items-center justify-center text-3xl shadow-inner`}>🔮</div>
+                                                    <div className="pr-6">
+                                                        <h3 className="font-bold text-lg text-white">{g.title}</h3>
+                                                        <span className="text-[10px] font-mono text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">{g.baseStandard || 'Custom'}</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-slate-400 mb-6 flex-1 line-clamp-3">包含 {g.subjects?.length||0} 个核心学科行星。您可以在此修改底层教案，并决定何时发布给学生。</p>
+                                                <div className="flex gap-2 mt-auto">
+                                                    <button onClick={(e) => { e.stopPropagation(); openEditor(g.id); }} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-600 transition">⚙️ 排课编辑器</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); toggleDeploy(g.id); }} className={`flex-1 py-2 rounded-xl text-xs font-bold transition shadow-md ${g.isDeployed ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-900/50 shadow-inner' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500'}`}>
+                                                        {g.isDeployed ? '✅ 已部署前台 (点击撤回)' : '🚀 部署至探索舱'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            ) : <div className="h-full flex items-center justify-center text-slate-600 font-mono tracking-widest uppercase">Select_Galaxy_Matrix</div>}
+                                <div className="flex-1 glass-panel border-slate-800 rounded-[2rem] p-10 flex flex-col items-center justify-center text-slate-500">
+                                    <Globe size={64} className="mb-4 opacity-20" />
+                                    <p className="font-mono text-sm uppercase tracking-widest">Select a Galaxy from the Forge List</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
-                {activeTab === 'api' && (
-                    <div className="max-w-xl mx-auto glass-panel p-10 rounded-[3rem] border-slate-800 animate-[fadeIn_0.3s]">
-                        <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase font-mono tracking-widest"><Cpu size={24}/> Unified_API_Gateway</h3>
-                        <div className="space-y-8">
-                            <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Master Key</label><input type="password" value={config.apiKey} onChange={e=>saveConfig('apiKey', e.target.value)} className="w-full glass-input rounded-2xl p-4 font-mono text-sm tracking-widest" placeholder="sk-..." /></div>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Proxy URL</label><input type="text" value={config.apiProxy} onChange={e=>saveConfig('apiProxy', e.target.value)} className="w-full glass-input rounded-2xl p-4 text-xs font-mono" placeholder="https://..." /></div>
-                                <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Model Name</label><input type="text" value={config.apiModel} onChange={e=>saveConfig('apiModel', e.target.value)} className="w-full glass-input rounded-2xl p-4 text-xs font-mono text-amber-200" /></div>
+
+                {activeTab === 'builder' && viewMode === 'editor' && editGalaxy && (
+                    <div className="absolute inset-0 z-[100] bg-[#02040a] flex flex-col animate-[fadeIn_0.3s]">
+                        <div className="h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-800 shrink-0">
+                            <div className="flex items-center gap-4">
+                                <button onClick={saveCurriculum} className="text-slate-400 hover:text-white flex items-center gap-2 transition"><ChevronLeft size={18}/> 返回星系列表</button>
+                                <h3 className="font-bold text-white text-lg tracking-widest">{editGalaxy.title}</h3>
                             </div>
-                            <button onClick={()=>SwalMock.fire({title:'探测脉冲', text:'链路状态: READY', icon:'success'})} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition active:scale-95">Pulse_Check ↵</button>
+                            <button onClick={saveCurriculum} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 transition">
+                                <Save size={16}/> 保存教案并返回
+                            </button>
+                        </div>
+                        <div className="flex-1 flex overflow-hidden">
+                            <div className="w-64 border-r border-slate-800 bg-slate-900/30 p-4 overflow-y-auto custom-scroll shrink-0">
+                                <h4 className="text-[10px] font-black text-slate-500 tracking-widest uppercase mb-4">学科行星 (Subjects)</h4>
+                                <div id="editor-subject-list">
+                                    {editGalaxy.subjects.map((s, i) => {
+                                        const isFree = config.isPro || i === 0;
+                                        return (
+                                            <button key={s.id} onClick={() => selectEditorSubject(s.id, isFree)} className={`w-full px-4 py-3 rounded-xl border text-sm font-bold text-left transition flex items-center shrink-0 mb-2 ${editSubject?.id === s.id ? 'border-blue-500 bg-blue-900/50 text-white' : 'border-slate-700 bg-slate-800/50 text-slate-400'}`}>
+                                                <span className="mr-3 text-2xl">{s.icon}</span> 
+                                                <span className="truncate">{s.title}</span> 
+                                                {!isFree && <span className="text-[10px] ml-auto opacity-50">🔒</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className="w-72 border-r border-slate-800 bg-slate-900/10 p-4 flex flex-col shrink-0">
+                                <h4 className="text-[10px] font-black text-slate-500 tracking-widest uppercase mb-4">排课节点 (Lessons)</h4>
+                                <button id="btn-gen-lessons" onClick={generateLessons} disabled={isGenLessons} className="w-full py-3 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/30 rounded-xl mb-4 font-bold text-sm transition flex items-center justify-center gap-2">
+                                    {isGenLessons ? <span className="animate-spin inline-block">↻</span> : <Sparkles size={16}/>}
+                                    {isGenLessons ? '挖掘中...' : '✨ AI 获取全量排课节点'}
+                                </button>
+                                <div className="flex-1 overflow-y-auto custom-scroll space-y-2" id="lesson-list">
+                                    {lessons.map(l => (
+                                        <div key={l.id} onClick={() => selectLesson(l.id)} className={`p-4 rounded-2xl border transition cursor-pointer flex justify-between items-center ${curLessonId === l.id ? 'border-blue-500 bg-blue-900/30 text-white' : 'border-slate-700 bg-slate-800/40 hover:border-blue-500 text-slate-300'}`}>
+                                            <span className="font-bold text-sm truncate pr-2">{l.title}</span>
+                                            <span className={`text-lg ${l.content ? 'text-emerald-400' : 'opacity-10'}`}>✓</span>
+                                        </div>
+                                    ))}
+                                    {lessons.length === 0 && <div className="text-center text-xs text-slate-500 mt-10">暂无节点数据。</div>}
+                                </div>
+                            </div>
+                            <div className="flex-1 flex flex-col bg-white relative">
+                                {!curLessonId ? (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-950 z-10" id="editor-empty">
+                                        <PenTool size={48} className="mb-4 opacity-20" />
+                                        <p>请在左侧选择具体的排课节点进行编辑</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col h-full z-0">
+                                        <div className="h-14 bg-slate-100 border-b border-slate-300 flex items-center justify-between px-6 shrink-0" id="editor-toolbar-container">
+                                            <span className="font-bold text-slate-800 flex items-center gap-2">
+                                                <span className="text-blue-500">📝</span> {lessons.find(l=>l.id===curLessonId)?.title}
+                                            </span>
+                                            <button id="btn-gen-content" onClick={generateLessonContent} disabled={isGenContent} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                                                {isGenContent ? <span className="animate-spin inline-block">↻</span> : <Wand2 size={14}/>}
+                                                {isGenContent ? '生成中...' : '✨ 智能生成苏格拉底教案'}
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 relative bg-white">
+                                            <div ref={quillRef} id="quill-container" className="absolute inset-0 custom-scroll pb-12 text-slate-800 border-none"></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'api' && (
+                    <div className="p-10 overflow-y-auto h-full custom-scroll animate-[fadeIn_0.3s]">
+                        <div className="max-w-xl mx-auto space-y-8">
+                            <div className="glass-panel p-10 rounded-[3rem] border-slate-800">
+                                <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase font-mono tracking-widest"><Cpu size={24}/> Unified_API_Gateway</h3>
+                                <div className="space-y-8">
+                                    <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Master Key</label><input type="password" id="sys-key" value={config.apiKey} onChange={e=>setConfig({...config, apiKey: e.target.value})} className="w-full glass-input rounded-2xl p-4 font-mono text-sm tracking-widest" placeholder="sk-..." /></div>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Proxy URL</label><input type="text" id="sys-url" value={config.apiProxy} onChange={e=>setConfig({...config, apiProxy: e.target.value})} className="w-full glass-input rounded-2xl p-4 text-xs font-mono" placeholder="https://..." /></div>
+                                        <div><label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">Model Name</label><input type="text" id="sys-model" value={config.apiModel} onChange={e=>setConfig({...config, apiModel: e.target.value})} className="w-full glass-input rounded-2xl p-4 text-xs font-mono text-amber-200" /></div>
+                                    </div>
+                                    <button onClick={performSaveConfig} className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl transition active:scale-95">保存全局引擎配置 ↵</button>
+                                </div>
+                            </div>
+
+                            <div className="glass-panel p-10 rounded-[3rem] border-rose-500/20">
+                                <h3 className="text-2xl font-black text-rose-400 mb-6 flex items-center gap-3 uppercase font-mono tracking-widest"><Lock size={24}/> System_Security</h3>
+                                <div className="space-y-8">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">高阶管理密钥 (4位数字)</label>
+                                        <input type="text" id="new-pin" maxLength="4" value={config.parentPin} onChange={e=>setConfig({...config, parentPin: e.target.value})} className="w-full glass-input rounded-2xl p-6 text-center text-4xl font-mono tracking-[1em] text-rose-300 border-rose-500/30" placeholder="0000" />
+                                    </div>
+                                    <button onClick={performSavePinConfig} className="w-full py-5 bg-rose-900/40 hover:bg-rose-800 border border-rose-500/50 text-rose-400 hover:text-white rounded-2xl font-black uppercase tracking-widest transition">更新隔离密钥</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showPlanner && (
+                    <div className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-[fadeIn_0.3s]" id="planner-modal">
+                        <div className="bg-slate-900 border border-slate-700 p-10 rounded-[2.5rem] shadow-2xl max-w-lg w-full relative">
+                            <button onClick={()=>setShowPlanner(false)} className="absolute top-8 right-8 text-slate-500 hover:text-white"><X size={24}/></button>
+                            <h3 className="text-2xl font-black text-white mb-2 flex items-center gap-3"><Sparkles className="text-blue-500"/> 星系锻造中枢</h3>
+                            <p className="text-xs text-blue-400 mb-8 font-mono" id="planner-hint">{config.isPro ? '【PRO权限】：支持多语言输出与真实进度投喂。' : '【基础版权限】：您可以免费体验星系的智能铸造。'}</p>
+                            
+                            <div className="space-y-6 mb-10">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">对齐课标</label>
+                                    <select id="plan-curriculum" value={planForm.curr} onChange={e=>setPlanForm({...planForm, curr: e.target.value})} className="w-full glass-input rounded-xl p-4 text-sm font-bold text-white cursor-pointer">
+                                        <option value="义务教育新课标">中国义务教育新课标</option>
+                                        <option value="NGSS标准">NGSS 美国科学标准</option>
+                                        <option value="CCSS标准">CCSS 美国核心州立标准</option>
+                                        <option value="IB国际文凭">IB 国际文凭体系</option>
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">年级</label>
+                                        <input type="text" id="plan-grade" value={planForm.grade} onChange={e=>setPlanForm({...planForm, grade: e.target.value})} className="w-full glass-input rounded-xl p-4 text-sm font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">学期</label>
+                                        <input type="text" id="plan-term" value={planForm.term} onChange={e=>setPlanForm({...planForm, term: e.target.value})} className="w-full glass-input rounded-xl p-4 text-sm font-bold" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">痛点投喂 (RAG Context)</label>
+                                    <textarea id="plan-rag-context" value={planForm.ragContext} onChange={e=>setPlanForm({...planForm, ragContext: e.target.value})} rows="3" placeholder="例如：孩子最近对基础物理概念难以理解..." className="w-full glass-input rounded-xl p-4 text-sm custom-scroll leading-relaxed"></textarea>
+                                </div>
+                            </div>
+                            
+                            <button id="plan-btn" onClick={generateGalaxy} disabled={isGenerating} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.4)] disabled:opacity-50">
+                                {isGenerating ? <span className="animate-spin inline-block">↻</span> : <Rocket size={18}/>}
+                                {isGenerating ? '正在融合重构大纲...' : '🚀 [RAG 协议] 对齐课标并铸造全景星系'}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -871,7 +1206,7 @@ const DashboardView = () => {
 };
 
 // ==========================================
-// 11. 星舰操作手册 (ManualView - 保持未动)
+// 11. 星舰操作手册 (保持未动)
 // ==========================================
 function ManualView() {
     const [activeTab, setActiveTab] = useState('intro');
@@ -988,7 +1323,7 @@ function ManualView() {
 }
 
 // ==========================================
-// 12. 侧边栏与主入口
+// 12. 侧边栏与主入口 (精确执行重命名指令)
 // ==========================================
 function Sidebar({ currentRoute, navigate, auth }) {
     const handleNav = (r, isP) => { if (isP) auth.verify(() => navigate(r)); else navigate(r); };
@@ -1014,7 +1349,6 @@ function Sidebar({ currentRoute, navigate, auth }) {
                 <div className="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">专项集训营</div>
                 <NavItem id="simulator" icon={Gamepad2} label="危机救援演习" activeClass="text-rose-400 bg-rose-900/10" />
                 <NavItem id="writing" icon={PenTool} label="启发写作舱" activeClass="text-indigo-400 bg-indigo-900/10" />
-                
                 <NavItem id="language-en" icon={Languages} label="AI英文伴读" activeClass="text-emerald-400 bg-emerald-900/10" />
                 <NavItem id="language-cn" icon={ScrollText} label="AI中文伴读" activeClass="text-amber-400 bg-amber-900/10" />
 

@@ -22,8 +22,6 @@
         /* ========================================== */
         /* 2. 视觉主题引擎与高对比度绝对统一          */
         /* ========================================== */
-        /* 🚀 架构师补丁：使用 inherit !important 强制击穿所有外来脏代码，保证全文与标题色系绝对一致 */
-        
         .theme-dark { background-color: #020617; color: #f8fafc; } 
         .theme-dark .reader-bg { background-color: #020617; }
         .theme-dark .content-engine, .theme-dark .content-engine * { color: #f8fafc !important; } 
@@ -86,7 +84,6 @@
             </div>
             
             <div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
-                <!-- 🚀 修复1：使用 flex-wrap 让超出屏幕的标签自动换行，不再隐藏 -->
                 <div class="flex flex-wrap gap-2 w-full pb-2">
                     <template x-for="cat in categories" :key="cat">
                         <button @click="selectedCategory = cat"
@@ -116,9 +113,9 @@
                         <h3 class="text-lg font-black text-slate-200 mb-2 leading-snug" x-text="book.title"></h3>
                         <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed flex-1" x-text="book.description || book.desc || '暂无内容摘要'"></p>
                         
-                        <div class="mt-6 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1"
-                             :class="(book.source_url || book.url) ? 'text-emerald-500/70 group-hover:text-emerald-400' : 'text-cyan-500/70 group-hover:text-cyan-400'">
-                            <span x-text="(book.source_url || book.url) ? '🔗 外部授权跃迁 ↗' : '📄 抽取图文流 ➔'"></span>
+                        <!-- 🚀 架构师修复：消除 UI 误导，统一显示底层连接提示 -->
+                        <div class="mt-6 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1 text-cyan-500/70 group-hover:text-cyan-400">
+                            <span>⚡ 载入神经图文流 ➔</span>
                         </div>
                     </div>
                 </template>
@@ -138,7 +135,6 @@
                 ]">
             
             <div class="flex items-center gap-2 md:gap-4">
-                <!-- 🚀 返回大厅逻辑已确认绑定 -->
                 <button @click="exitReaderToLibrary()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-xl" title="返回伴读舱大厅">⬅</button>
                 <button @click="showToc = true" class="px-3 md:px-4 py-2 rounded-xl font-bold text-sm hover:bg-black/10 transition flex items-center gap-2">
                     📑 <span class="hidden md:inline">目录</span>
@@ -200,15 +196,10 @@
             </div>
         </div>
 
-        <!-- --------------------------------------- -->
-        <!-- 🚀 需求补丁：贴边悬浮翻页键 (动态计算间距)  -->
-        <!-- --------------------------------------- -->
-        <!-- 左侧：计算屏幕宽度的50%减去文章容器宽度的一半(约384px)，再减去按键自身宽度即可紧贴文章 -->
         <button @click="loadChapter(currentChapterIdx - 1)" x-show="currentChapterIdx > 0" 
                 class="fixed left-2 md:left-[calc(50%-440px)] top-1/2 -translate-y-1/2 z-30 w-10 h-24 md:w-12 md:h-32 rounded-2xl glass-panel flex items-center justify-center opacity-40 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-xl" title="上一章">
             〈
         </button>
-        <!-- 右侧：同理紧贴右侧 -->
         <button @click="loadChapter(currentChapterIdx + 1)" x-show="currentChapterIdx < chapters.length - 1" 
                 class="fixed right-2 md:right-[calc(50%-440px)] top-1/2 -translate-y-1/2 z-30 w-10 h-24 md:w-12 md:h-32 rounded-2xl glass-panel flex items-center justify-center opacity-40 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-xl" title="下一章">
             〉
@@ -317,11 +308,9 @@
                 selectionText: '', showTooltip: false, tooltipX: 0, tooltipY: 0,
                 novaChat: [], chatInput: '', isNovaThinking: false,
 
-                // 🚀 修复2：前端动态清洗脏标签，合并中英文重复项
                 get categories() {
                     const cats = new Set(this.libraryBooks.map(b => {
                         let t = b.type || b.provider_type || '其他编目';
-                        // 抹除英文括号及其内容，以及末尾的纯英文字符（例如合并 "开源体系" 与 "开源体系 Open Source"）
                         t = t.replace(/[\(（].*?[\)）]/g, '').replace(/\s+[a-zA-Z\s]+$/, '').trim();
                         return t;
                     }));
@@ -331,7 +320,6 @@
                 get filteredBooks() {
                     return this.libraryBooks.filter(b => {
                         let bType = b.type || b.provider_type || '其他编目';
-                        // 同步清洗逻辑，确保过滤准确
                         bType = bType.replace(/[\(（].*?[\)）]/g, '').replace(/\s+[a-zA-Z\s]+$/, '').trim();
                         const matchCat = this.selectedCategory === '全部' || bType === this.selectedCategory;
                         const searchStr = (this.searchQuery || '').toLowerCase();
@@ -428,9 +416,11 @@
                         
                         if (res.ok) {
                             const data = await res.json();
+                            // 🚀 核心判定：如果包含正文，必定进入本地阅读器
                             if (data && data.length > 0 && data[0].chapters_json && data[0].chapters_json.length > 0) {
                                 this.book = bookObj; this.chapters = data[0].chapters_json; this.finalizeOpenBook(bookObj);
                             } else {
+                                // 只有在绝对空壳的情况下，才会跳转外链
                                 const targetUrl = bookObj.source_url || bookObj.url || (data[0] && (data[0].source_url || data[0].url));
                                 if (targetUrl) {
                                     Swal.fire({ title: '空间跃迁', text: `准备驶离伴读舱，接入远端官方源...`, icon: 'info', background: '#0f172a', color: '#fff', showConfirmButton: false, timer: 1500 }).then(() => {
@@ -460,7 +450,6 @@
                     setTimeout(() => { if(this.$refs.readerScroll) this.$refs.readerScroll.scrollTop = 0; }, 100);
                 },
 
-                // 🚀 返回阅读舱大厅
                 exitReaderToLibrary() {
                     this.viewMode = 'library';
                     try { const newUrl = new URL(window.location); newUrl.searchParams.delete('bookId'); window.history.pushState({}, '', newUrl); } catch(e) {}

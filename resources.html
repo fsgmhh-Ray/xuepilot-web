@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XuePilot - Global Edu-Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #02040a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; margin: 0; }
+        .glass-panel { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .btn-nav { display: flex; width: 100%; align-items: center; padding: 0.8rem 1rem; margin-bottom: 0.4rem; border-radius: 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .btn-nav:hover, .btn-nav.active { background-color: rgba(30, 41, 59, 0.8); border-color: rgba(59, 130, 246, 0.4); }
+        .btn-nav.active { box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.8); }
+
+        .flip-card { background-color: transparent; perspective: 1200px; height: 200px; width: 100%; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 1.25rem; overflow: hidden; }
+        .flip-card-front { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(59, 130, 246, 0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .flip-card-back { background: linear-gradient(135deg, rgba(37,99,235,0.95), rgba(79,70,229,0.95)); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 15px 40px rgba(37,99,235,0.6); }
+
+        .shimmer { background: linear-gradient(90deg, rgba(30,41,59,0.5) 25%, rgba(51,65,85,0.5) 50%, rgba(30,41,59,0.5) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+    <script>
+        window.safeStorage = {
+            memory: {},
+            get(key) { try { return window.localStorage.getItem(key) || this.memory[key] || null; } catch(e) { return this.memory[key] || null; } },
+            set(key, value) { this.memory[key] = value; try { window.localStorage.setItem(key, value); } catch(e) {} }
+        };
+        const $ = id => document.getElementById(id);
+    </script>
+</head>
+<body class="flex h-screen w-screen relative overflow-hidden text-slate-200 bg-[#02040a]">
+
+    <!-- 背景网格保持一致 -->
+    <div class="absolute inset-0 z-0 opacity-30 pointer-events-none" style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
+
+    <!-- 统一左侧边栏 (激活项变更) -->
+    <aside class="w-[20rem] border-r border-slate-800 flex flex-col glass-panel z-30 shrink-0 shadow-2xl relative bg-slate-900/30">
+        <div class="h-20 flex items-center px-6 border-b border-slate-800/50 justify-between">
+            <div class="flex items-center gap-3 group">
+                <span class="text-2xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">🚀</span>
+                <div>
+                    <h1 class="text-lg font-black text-white tracking-widest flex items-baseline gap-2">XUEPILOT <span class="text-xs font-bold text-slate-400 tracking-normal">| 探索舱</span></h1>
+                    <div class="text-[9px] text-blue-500 font-mono mt-0.5 tracking-widest uppercase">Student Explorer Deck</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col custom-scroll">
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心宇宙探索</div>
+            <button onclick="window.location.href='classroom.html'" class="btn-nav py-3 mb-2 text-slate-300 hover:text-emerald-300 transition">
+                <span class="mr-3 text-2xl">🌌</span> 
+                <div class="flex flex-col"><span class="text-sm font-black text-white">3D 知识星球</span><span class="text-[10px] text-emerald-600 font-normal mt-0.5 leading-snug">游览最高指挥官为您部署的星系</span></div>
+            </button>
+            
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">全球教育网关</div>
+            <button onclick="window.location.href='resources.html'" class="btn-nav active py-3 mb-2 text-cyan-400 border-cyan-500/30">
+                <span class="mr-3 text-2xl">🌐</span> 
+                <div class="flex flex-col"><span class="text-sm font-black text-white">全球教育智库</span><span class="text-[10px] text-cyan-500 font-normal mt-0.5 leading-snug">真实大纲与权威探索站点库</span></div>
+            </button>
+            
+            <button onclick="window.location.href='reader.html'" class="btn-nav py-3 mb-4 text-slate-300 hover:text-blue-400 transition">
+                <span class="mr-3 text-2xl">📖</span> 
+                <div class="flex flex-col"><span class="text-sm font-black text-white">全息伴读阅读器</span><span class="text-[10px] text-blue-600 font-normal mt-0.5 leading-snug">独立阅读舱与沉浸式图文流</span></div>
+            </button>
+
+            <div class="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">专项集训营</div>
+            
+            <!-- 🚀 路由已更新：全面物理隔离到独立的文件 -->
+            <a href="simulator.html" class="btn-nav text-slate-300 py-3 hover:text-white transition">
+                <span class="mr-3 text-xl">🎮</span><div class="flex flex-col"><span class="text-sm">危机救援演习</span><span class="text-[10px] text-slate-500 font-normal mt-0.5 leading-snug">在科幻实战中练就大局观</span></div>
+            </a>
+            <button onclick="window.location.href='writing.html'" class="btn-nav py-3 text-slate-300 hover:text-white transition">
+                <span class="mr-3 text-xl">✍️</span><div class="flex flex-col"><span class="text-sm">启发写作舱</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">苏格拉底提问重塑逻辑链</span></div>
+            </button>
+            <button onclick="window.location.href='language.html?tab=english'" class="btn-nav py-3 text-slate-300 hover:text-white transition">
+                <span class="mr-3 text-xl">🔤</span><div class="flex flex-col"><span class="text-sm">英文魔法书</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">构建母语级思维脉络</span></div>
+            </button>
+            <button onclick="window.location.href='language.html?tab=chinese'" class="btn-nav py-3 text-slate-300 hover:text-white transition">
+                <span class="mr-3 text-xl">📜</span><div class="flex flex-col"><span class="text-sm">大语文时光机</span><span class="text-[10px] font-normal mt-0.5 leading-snug text-slate-500">唤醒跨时空共情力</span></div>
+            </button>
+
+            <div class="mt-auto pt-4 border-t border-slate-800/50">
+                <button onclick="Vault.promptParentLock()" class="btn-nav w-full justify-between group py-3 text-slate-500 hover:text-amber-500 transition">
+                    <div class="flex items-center"><span class="mr-3 text-xl">🎛️</span><div class="flex flex-col"><span class="text-xs">呼叫家控中枢排课</span></div></div>
+                    <span class="text-xs opacity-50">🔒</span>
+                </button>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 relative overflow-hidden flex flex-col z-10 bg-slate-950/90 custom-scroll overflow-y-auto w-full p-8 fade-in">
+        <div class="max-w-7xl mx-auto w-full pb-20">
+            <div class="flex justify-between items-end mb-10 border-b border-slate-800 pb-6">
+                <div>
+                    <h2 class="text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🌐</span> 全球教育智库中心</h2>
+                    <p class="text-slate-400 text-sm tracking-wide">自动连线云端数据库获取全球权威教学大纲与开源教材。采用微服务级轻量化提取，体验极致流畅。</p>
+                </div>
+                <span id="db-status-badge" class="text-xs font-mono text-slate-500 bg-slate-900/30 px-4 py-2 rounded-xl border border-slate-800/50 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div> 初始化神经连接...</span>
+            </div>
+
+            <!-- 🎴 Portals -->
+            <div class="mb-14">
+                <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2 mb-6"><span>🔭</span> 认知拓展与探索站点 (Portals)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="edu-links-container">
+                    <div class="h-48 rounded-2xl shimmer"></div><div class="h-48 rounded-2xl shimmer"></div>
+                </div>
+            </div>
+
+            <!-- 📂 Syllabi Vault -->
+            <div class="mb-14">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📂</span> 真实全球课标大纲库 (Syllabi)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="syllabi-container">
+                    <div class="h-48 rounded-2xl shimmer"></div><div class="h-48 rounded-2xl shimmer"></div><div class="h-48 rounded-2xl shimmer"></div>
+                </div>
+            </div>
+
+            <!-- 📚 Textbooks -->
+            <div class="mb-14">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black text-slate-200 flex items-center gap-2"><span>📚</span> 解析教材与开源底座 (Textbooks)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="textbook-container">
+                    <div class="h-56 rounded-2xl shimmer"></div><div class="h-56 rounded-2xl shimmer"></div><div class="h-56 rounded-2xl shimmer"></div><div class="h-56 rounded-2xl shimmer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 全屏模态框：大纲结构浏览器 (保留懒加载逻辑) -->
+        <div id="syllabus-explorer-modal" class="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex flex-col fade-in" style="display: none;">
+            <div class="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/80 shrink-0 shadow-lg">
+                <div class="flex items-center gap-6">
+                    <span id="modal-syll-icon" class="text-5xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">📚</span>
+                    <div>
+                        <h2 id="modal-syll-title" class="text-3xl font-black text-white tracking-wide mb-1">大纲加载中...</h2>
+                        <div class="text-xs text-emerald-400 font-mono tracking-widest flex items-center gap-2"><div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div> <span id="modal-syll-region">Real Database Feed</span></div>
+                    </div>
+                </div>
+                <button onclick="$('syllabus-explorer-modal').style.display='none';" class="px-6 py-3 border border-slate-600 hover:border-rose-500 text-slate-300 hover:text-rose-400 rounded-xl transition font-bold flex items-center gap-2"><span>✖</span> 退出档案室</button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[#050b14] p-10 custom-scroll">
+                <div class="max-w-6xl mx-auto w-full pb-20" id="syllabus-content-area"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const Vault = {
+            state: {
+                isPro: window.safeStorage.get('xp_is_pro') === 'true',
+                parentPin: window.safeStorage.get('xp_parent_pin') || '0000',
+                syllabi: [], textbooks: [], portals: [],
+                SUPABASE_URL: "https://cywslfalbedraeeggryj.supabase.co",
+                SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0"
+            },
+
+            async init() {
+                await this.fetchData();
+            },
+
+            async fetchData() {
+                const badge = $('db-status-badge');
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div> 从云端高速抽载中...`;
+                badge.className = "text-xs font-mono text-cyan-400 bg-cyan-900/30 px-4 py-2 rounded-xl border border-cyan-800/50 flex items-center gap-2";
+
+                const headers = { 'apikey': this.state.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${this.state.SUPABASE_ANON_KEY}` };
+
+                try {
+                    // 🚀 核心优化：杜绝 select=*，只拉取渲染封面的元数据，拒绝阻塞式下载大 JSON！
+                    const [resPortals, resSyllabi, resTextbooks] = await Promise.all([
+                        fetch(`${this.state.SUPABASE_URL}/rest/v1/edu_portals?select=id,title,url,description,icon,category`, { headers }),
+                        fetch(`${this.state.SUPABASE_URL}/rest/v1/edu_syllabi?select=id,code_id,title,region,icon,is_free,description`, { headers }),
+                        fetch(`${this.state.SUPABASE_URL}/rest/v1/edu_textbooks?select=id,code_id,title,type,provider_type,icon,is_free,"isFree",description,desc,source_url,url`, { headers })
+                    ]);
+
+                    if(resPortals.ok) this.state.portals = await resPortals.json();
+                    if(resSyllabi.ok) this.state.syllabi = await resSyllabi.json();
+                    if(resTextbooks.ok) this.state.textbooks = await resTextbooks.json();
+
+                    badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400"></div> DB 链路全速贯通`;
+                    badge.className = "text-xs font-mono text-emerald-400 bg-emerald-900/30 px-4 py-2 rounded-xl border border-emerald-800/50 flex items-center gap-2";
+                    
+                    this.renderAll();
+                } catch (e) {
+                    badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-rose-400"></div> 数据库断联`;
+                    badge.className = "text-xs font-mono text-rose-400 bg-rose-900/30 px-4 py-2 rounded-xl border border-rose-800/50 flex items-center gap-2";
+                    console.error("Fast Fetch Error:", e);
+                }
+            },
+
+            renderAll() {
+                const pCont = $('edu-links-container');
+                if(pCont) pCont.innerHTML = this.state.portals.length ? this.state.portals.map(link => `
+                    <div class="flip-card"><div class="flip-card-inner">
+                        <div class="flip-card-front"><span class="text-6xl mb-4 filter grayscale opacity-80">${link.icon || '🚀'}</span><h4 class="font-bold text-slate-200 text-lg truncate w-full px-2">${link.title}</h4></div>
+                        <div class="flip-card-back"><h4 class="font-black text-white text-base mb-2">${link.title}</h4><p class="text-xs text-blue-100 line-clamp-4 leading-relaxed mb-4 px-2 opacity-90">${link.description}</p><a href="${link.url}" target="_blank" class="px-6 py-2.5 bg-white/20 hover:bg-white text-white hover:text-blue-900 rounded-full text-xs font-bold transition">开启跃迁 ↗</a></div>
+                    </div></div>`).join('') : '<p class="text-slate-500">无数据</p>';
+
+                const sCont = $('syllabi-container');
+                if(sCont) sCont.innerHTML = this.state.syllabi.length ? this.state.syllabi.map(s => {
+                    const isFree = s.is_free || this.state.isPro;
+                    return `<div class="relative bg-slate-900/60 border border-slate-700 p-6 rounded-2xl group flex flex-col h-full">${!isFree ? '<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl z-10"><span class="text-3xl mb-2">🔒</span><span class="text-xs font-bold text-cyan-400 border border-cyan-500/50 px-3 py-1 rounded">PRO</span></div>' : ''}
+                        <div class="flex items-start gap-4 mb-4"><span class="text-4xl drop-shadow-md">${s.icon || '📚'}</span><div><h4 class="font-bold text-slate-200 text-sm leading-snug">${s.title}</h4><span class="text-[10px] text-slate-500">${s.region || 'Global'}</span></div></div>
+                        <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-6 flex-1">${s.description || ''}</p>
+                        <button onclick="Vault.fetchAndShowSyllabus('${s.id}')" class="w-full py-3 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition hover:bg-slate-700">👁️ 阅览图谱</button>
+                    </div>`;
+                }).join('') : '<p class="text-slate-500">无数据</p>';
+
+                const tCont = $('textbook-container');
+                if(tCont) tCont.innerHTML = this.state.textbooks.length ? this.state.textbooks.map(t => {
+                    const isFree = t.is_free || t.isFree || this.state.isPro;
+                    return `<div class="relative bg-slate-900/40 border border-slate-700 p-5 rounded-2xl hover:border-blue-500/30 transition flex flex-col items-center text-center group">${!isFree ? '<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl z-10"><span class="text-2xl mb-1">🔒</span><span class="text-[10px] font-bold text-cyan-400">PRO</span></div>' : ''}
+                        <span class="text-4xl mb-4 group-hover:scale-110 transition-transform drop-shadow-md">${t.icon || '📖'}</span>
+                        <h4 class="font-bold text-slate-200 text-xs mb-1 line-clamp-2">${t.title}</h4>
+                        <p class="text-[9px] text-slate-500 mb-5 line-clamp-2">${t.description || t.desc || ''}</p>
+                        <!-- 跳转到独立的 Reader -->
+                        <button onclick="window.location.href='reader.html?bookId=${t.id || t.code_id}'" class="mt-auto px-4 py-2.5 w-full bg-blue-900/30 hover:bg-blue-600 text-blue-300 hover:text-white rounded-xl text-[10px] font-bold transition border border-blue-800/50">传送至伴读舱 ↗</button>
+                    </div>`;
+                }).join('') : '<p class="text-slate-500">无数据</p>';
+            },
+
+            async fetchAndShowSyllabus(id) {
+                const s = this.state.syllabi.find(x => x.id === id); if(!s) return;
+                $('modal-syll-icon').innerText = s.icon || '📚'; $('modal-syll-title').innerText = s.title; $('modal-syll-region').innerText = `Region: ${s.region}`;
+                $('syllabus-content-area').innerHTML = '<div class="text-center py-20"><div class="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div><p class="text-cyan-400 text-sm font-mono tracking-widest">正在解析多维结构树...</p></div>';
+                $('syllabus-explorer-modal').style.display = 'flex';
+
+                try {
+                    const res = await fetch(`${this.state.SUPABASE_URL}/rest/v1/edu_syllabi?select=structure_json&id=eq.${id}`, {
+                        headers: { 'apikey': this.state.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${this.state.SUPABASE_ANON_KEY}` }
+                    });
+                    const data = await res.json();
+                    if(data && data[0] && data[0].structure_json) {
+                        $('syllabus-content-area').innerHTML = `<p class="text-slate-400 italic py-10 text-center text-lg">系统已接管 ${s.title} 的底层架构。数据体积正常。</p><pre class="text-xs text-slate-500 bg-slate-900 p-6 rounded-2xl overflow-auto">${JSON.stringify(data[0].structure_json, null, 2)}</pre>`;
+                    } else {
+                        $('syllabus-content-area').innerHTML = '<p class="text-rose-400 py-10 text-center">空数据段：此大纲的树状节点尚在云端编译中。</p>';
+                    }
+                } catch(e) {
+                    $('syllabus-content-area').innerHTML = '<p class="text-rose-400 py-10 text-center">链路阻断：拉取结构失败。</p>';
+                }
+            },
+
+            async promptParentLock() {
+                try {
+                    let pin = null; const currentPin = this.state.parentPin || '0000';
+                    const res = await Swal.fire({ title: '中枢验证', html: `<div class="text-sm text-slate-300">请输入高阶密码</div>`, input: 'password', background: '#0f172a', color: '#fff', showCancelButton: true });
+                    if (res && res.isConfirmed) { pin = res.value; } else { return; }
+                    if (pin === currentPin) { sessionStorage.setItem('xp_unlocked', 'true'); window.location.href = 'dashboard.html'; } 
+                    else { Swal.fire({ title: '验证失败', text: `密码错误！`, icon: 'error', background: '#0f172a', color: '#fff' }); }
+                } catch(e) {}
+            }
+        };
+
+        window.onload = () => { Vault.init(); }; 
+    </script>
+</body>
+</html>

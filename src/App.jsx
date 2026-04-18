@@ -7,11 +7,11 @@ import {
   Compass, Eye, Wand2, ScrollText, Settings2, LineChart, Lock,
   MessageSquare, Sparkles, History, Swords, Target, Crosshair,
   Library, ChevronLeft, ChevronRight, Sun, Moon, HelpCircle,
-  PenTool, BrainCircuit, Navigation, Info, Zap, Trash, PlayCircle, Volume2, VolumeX
+  PenTool, BrainCircuit, Navigation, Info, Zap, Trash, PlayCircle, Volume2, VolumeX, Edit3
 } from 'lucide-react';
 
 // ==========================================
-// 1. 全局设计系统 (物理法则层 - 增加手册专用排版)
+// 1. 全局设计系统
 // ==========================================
 function GlobalStyles() {
     return (
@@ -28,7 +28,7 @@ function GlobalStyles() {
             
             .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.05); }
             .glass-input { background: rgba(15,23,42,0.5); border: 1px solid rgba(71,85,105,0.5); color: #e2e8f0; transition: all 0.2s; }
-            .glass-input:focus { border-color: #38bdf8; outline: none; background: rgba(15,23,42,0.8); }
+            .glass-input:focus { border-color: #38bdf8; outline: none; background: rgba(15,23,42,0.8); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
             .phi-gradient { background: radial-gradient(circle at top right, rgba(56,189,248,0.05), transparent), linear-gradient(135deg, #0f172a 0%, #020617 100%); }
             
             .sun-core { border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 20%, #ea580c 50%, #7c2d12 100%); box-shadow: 0 0 60px rgba(234, 88, 12, 0.6), 0 0 120px rgba(251, 191, 36, 0.3), inset -10px -10px 20px rgba(0,0,0,0.5); animation: sunPulse 4s infinite ease-in-out; }
@@ -53,13 +53,17 @@ function GlobalStyles() {
             .critical-error { animation: criticalShake 0.4s ease-in-out; box-shadow: inset 0 0 100px rgba(225, 29, 72, 0.5); border: 2px solid #e11d48 !important; }
             .hacker-grid { background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px); background-size: 40px 40px; }
 
-            /* 手册专用排版 (还原 manual.html 样式) */
             .prose h2 { color: #38bdf8; font-weight: 900; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(56,189,248,0.3); padding-bottom: 0.5rem; }
             .prose h3 { color: #e2e8f0; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
             .prose p { color: #94a3b8; margin-bottom: 1rem; line-height: 1.6; font-size: 0.875rem;}
             .prose ul { list-style-type: disc; padding-left: 1.5rem; color: #94a3b8; margin-bottom: 1rem; font-size: 0.875rem;}
             .prose li { margin-bottom: 0.5rem; }
             .prose code { background: rgba(0,0,0,0.5); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: #facc15; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+            
+            /* 富文本编辑器定制样式 */
+            .ql-toolbar.ql-snow { border: none !important; border-bottom: 1px solid #e2e8f0 !important; background: #f8fafc; border-radius: 0.5rem 0.5rem 0 0; }
+            .ql-container.ql-snow { border: none !important; font-size: 1rem; font-family: inherit; }
+            .ql-editor { min-height: 300px; color: #0f172a; }
         `}} />
     );
 }
@@ -96,7 +100,7 @@ function GlobalOverlays() {
         <>
             {toast && (
                 <div className="fixed top-6 right-6 z-[300] bg-slate-800 border border-slate-600 px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-white font-bold animate-bounce">
-                    {toast.icon === 'success' ? <CheckCircle2 className="text-emerald-500" size={20}/> : <ShieldAlert className="text-amber-500" size={20}/>}
+                    {toast.icon === 'success' ? <CheckCircle2 className="text-emerald-500" size={20}/> : (toast.icon === 'info' ? <Info className="text-blue-500" size={20}/> : <ShieldAlert className="text-amber-500" size={20}/>)}
                     {toast.title}
                 </div>
             )}
@@ -104,13 +108,13 @@ function GlobalOverlays() {
                 <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                     <div className="bg-slate-900 border border-slate-700 p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full flex flex-col items-center text-center">
                         <h2 className="text-xl font-black text-white mb-4 uppercase tracking-widest">{dialog.title}</h2>
-                        <p className="text-slate-400 text-sm mb-6 leading-relaxed">{dialog.text}</p>
+                        <p className="text-slate-400 text-sm mb-6 leading-relaxed" dangerouslySetInnerHTML={{__html: dialog.text || dialog.html}}></p>
                         {dialog.input === 'password' && (
                             <input type="password" maxLength={4} value={inputValue} onChange={e=>setInputValue(e.target.value)} className="w-full glass-input border border-slate-700 rounded-2xl p-4 text-center text-3xl font-mono tracking-[0.5em] text-white mb-6" autoFocus />
                         )}
                         <div className="flex gap-3 w-full">
-                            {dialog.showCancelButton && <button onClick={()=>setDialog(null)} className="flex-1 py-4 rounded-2xl font-bold text-slate-300 bg-slate-800 transition">取消</button>}
-                            <button onClick={handleConfirm} className="flex-1 py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition">{dialog.confirmButtonText || '确定'}</button>
+                            {dialog.showCancelButton && <button onClick={()=>setDialog(null)} className="flex-1 py-4 rounded-2xl font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition">取消</button>}
+                            <button onClick={handleConfirm} className="flex-1 py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition" style={{backgroundColor: dialog.confirmButtonColor}}>{dialog.confirmButtonText || '确定'}</button>
                         </div>
                     </div>
                 </div>
@@ -135,7 +139,7 @@ function useAuth() {
 }
 
 // ==========================================
-// 4. 3D星系探索舱 (保持未动)
+// 4. 3D星系探索舱
 // ==========================================
 function ClassroomView({ navigate }) {
     const [galaxies, setGalaxies] = useState([]);
@@ -230,7 +234,7 @@ function ClassroomView({ navigate }) {
 }
 
 // ==========================================
-// 5. 🎯 全球教育智库 (ResourcesView - 保持未动)
+// 5. 全球教育资源
 // ==========================================
 function ResourcesView({ navigate }) {
     const [textbooks, setTextbooks] = useState([]);
@@ -274,9 +278,9 @@ function ResourcesView({ navigate }) {
                 <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
-                            <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🏛️</span> 全球教育智库
+                            <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🏛️</span> 全球教育资源
                         </h2>
-                        <p className="text-slate-400 text-xs md:text-sm tracking-wide">支持分类极速检索与封面秒级抽载，点击立即跃迁至全息阅读舱。</p>
+                        <p className="text-slate-400 text-xs md:text-sm tracking-wide">支持分类极速检索与封面秒级抽载，点击立即跃迁至教育图书资料舱。</p>
                     </div>
                 </div>
 
@@ -313,7 +317,7 @@ function ResourcesView({ navigate }) {
                             <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed flex-1">{book.description || book.desc || '暂无内容摘要'}</p>
                             
                             <div className="mt-6 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1 text-cyan-500/70 group-hover:text-cyan-400">
-                                <span>⚡ 载入全息阅读 ➔</span>
+                                <span>⚡ 载入教育图书资料 ➔</span>
                             </div>
                         </div>
                     ))}
@@ -324,7 +328,7 @@ function ResourcesView({ navigate }) {
 }
 
 // ==========================================
-// 6. 全息阅读 (ReaderView - 保持未动)
+// 6. 教育图书资料
 // ==========================================
 function ReaderView({ routeParams, navigate }) {
     const [viewMode, setViewMode] = useState('library'); 
@@ -409,7 +413,7 @@ function ReaderView({ routeParams, navigate }) {
                     <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-10 border-b border-slate-800 pb-6">
                         <div>
                             <h2 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
-                                <span className="text-purple-500">📖</span> 全息阅读库
+                                <span className="text-purple-500">📖</span> 教育图书资料库
                             </h2>
                             <p className="text-slate-400 text-sm tracking-wide">请在下方检索并载入神经图文流。</p>
                         </div>
@@ -485,30 +489,50 @@ function ReaderView({ routeParams, navigate }) {
 }
 
 // ==========================================
-// 7. 危机救援演习 (SimulatorView - 保持未动)
+// 7. 🚀 危机救援演习 (SimulatorView - 彻底全量对接交互视频)
 // ==========================================
 function SimulatorView() {
-    const [status, setStatus] = useState('lobby'); 
+    const [status, setStatus] = useState('lobby'); // 'lobby', 'playing'
     const [ageGroup, setAgeGroup] = useState('mid');
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(1);
+    const [showHUD, setShowHUD] = useState(false);
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [hudAlert, setHudAlert] = useState({ show: false, message: '' });
+    const videoRef = useRef(null);
 
+    // 基于您的规则，严格划分三阶段逻辑，支持视频进度触发
     const scripts = {
-        young: [
-            { phase: "🧠 提问引导", ai: "小指挥官，前方糖果城堡被挡住了！我们要怎么进去？", options: [{ text: "扫描音乐密码", isCorrect: true }, { text: "用大炮轰碎", isCorrect: false, feedback: "糟糕！热量会烤化巧克力城堡的。" }] },
-            { isCrisis: true }
-        ],
-        mid: [
-            { phase: "🧠 战术研判", ai: "指挥官，我们抵近了三角星星港，大门紧闭。第一步指令？", options: [{ text: "强行撞开闸门", isCorrect: false, feedback: "莽撞！撞击会触发星港防御。必须先侦测！" }, { text: "分析基地的防卫协议", isCorrect: true }] },
-            { phase: "⚖️ 破除幻觉", ai: "EMP 冲击！屏幕全是雪花！AI 建议：'关闭维生系统分配武器电力'。决断是？", options: [{ text: "批准！武器最重要", isCorrect: false, feedback: "致命判断！没有命，武器再强也无用！" }, { text: "驳回！保持供氧", isCorrect: true }] },
-            { isCrisis: true }
-        ]
+        young: {
+            1: { phase: "🧠 提问引导 (Step 1)", ai: "小指挥官，前方糖果城堡被陨石挡住了！我们要怎么进去？", options: [{ text: "使用引力光束移开陨石", isCorrect: true }, { text: "用飞船上的大炮轰碎", isCorrect: false, feedback: "糟糕！爆炸的高温会烤化巧克力城堡的。" }] },
+            2: { phase: "🧠 路径选择 (Step 2)", ai: "进入城堡后，发现左边是彩虹桥，右边是黑流沙。探测器显示右侧有微弱求救信号，走哪边？", options: [{ text: "开启反重力踏板走黑流沙", isCorrect: true }, { text: "走安全的彩虹桥", isCorrect: false, feedback: "我们不能无视求救信号！星际探索者的第一准则是拯救生命。" }] },
+            3: { phase: "🎉 救援成功 (Step 3)", ai: "干得漂亮！我们成功救出了小熊伙伴！本次探索任务圆满完成。", options: [{ text: "返回任务大厅", isCorrect: true, isEnd: true }] }
+        },
+        mid: {
+            1: { phase: "🧠 战术研判 (Step 1)", ai: "指挥官，我们抵近了三角星星港，大门紧闭。第一步指令？", options: [{ text: "分析基地的防卫协议", isCorrect: true }, { text: "强行撞开闸门", isCorrect: false, feedback: "莽撞！物理撞击直接触发了星港的最高级防御矩阵！" }] },
+            2: { phase: "⚖️ 破除幻觉 (Step 2)", ai: "遭遇电磁风暴！屏幕全是雪花！AI 副官建议：'关闭维生系统以分配武器电力'。决断是？", options: [{ text: "驳回！保持舱内供氧", isCorrect: true }, { text: "批准！武器最重要", isCorrect: false, feedback: "致命判断！没有氧气，武器再强也无用！" }] },
+            3: { phase: "🎉 跃迁成功 (Step 3)", ai: "护盾完好，机密数据已回收！准备超光速跃迁！", options: [{ text: "返回任务大厅", isCorrect: true, isEnd: true }] }
+        },
+        old: {
+            1: { phase: "🧠 资源调度 (Step 1)", ai: "探测到微星系级塌缩，舰队燃料仅剩 30%，如何规划逃生航线？", options: [{ text: "利用木星引力弹弓效应折跃", isCorrect: true }, { text: "直线全速启动引擎冲刺", isCorrect: false, feedback: "警告！燃料将在抵达安全区前耗尽，舰队面临迷航危险！" }] },
+            2: { phase: "⚖️ 伦理博弈 (Step 2)", ai: "逃生途中发现民用飞船求救信号，但偏离航线会增加 40% 的塌缩卷入风险。是否救援？", options: [{ text: "分遣无人机群进行牵引评估", isCorrect: true }, { text: "无视信号，全速保全主力舰队", isCorrect: false, feedback: "星际法庭宣告你违背了最高文明伦理，你的舰队士气已崩溃！" }] },
+            3: { phase: "🎉 纪元重启 (Step 3)", ai: "完美的推演与决断。指挥官，你拯救了整个星区，成为联邦传奇。", options: [{ text: "返回任务大厅", isCorrect: true, isEnd: true }] }
+        }
+    };
+
+    const startGame = (age) => {
+        setAgeGroup(age);
+        setStep(1);
+        setStatus('playing');
+        setShowHUD(false); // 隐藏HUD，等待当前视频播放完毕再弹出
+    };
+
+    const handleVideoEnded = () => {
+        setShowHUD(true); // 视频播完，准确时机弹出界面与交互
     };
 
     useEffect(() => {
-        if (status === 'briefing') {
+        if (showHUD) {
             const currentScene = scripts[ageGroup][step];
             if (currentScene && currentScene.ai) {
                 setIsTyping(true);
@@ -517,12 +541,15 @@ function SimulatorView() {
                 const interval = setInterval(() => {
                     setDisplayedText(prev => prev + currentScene.ai.charAt(i));
                     i++;
-                    if (i >= currentScene.ai.length) { clearInterval(interval); setIsTyping(false); }
+                    if (i >= currentScene.ai.length) {
+                        clearInterval(interval);
+                        setIsTyping(false);
+                    }
                 }, 40);
                 return () => clearInterval(interval);
             }
         }
-    }, [status, step, ageGroup]);
+    }, [showHUD, step, ageGroup]);
 
     const handleChoice = (opt) => {
         if (!opt.isCorrect) {
@@ -530,61 +557,99 @@ function SimulatorView() {
             setTimeout(() => setHudAlert({ show: false, message: '' }), 4000);
             return;
         }
-        if (scripts[ageGroup][step + 1]) { setStep(s => s + 1); }
+        if (opt.isEnd) {
+            setStatus('lobby');
+            setShowHUD(false);
+            return;
+        }
+        
+        // 进入下一阶段
+        setStep(s => s + 1);
+        setShowHUD(false); 
+        // 状态更新后，video标签由于 src 变更，会自动加载下一段并 autoPlay
     };
 
-    if (status === 'lobby') return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 p-10 hacker-grid animate-[fadeIn_0.5s]">
-            <div className="text-center mb-12"><Globe size={64} className="mx-auto text-cyan-500 mb-4 animate-pulse"/><h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase">Tactical_Lobby</h2></div>
-            <div className="grid grid-cols-2 gap-8 max-w-4xl w-full">
-                <button onClick={()=>{setAgeGroup('young'); setStatus('briefing'); setStep(0);}} className="glass-panel p-10 rounded-3xl border border-emerald-500/30 hover:border-emerald-500 transition group text-center shadow-lg hover:shadow-emerald-500/20">
-                    <div className="text-6xl mb-4 group-hover:scale-110 transition">🍭</div>
-                    <h3 className="text-xl font-bold text-emerald-400 mb-2 uppercase tracking-widest">Candy_Nebula</h3>
-                    <p className="text-xs text-slate-500">难度等级：见习探索者</p>
-                </button>
-                <button onClick={()=>{setAgeGroup('mid'); setStatus('briefing'); setStep(0);}} className="glass-panel p-10 rounded-3xl border border-blue-500/30 hover:border-blue-500 transition group text-center shadow-lg hover:shadow-blue-500/20">
-                    <div className="text-6xl mb-4 group-hover:scale-110 transition">🛰️</div>
-                    <h3 className="text-xl font-bold text-blue-400 mb-2 uppercase tracking-widest">Starport_Breach</h3>
-                    <p className="text-xs text-slate-500">难度等级：特级领航员</p>
-                </button>
+    // 动态生成对应的视频地址
+    const videoUrl = `https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/cinematics/${ageGroup}_step${step}.mp4`;
+
+    if (status === 'lobby') {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 p-10 hacker-grid animate-[fadeIn_0.5s]">
+                <div className="text-center mb-12">
+                    <Globe size={64} className="mx-auto text-cyan-500 mb-4 animate-pulse"/>
+                    <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase">Tactical_Lobby</h2>
+                    <p className="text-slate-400 mt-4 text-sm font-mono">选择实战演习的指挥官级别</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
+                    <button onClick={() => startGame('young')} className="glass-panel p-10 rounded-3xl border border-emerald-500/30 hover:border-emerald-500 transition group text-center shadow-lg hover:shadow-emerald-500/20">
+                        <div className="text-6xl mb-4 group-hover:scale-110 transition">🍭</div>
+                        <h3 className="text-xl font-bold text-emerald-400 mb-2 uppercase tracking-widest">Candy_Nebula</h3>
+                        <p className="text-xs text-slate-500">级别：见习探索者 (6-8岁)</p>
+                    </button>
+                    <button onClick={() => startGame('mid')} className="glass-panel p-10 rounded-3xl border border-blue-500/30 hover:border-blue-500 transition group text-center shadow-lg hover:shadow-blue-500/20">
+                        <div className="text-6xl mb-4 group-hover:scale-110 transition">🛰️</div>
+                        <h3 className="text-xl font-bold text-blue-400 mb-2 uppercase tracking-widest">Starport_Breach</h3>
+                        <p className="text-xs text-slate-500">级别：特级领航员 (9-12岁)</p>
+                    </button>
+                    <button onClick={() => startGame('old')} className="glass-panel p-10 rounded-3xl border border-purple-500/30 hover:border-purple-500 transition group text-center shadow-lg hover:shadow-purple-500/20">
+                        <div className="text-6xl mb-4 group-hover:scale-110 transition">🌌</div>
+                        <h3 className="text-xl font-bold text-purple-400 mb-2 uppercase tracking-widest">Void_Collapse</h3>
+                        <p className="text-xs text-slate-500">级别：联邦指挥官 (13岁+)</p>
+                    </button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 
     const currentScene = scripts[ageGroup][step];
-    if (currentScene?.isCrisis) return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-950 p-10">
-            <ShieldAlert size={120} className="text-rose-500 mb-8 animate-bounce"/>
-            <h2 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">Quantum_Halt</h2>
-            <p className="text-rose-200 text-xl font-bold uppercase tracking-widest">请解锁 PRO 权限以连接真实 AI 引擎推演剧情。</p>
-            <button onClick={()=>setStatus('lobby')} className="mt-10 px-8 py-3 bg-white text-rose-900 font-black rounded-xl">返回任务大厅</button>
-        </div>
-    );
 
     return (
-        <div className="flex-1 flex flex-col bg-black relative overflow-hidden animate-[fadeIn_0.8s]">
-            <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-blue-900/10 z-10 pointer-events-none"></div>
-                <iframe className="w-full h-full opacity-60 pointer-events-none" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1" frameBorder="0"></iframe>
+        <div className="flex-1 flex flex-col bg-black relative overflow-hidden animate-[fadeIn_0.5s]">
+            
+            {/* 1. 全屏互动视频引擎 */}
+            <div className="absolute inset-0 z-0 bg-black">
+                <video 
+                    ref={videoRef}
+                    src={videoUrl}
+                    autoPlay 
+                    playsInline
+                    onEnded={handleVideoEnded}
+                    className={`w-full h-full object-cover transition-all duration-1000 ${showHUD ? 'opacity-40 blur-sm scale-105' : 'opacity-100 scale-100'}`}
+                />
+                {/* 增加科幻扫描线网格蒙版 */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none z-10"></div>
             </div>
-            <div className="relative z-30 flex-1 flex flex-col justify-end pb-16 px-10 items-center pointer-events-none">
+
+            {/* 2. 左上角返回控制 */}
+            <button onClick={() => setStatus('lobby')} className="absolute top-8 left-8 z-40 px-4 py-2 bg-black/50 hover:bg-black/80 border border-white/20 text-white rounded-lg text-xs font-mono uppercase tracking-widest backdrop-blur transition flex items-center gap-2">
+                <ChevronLeft size={16}/> 终止任务
+            </button>
+
+            {/* 3. 互动战术面板 (HUD) - 仅在视频播放结束时显现 */}
+            <div className={`relative z-30 flex-1 flex flex-col justify-end pb-16 px-10 items-center pointer-events-none transition-opacity duration-700 ${showHUD ? 'opacity-100' : 'opacity-0'}`}>
+                
                 {hudAlert.show && (
-                    <div className="absolute top-20 w-full max-w-2xl bg-rose-950/90 border-2 border-rose-500 p-8 rounded-lg critical-error pointer-events-auto">
-                        <h3 className="text-rose-400 font-black mb-1 uppercase tracking-widest">System_Override_Error</h3>
+                    <div className="absolute top-20 w-full max-w-2xl bg-rose-950/90 border-2 border-rose-500 p-8 rounded-lg critical-error pointer-events-auto shadow-[0_0_50px_rgba(225,29,72,0.6)]">
+                        <h3 className="text-rose-400 font-black mb-1 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={20}/> System_Override_Error</h3>
                         <p className="text-white font-bold leading-relaxed">{hudAlert.message}</p>
                     </div>
                 )}
-                <div className="w-full max-w-4xl tech-panel p-10 pointer-events-auto shadow-2xl">
-                    <div className="text-[10px] font-black text-blue-400 mb-4 tracking-[0.2em] uppercase">{currentScene?.phase}</div>
-                    <p className={`text-xl md:text-2xl font-black text-white italic tracking-wide h-16 ${isTyping ? 'typing-cursor' : ''}`}>
+                
+                <div className="w-full max-w-4xl tech-panel p-10 pointer-events-auto shadow-2xl backdrop-blur-xl bg-slate-900/80 border border-cyan-500/30">
+                    <div className="text-[10px] font-black text-cyan-400 mb-4 tracking-[0.2em] uppercase flex items-center justify-between">
+                        <span>{currentScene?.phase || 'SYSTEM_READY'}</span>
+                        <span className="text-cyan-500/50">NODE_STEP_0{step}</span>
+                    </div>
+                    <p className={`text-xl md:text-2xl font-black text-white italic tracking-wide h-20 leading-relaxed ${isTyping ? 'typing-cursor' : ''}`}>
                         {displayedText}
                     </p>
-                    {!isTyping && (
-                        <div className="flex gap-6 mt-10">
+                    
+                    {!isTyping && showHUD && (
+                        <div className="flex flex-col md:flex-row gap-4 mt-8">
                             {currentScene?.options?.map((opt, i) => (
-                                <button key={i} onClick={()=>handleChoice(opt)} className="quantum-btn flex-1 p-6 text-left group">
-                                    <span className="text-[9px] text-cyan-500 block mb-1 uppercase tracking-tighter">Execute_0x0{i+1}</span>
-                                    <span className="text-white font-bold group-hover:text-cyan-400 transition-colors">{opt.text}</span>
+                                <button key={i} onClick={()=>handleChoice(opt)} className="quantum-btn flex-1 p-6 text-left group bg-slate-800/80 hover:bg-cyan-900/40 border border-slate-600 hover:border-cyan-400 transition-all">
+                                    <span className="text-[9px] text-cyan-500/70 block mb-2 uppercase tracking-widest font-mono">Execute_0x0{i+1}</span>
+                                    <span className="text-white font-bold group-hover:text-cyan-300 transition-colors text-lg drop-shadow-md">{opt.text}</span>
                                 </button>
                             ))}
                         </div>
@@ -596,7 +661,77 @@ function SimulatorView() {
 }
 
 // ==========================================
-// 8. 家控中枢 (DashboardView - 保持未动)
+// 8. 写作舱 (保持未动)
+// ==========================================
+function WritingView() {
+    return (
+        <div className="flex-1 flex overflow-hidden bg-[#050505] animate-[fadeIn_0.5s]">
+            <div className="flex-1 flex flex-col border-r border-slate-800">
+                <div className="h-16 border-b border-slate-800 flex items-center px-6 bg-slate-900/50">
+                    <span className="text-purple-400 font-bold tracking-widest uppercase">✍️ 神经元写作基座</span>
+                </div>
+                <textarea className="flex-1 bg-transparent text-slate-200 p-8 resize-none focus:outline-none custom-scroll text-lg leading-loose placeholder-slate-700" placeholder="在这里输入您的灵感流..."></textarea>
+            </div>
+            
+            <div className="w-96 flex flex-col bg-slate-900/30">
+                <div className="h-16 border-b border-slate-800 flex items-center px-6 bg-slate-900/50">
+                    <span className="text-cyan-400 font-mono text-sm tracking-widest uppercase">🤖 NOVA 苏格拉底导师</span>
+                </div>
+                <div className="flex-1 p-6 custom-scroll overflow-y-auto text-sm text-slate-400 leading-relaxed">
+                    <div className="bg-slate-800/50 border border-slate-700 p-4 rounded-2xl mb-4">
+                        <p>我不会直接替您写出大纲，那样会剥夺您的独立思考能力。</p>
+                        <p className="mt-2 text-cyan-400">请告诉我，您今天想创作的主题是什么？</p>
+                    </div>
+                </div>
+                <div className="p-4 border-t border-slate-800 bg-[#02040a]">
+                    <input type="text" placeholder="回复导师..." className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-cyan-500 transition" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ==========================================
+// 9. 🚀 双语伴读舱 (去除双语切换按钮版)
+// ==========================================
+function LanguageView({ tab }) {
+    // 根据传入的 tab 属性 ('en' 或 'cn')，直接渲染对应的纯净界面
+    return (
+        <div className="flex-1 flex flex-col bg-slate-950 relative overflow-hidden animate-[fadeIn_0.5s_ease-out]">
+            <header className="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50 shrink-0">
+                <h2 className="text-3xl font-black text-white">{tab === 'en' ? '🔤 AI英文伴读' : '📜 AI中文伴读'}</h2>
+                {/* 🚀 已移除：双语切换按钮组 */}
+            </header>
+
+            {tab === 'cn' && (
+                <div className="flex-1 overflow-y-auto p-10 custom-scroll">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="bg-rose-900/10 border border-rose-500/20 rounded-3xl p-10 text-center shadow-xl backdrop-blur-sm">
+                            <span className="text-6xl drop-shadow-md mb-6 inline-block">🏺</span>
+                            <h3 className="text-2xl font-bold text-rose-400 mb-4 tracking-widest">大语文共情力沙盒</h3>
+                            <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">独立的大语文环境，将通过 AI 引导重构历史语境，让学习者穿越时空，与苏轼、屈原直接进行跨维度的神经元对话。</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {tab === 'en' && (
+                <div className="flex-1 overflow-y-auto p-10 custom-scroll">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="bg-blue-900/10 border border-blue-500/20 rounded-3xl p-10 text-center shadow-xl backdrop-blur-sm">
+                            <span className="text-6xl drop-shadow-md mb-6 inline-block">🏰</span>
+                            <h3 className="text-2xl font-bold text-blue-400 mb-4 tracking-widest">English Native Matrix</h3>
+                            <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">纯净的英文母语级建构舱。摒弃传统的死记硬背，以沉浸式情境引擎重塑对单词与从句的本能级条件反射。</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ==========================================
+// 10. 家控中枢 (DashboardView - 保持未动)
 // ==========================================
 const DashboardView = () => {
     const [activeTab, setActiveTab] = useState('builder');
@@ -665,14 +800,13 @@ const DashboardView = () => {
 };
 
 // ==========================================
-// 11. 🚀 星舰操作手册 (ManualView - 本次重点增加，完美还原)
+// 11. 星舰操作手册 (ManualView - 保持未动)
 // ==========================================
 function ManualView() {
     const [activeTab, setActiveTab] = useState('intro');
 
     return (
         <div className="flex-1 flex flex-col z-10 bg-slate-950/80 backdrop-blur-sm relative animate-[fadeIn_0.5s]">
-            {/* 头部 */}
             <header className="h-24 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50 shrink-0">
                 <h2 className="text-3xl font-black text-white flex items-center gap-3">
                     <span className="text-amber-400">💡</span> 联邦指挥官星舰指南
@@ -685,8 +819,6 @@ function ManualView() {
 
             <div className="flex-1 overflow-y-auto custom-scroll p-10">
                 <div className="max-w-4xl mx-auto pb-20 prose">
-                    
-                    {/* TAB 1: 舱体说明 */}
                     {activeTab === 'intro' && (
                         <div className="animate-[fadeIn_0.3s]">
                             <h2>🌌 XuePilot 核心教育矩阵全景</h2>
@@ -694,15 +826,15 @@ function ManualView() {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
-                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">🌌</span> 3D 知识星球</h3>
+                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">🌌</span> 星际教室</h3>
                                     <p><strong>功能：</strong>可视化大纲管理中枢。<br/>在这里，家控中枢排布的所有课程大纲将化作引力星系。指挥官可以拖拽星空，直观感受知识点之间的网状联系与层级深度。</p>
                                 </div>
                                 <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
-                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">🌐</span> 全球教育智库</h3>
+                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">🌐</span> 全球教育资源</h3>
                                     <p><strong>功能：</strong>教材与数据集散地。<br/>秒级直连云端数据库，囊括国际顶尖开源教材、国家统编数据底座以及前沿站点。是进入阅读舱前的资料跳板。</p>
                                 </div>
                                 <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
-                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">📖</span> 全息阅读</h3>
+                                    <h3 className="flex items-center gap-2 mt-0"><span className="text-2xl">📖</span> 教育图书资料</h3>
                                     <p><strong>功能：</strong>沉浸式高对比度图文流解析。<br/>支持划线触发 <b>NOVA 硅基导师</b>，采用苏格拉底提问法，拒绝灌输，通过连环追问重塑您的逻辑闭环。</p>
                                 </div>
                                 <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 opacity-60">
@@ -713,16 +845,15 @@ function ManualView() {
                         </div>
                     )}
 
-                    {/* TAB 2: API 配置指南 */}
                     {activeTab === 'api' && (
                         <div className="animate-[fadeIn_0.3s]">
                             <div className="bg-blue-900/10 border border-blue-500/30 p-6 rounded-2xl mb-8">
                                 <h2 className="mt-0 text-blue-400 flex items-center gap-2 border-none"><span>⚡</span> 为什么需要配置 API Key？</h2>
-                                <p className="text-slate-300">XuePilot 秉承 <b>Data Sovereignty (数据主权)</b> 与 <b>去中心化</b> 理念。我们不倒卖算力，也不将系统与单一模型绑定。<b>只有配置了 API Key，全息阅读舱里的 NOVA 导师才能真正被唤醒。</b><br/>本系统支持无缝接入全球各大厂商的顶级商业模型与开源模型。</p>
+                                <p className="text-slate-300">XuePilot 秉承 <b>Data Sovereignty (数据主权)</b> 与 <b>去中心化</b> 理念。我们不倒卖算力，也不将系统与单一模型绑定。<b>只有配置了 API Key，全息伴读舱里的 NOVA 导师才能真正被唤醒。</b><br/>本系统支持无缝接入全球各大厂商的顶级商业模型与开源模型。</p>
                             </div>
 
                             <h2>🛠️ 部署步骤与侦测 (仅限 PRO 家长权限)</h2>
-                            <p>请前往 <b>【家控中枢 (Dashboard)】 -&gt; 【算力燃料配置】</b> 区域，将您获取的 Key 填入对应的输入框内。</p>
+                            <p>请前往 <b>【家控中心 (Dashboard)】 -&gt; 【算力燃料配置】</b> 区域，将您获取的 Key 填入对应的输入框内。</p>
                             <div className="bg-slate-800/50 border-l-4 border-emerald-500 p-4 mb-4">
                                 <strong className="text-emerald-400 block mb-1">✅ 关键步骤：连通性侦测</strong>
                                 <p className="mb-0 text-slate-300">参数填入后，请务必点击配置面板旁的 <b>[测试连接]</b> 按钮。系统会向目标节点发射一次微型侦测脉冲。若返回绿灯并收到 AI 应答，即代表燃料通道已贯通，可放心进入阅读舱！</p>
@@ -740,12 +871,12 @@ function ManualView() {
                             <p>对于预算充足、追求地表最强推理能力与体验的指挥官，您完全可以接入各大 AI 巨头的付费大模型，如 <b>OpenAI GPT-4o</b>、<b>Anthropic Claude 3.5 Sonnet</b> 或 <b>DeepSeek Pro</b>。</p>
                             <ul>
                                 <li><b>适用人群：</b> 愿意为顶级算力付费，希望获得最强逻辑推理深度与全科辅导能力的用户。</li>
-                                <li><b>获取方式：</b> 前往各大家官方开放平台（如 <a href="https://platform.openai.com/" target="_blank" rel="noreferrer" className="text-cyan-400 underline">OpenAI API</a>、<a href="https://console.anthropic.com/" target="_blank" rel="noreferrer" className="text-cyan-400 underline">Anthropic Console</a> 或 <a href="https://platform.deepseek.com/" target="_blank" rel="noreferrer" className="text-cyan-400 underline">DeepSeek 开放平台</a>）绑定信用卡并充值获取 Key。</li>
+                                <li><b>获取方式：</b> 前往各大家官方开放平台充值获取 Key。</li>
                                 <li><b>配置说明：</b> 得益于底层的 <b>大统一格式转换网关</b>，您只需贴入对应的 Key 和 Base URL，即可享受与原生协议一样的顺畅体验。</li>
                             </ul>
 
                             <h2>3. 第三方镜像/中转站 (国内免翻墙首选)</h2>
-                            <p>如果无法直连海外网络，无论是 Gemini 还是 GPT-4o，我们强烈建议您使用第三方的 API 中转平台（例如 Wildcard、API2D、或者 Github 上的开源代理）。</p>
+                            <p>如果无法直连海外网络，无论是 Gemini 还是 GPT-4o，我们强烈建议您使用第三方的 API 中转平台。</p>
                             <ul>
                                 <li><b>如何配置：</b> 
                                     <br/>1. 将中转站提供的 Key 填入 <code>API Key</code> 框内。
@@ -765,21 +896,15 @@ function ManualView() {
                                 </div>
                                 <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
                                     <h3 className="mt-0 text-emerald-400 border-none">🇨🇳 硅基流动 (SiliconFlow)</h3>
-                                    <p>国内顶级开源算力分发平台。注册即送海量 Token，支持极速运行 <b>DeepSeek-Coder</b>、<b>Qwen2 (通义千问)</b> 等国产神级大模型。无需翻墙，极为稳定。</p>
+                                    <p>国内顶级开源算力分发平台。注册即送海量 Token，无需翻墙，极为稳定。</p>
                                     <p>地址：<a href="https://siliconflow.cn/" target="_blank" rel="noreferrer" className="text-cyan-400 underline">siliconflow.cn</a></p>
-                                </div>
-                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
-                                    <h3 className="mt-0 text-emerald-400 border-none">🟢 Nvidia NIM (英伟达开发者)</h3>
-                                    <p>老黄的福利，每天免费额度，同样提供业界最新开源模型的 API 终点。</p>
-                                    <p>地址：<a href="https://build.nvidia.com/" target="_blank" rel="noreferrer" className="text-cyan-400 underline">build.nvidia.com</a></p>
                                 </div>
                             </div>
 
-                            {/* 🚀 全新上线的大统一转换网关说明 */}
                             <div className="mt-8 bg-gradient-to-r from-emerald-900/20 to-cyan-900/20 border border-emerald-500/30 p-6 rounded-2xl">
                                 <h3 className="mt-0 text-emerald-400 text-lg font-black flex items-center gap-2 border-none"><span>🚀</span> 全新特性上线：大统一格式转换网关</h3>
                                 <p className="text-slate-300 mt-2">
-                                    架构师已为您解锁真正的模型自由！系统底层现已内置强大的智能路由转换网关。无论您接入的是原生 <b>Gemini 协议</b>，还是通用的 <b>OpenAI 标准协议 (Chat Completions)</b>（涵盖市面上 99% 的商业与开源模型），系统均会自动识别格式、动态拼装请求载荷，并完成无缝握手。
+                                    架构师已为您解锁真正的模型自由！系统底层现已内置强大的智能路由转换网关。无论您接入的是原生 <b>Gemini 协议</b>，还是通用的 <b>OpenAI 标准协议 (Chat Completions)</b>，系统均会自动识别格式、动态拼装请求载荷，并完成无缝握手。
                                 </p>
                             </div>
 
@@ -792,7 +917,7 @@ function ManualView() {
 }
 
 // ==========================================
-// 12. 侧边栏与主入口 (精确执行重命名指令)
+// 12. 侧边栏与主入口
 // ==========================================
 function Sidebar({ currentRoute, navigate, auth }) {
     const handleNav = (r, isP) => { if (isP) auth.verify(() => navigate(r)); else navigate(r); };
@@ -809,27 +934,26 @@ function Sidebar({ currentRoute, navigate, auth }) {
             
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scroll">
                 <div className="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-2">核心宇宙探索</div>
-                <NavItem id="classroom" icon={Globe} label="3D 知识星球" activeClass="bg-blue-600/20 text-blue-400 border border-blue-500/30" />
+                <NavItem id="classroom" icon={Globe} label="星际教室" activeClass="bg-blue-600/20 text-blue-400 border border-blue-500/30" />
                 
                 <div className="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">全球教育网关</div>
-                <NavItem id="resources" icon={Library} label="全球教育智库" activeClass="bg-cyan-600/20 text-cyan-400 border border-cyan-500/30" />
-                {/* 🚀 彻底定死名字：全息阅读 */}
-                <NavItem id="reader" icon={BookOpen} label="全息阅读" activeClass="bg-purple-600/20 text-purple-400 border border-purple-500/30" />
+                <NavItem id="resources" icon={Library} label="全球教育资源" activeClass="bg-cyan-600/20 text-cyan-400 border border-cyan-500/30" />
+                <NavItem id="reader" icon={BookOpen} label="教育图书资料" activeClass="bg-purple-600/20 text-purple-400 border border-purple-500/30" />
                 
                 <div className="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">专项集训营</div>
                 <NavItem id="simulator" icon={Gamepad2} label="危机救援演习" activeClass="text-rose-400 bg-rose-900/10" />
                 <NavItem id="writing" icon={PenTool} label="启发写作舱" activeClass="text-indigo-400 bg-indigo-900/10" />
-                <NavItem id="language-en" icon={Languages} label="英文魔法书" activeClass="text-emerald-400 bg-emerald-900/10" />
-                <NavItem id="language-cn" icon={ScrollText} label="大语文时光机" activeClass="text-amber-400 bg-amber-900/10" />
+                
+                <NavItem id="language-en" icon={Languages} label="AI英文伴读" activeClass="text-emerald-400 bg-emerald-900/10" />
+                <NavItem id="language-cn" icon={ScrollText} label="AI中文伴读" activeClass="text-amber-400 bg-amber-900/10" />
 
                 <div className="text-[10px] text-slate-500 font-bold px-2 uppercase tracking-widest mb-2 mt-4">系统支持</div>
-                {/* 🚀 新增手册入口 */}
                 <NavItem id="manual" icon={HelpCircle} label="星舰操作手册" activeClass="text-white border border-dashed border-slate-500" />
             </nav>
 
             <div className="p-4 border-t border-slate-800">
                 <button onClick={() => handleNav('dashboard', true)} className="w-full flex items-center justify-between px-4 py-3 text-slate-500 hover:text-amber-500 transition group">
-                    <div className="flex items-center gap-3"><span className="text-xl">🎛️</span><span className="text-xs font-bold">呼叫家控中枢排课</span></div>
+                    <div className="flex items-center gap-3"><span className="text-xl">🎛️</span><span className="text-xs font-bold">家控中心</span></div>
                     <Lock size={12} className="opacity-50" />
                 </button>
             </div>
@@ -872,8 +996,6 @@ export default function App() {
                 {currentRoute === 'writing' && <WritingView />}
                 {currentRoute === 'language-en' && <LanguageView tab="en" navigate={navigate} />}
                 {currentRoute === 'language-cn' && <LanguageView tab="cn" navigate={navigate} />}
-                
-                {/* 🚀 载入刚刚复原的手册舱 */}
                 {currentRoute === 'manual' && <ManualView />}
             </main>
         </div>

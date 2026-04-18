@@ -73,9 +73,8 @@
     <!-- ========================================================= -->
     <div x-show="loading" class="fixed inset-0 z-[200] bg-slate-950 flex flex-col items-center justify-center">
         <div class="text-5xl text-cyan-500 mb-6 animate-pulse">⚛️</div>
-        <div class="text-cyan-400 font-mono tracking-widest text-sm animate-pulse">连接全球智库数据库... 提取全息图文流</div>
+        <div class="text-cyan-400 font-mono tracking-widest text-sm animate-pulse" x-text="loadingText"></div>
     </div>
-
 
     <!-- ========================================================= -->
     <!-- [视图层 1] 模式 A：档案馆矩阵 (未传 bookId 时展示)      -->
@@ -100,7 +99,7 @@
                         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <div class="text-5xl mb-6 group-hover:scale-110 transition-transform filter drop-shadow-md" x-text="book.icon || '📖'"></div>
                         <h3 class="text-lg font-bold text-slate-200 mb-2 leading-snug" x-text="book.title"></h3>
-                        <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed" x-text="book.description || book.desc"></p>
+                        <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed" x-text="book.description || book.desc || '无可用的描述数据'"></p>
                     </div>
                 </template>
             </div>
@@ -281,6 +280,7 @@
                 currentChapterIdx: 0,// 当前章节索引
                 libraryBooks: [],    // 获取到的书籍矩阵数据
                 loading: true,       // 全局加载状态
+                loadingText: '正在连接全球智库...', // 动态加载文案
 
                 // 界面 UI 状态
                 theme: 'dark', 
@@ -323,52 +323,95 @@
                 // [3. 核心数据获取 (Data Fetching)]
                 async fetchDatabase() {
                     this.loading = true;
+                    this.loadingText = '正在扫描全球智库档案...';
                     const SUPABASE_URL = "https://cywslfalbedraeeggryj.supabase.co";
                     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0";
                     const headers = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
 
                     try {
-                        // 拉取真实教材库
-                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=*`, { headers });
+                        // 🚀 架构师斩断超时元凶：只拉取轻量级封面元数据，绝对不拉取巨大的 chapters_json！
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=id,code_id,title,type,icon,description,desc,is_free,"isFree"`, { headers });
+                        
                         if (res.ok) {
                             const data = await res.json();
-                            // 过滤出具备真实 JSON 章节流的书籍
-                            this.libraryBooks = data.filter(b => b.chapters_json && b.chapters_json.length > 0);
+                            this.libraryBooks = data;
                             
-                            // 若携带 bookId 启动，尝试直接匹配
+                            // 若携带 bookId 启动，尝试直接匹配并【按需下载正文】
                             if (this.bookId) {
                                 const target = this.libraryBooks.find(b => b.id === this.bookId || b.code_id === this.bookId);
-                                if (target) { this.openBook(target); } 
+                                if (target) { await this.openBook(target); } 
                                 else { this.viewMode = 'library'; } 
                             } else {
                                 this.viewMode = 'library';
                             }
                         } else { 
-                            throw new Error('DB Fetch Failed'); 
+                            throw new Error(`HTTP ${res.status} Error`); 
                         }
                     } catch (e) {
-                        console.error('Fetch Error:', e);
-                        // 兜底机制：断网或错误时注入演示数据，确保系统健壮性
-                        this.libraryBooks = [{
-                            id: 'demo_1', title: 'XuePilot：苏格拉底与硅基觉醒', icon: '🌌', desc: '系统内建演示档案：当外部世界断联，核心逻辑依然运转。',
-                            chapters_json: [
-                                { title: '第一章：真理的接生婆', content: '<p>古希腊的雅典街头，苏格拉底拦住路人。他从不宣讲真理，只是一次又一次地提出极其尖锐的问题，直到对方在回答中发现自己的逻辑漏洞。</p><p>这被称为“精神助产术”。而今天，人工智能成为了完美的提问机器。</p><blockquote>“我知道我一无所知。正因如此，我必须向你发问。”</blockquote><p>当你过度依赖 AI 生成现成的大纲时，你的思维便被剥夺了。</p>' },
-                                { title: '第二章：驾驭算力', content: '<p>真正的极客，不是被代码束缚的人，而是将机器视为外脑的创造者。你必须学会给出极其严密的 Prompt 指令。</p>' }
-                            ]
-                        }];
-                        if(this.bookId) this.openBook(this.libraryBooks[0]); else this.viewMode = 'library';
+                        console.error('[SYS] Database Fetch Error:', e);
+                        this.fallbackToDemo();
                     }
                     this.loading = false;
                 },
 
+                // 提取兜底逻辑为独立函数，保持代码整洁
+                fallbackToDemo() {
+                    Swal.fire({
+                        toast: true, position: 'top-end', icon: 'error', title: '云端中枢断联',
+                        text: '网络波动或超时，已切换至离线防线。', background: '#0f172a', color: '#cbd5e1', showConfirmButton: false, timer: 3000
+                    });
+                    this.libraryBooks = [{
+                        id: 'demo_1', title: 'XuePilot：苏格拉底与硅基觉醒', icon: '🌌', desc: '系统内建演示档案：当外部世界断联，核心逻辑依然运转。',
+                        chapters_json: [
+                            { title: '第一章：真理的接生婆', content: '<p>古希腊的雅典街头，苏格拉底拦住路人。他从不宣讲真理，只是一次又一次地提出极其尖锐的问题，直到对方在回答中发现自己的逻辑漏洞。</p><p>这被称为“精神助产术”。而今天，人工智能成为了完美的提问机器。</p><blockquote>“我知道我一无所知。正因如此，我必须向你发问。”</blockquote><p>当你过度依赖 AI 生成现成的大纲时，你的思维便被剥夺了。</p>' },
+                            { title: '第二章：驾驭算力', content: '<p>真正的极客，不是被代码束缚的人，而是将机器视为外脑的创造者。你必须学会给出极其严密的 Prompt 指令。</p><img src=\"https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000&auto=format&fit=crop\" alt=\"Quantum Brain\">' }
+                        ]
+                    }];
+                    if(this.bookId) this.openBook(this.libraryBooks[0]); else this.viewMode = 'library';
+                },
+
                 // [4. 路由与视图控制 (Navigation & View)]
-                openBook(bookObj) {
-                    this.book = bookObj;
-                    this.chapters = bookObj.chapters_json;
+                async openBook(bookObj) {
+                    if (bookObj.id === 'demo_1') {
+                        this.book = bookObj; this.chapters = bookObj.chapters_json; this.finalizeOpenBook(bookObj); return;
+                    }
+
+                    // 🚀 核心架构升级：按需懒加载 (Lazy Load) 图文流，防止数据库拥堵
+                    this.loadingText = `正在从云端抽载《${bookObj.title}》的图文流...`;
+                    this.loading = true;
+
+                    try {
+                        const SUPABASE_URL = "https://cywslfalbedraeeggryj.supabase.co";
+                        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d3NsZmFsYmVkcmFlZWdncnlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDg5NjEsImV4cCI6MjA5MTYyNDk2MX0.uZoL3JiHGuw_8XNOHKu4mA4z4tsEH7T9czQCkYrb0x0";
+                        const headers = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
+                        
+                        // 精确制导：只拉取用户点开的这一本书的 chapters_json
+                        const queryKey = bookObj.id ? `id=eq.${bookObj.id}` : `code_id=eq.${bookObj.code_id}`;
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=chapters_json&${queryKey}`, { headers });
+                        
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data && data.length > 0 && data[0].chapters_json && data[0].chapters_json.length > 0) {
+                                this.book = bookObj;
+                                this.chapters = data[0].chapters_json;
+                                this.finalizeOpenBook(bookObj);
+                            } else {
+                                Swal.fire({ title: '档案无正文', text: '该教材当前仅录入了目录与外链，图文流为空。', icon: 'info', background: '#0f172a', color: '#fff' });
+                                this.viewMode = 'library';
+                            }
+                        } else { throw new Error('Fetch chapters failed'); }
+                    } catch (e) {
+                        console.error('[SYS] Chapter Fetch Error:', e);
+                        Swal.fire({ title: '下载中断', text: '提取该教材详细内容时遭遇网络超时。', icon: 'error', background: '#0f172a', color: '#fff' });
+                        this.viewMode = 'library';
+                    }
+                    this.loading = false;
+                },
+
+                finalizeOpenBook(bookObj) {
                     this.currentChapterIdx = 0;
                     this.viewMode = 'reader';
                     this.novaChat = [];
-                    // 静默更新 URL，不刷新页面 (添加沙盒容错机制)
                     try {
                         const newUrl = new URL(window.location); 
                         newUrl.searchParams.set('bookId', bookObj.id || bookObj.code_id || 'demo_1'); 

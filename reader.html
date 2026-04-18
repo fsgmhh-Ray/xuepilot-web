@@ -86,7 +86,8 @@
             </div>
             
             <div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
-                <div class="flex gap-2 overflow-x-auto w-full md:w-auto hide-scroll pb-2">
+                <!-- 🚀 修复1：使用 flex-wrap 让超出屏幕的标签自动换行，不再隐藏 -->
+                <div class="flex flex-wrap gap-2 w-full pb-2">
                     <template x-for="cat in categories" :key="cat">
                         <button @click="selectedCategory = cat"
                                 class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm"
@@ -316,14 +317,22 @@
                 selectionText: '', showTooltip: false, tooltipX: 0, tooltipY: 0,
                 novaChat: [], chatInput: '', isNovaThinking: false,
 
+                // 🚀 修复2：前端动态清洗脏标签，合并中英文重复项
                 get categories() {
-                    const cats = new Set(this.libraryBooks.map(b => b.type || b.provider_type || '其他编目'));
+                    const cats = new Set(this.libraryBooks.map(b => {
+                        let t = b.type || b.provider_type || '其他编目';
+                        // 抹除英文括号及其内容，以及末尾的纯英文字符（例如合并 "开源体系" 与 "开源体系 Open Source"）
+                        t = t.replace(/[\(（].*?[\)）]/g, '').replace(/\s+[a-zA-Z\s]+$/, '').trim();
+                        return t;
+                    }));
                     return ['全部', ...Array.from(cats)];
                 },
 
                 get filteredBooks() {
                     return this.libraryBooks.filter(b => {
-                        const bType = b.type || b.provider_type || '其他编目';
+                        let bType = b.type || b.provider_type || '其他编目';
+                        // 同步清洗逻辑，确保过滤准确
+                        bType = bType.replace(/[\(（].*?[\)）]/g, '').replace(/\s+[a-zA-Z\s]+$/, '').trim();
                         const matchCat = this.selectedCategory === '全部' || bType === this.selectedCategory;
                         const searchStr = (this.searchQuery || '').toLowerCase();
                         const matchSearch = !searchStr || 

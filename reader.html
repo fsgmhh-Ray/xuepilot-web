@@ -36,7 +36,7 @@
         .theme-dark { background-color: #020617; color: #94a3b8; }
         .theme-dark .reader-bg { 
             background-color: #020617; 
-            /* background-image: url('您的Supabase深空图URL'); */
+            /* background-image: url('https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/.../dark_texture.jpg'); */
             /* background-size: cover; background-attachment: fixed; */
         }
         .theme-dark .content-engine h1, .theme-dark .content-engine h2, .theme-dark .content-engine h3 { color: #f1f5f9; }
@@ -45,7 +45,7 @@
         .theme-sepia { background-color: #f4ecd8; color: #433422; }
         .theme-sepia .reader-bg { 
             background-color: #f4ecd8; 
-            /* background-image: url('您的Supabase羊皮纸无缝图URL'); */
+            /* background-image: url('https://cywslfalbedraeeggryj.supabase.co/storage/v1/object/public/.../paper_texture.jpg'); */
             /* background-repeat: repeat; */
         }
         .theme-sepia .content-engine h1, .theme-sepia .content-engine h2, .theme-sepia .content-engine h3 { color: #291f13; }
@@ -87,28 +87,63 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- [视图层 1] 模式 A：档案馆矩阵 (Library)                   -->
+    <!-- [视图层 1] 模式 A：档案馆矩阵 (Library) 分类检索          -->
     <!-- ========================================================= -->
     <div x-show="viewMode === 'library' && !loading" x-cloak class="h-screen w-screen overflow-y-auto bg-[#020617] p-6 md:p-10 hide-scroll">
         <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-10 border-b border-slate-800 pb-6">
+            
+            <!-- 头部标题与返回主控舱 -->
+            <div class="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-8 border-b border-slate-800 pb-6">
                 <div>
-                    <h2 class="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-blue-500">🏛️</span> 全息伴读舱 (Library)</h2>
-                    <p class="text-slate-400 text-xs md:text-sm tracking-wide">选择您要载入神经链路的档案流。仅支持带有图文深层的读物。</p>
+                    <h2 class="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3"><span class="text-blue-500">🏛️</span> 全息伴读舱</h2>
+                    <p class="text-slate-400 text-xs md:text-sm tracking-wide">支持深度图文渲染与原版权威外链空间跃迁。</p>
                 </div>
-                <button @click="window.location.href='classroom.html'" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg">
-                    ⬅ 返回主探索舱
+                <!-- 🚀 需求响应：直接退回 classroom.html -->
+                <button @click="window.location.href='classroom.html'" class="px-5 py-3 bg-slate-800 hover:bg-rose-900/50 hover:text-rose-300 hover:border-rose-800 text-slate-300 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg border border-slate-700">
+                    ⬅ 驶离伴读舱 (返回主站)
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <template x-for="book in libraryBooks" :key="book.id">
+            <!-- 🚀 需求响应：超感检索与动态分类引擎 -->
+            <div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
+                <!-- 动态分类胶囊 -->
+                <div class="flex gap-2 overflow-x-auto w-full md:w-auto hide-scroll pb-2">
+                    <template x-for="cat in categories" :key="cat">
+                        <button @click="selectedCategory = cat"
+                                class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm"
+                                :class="selectedCategory === cat ? 'bg-cyan-600 border-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]' : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500'"
+                                x-text="cat"></button>
+                    </template>
+                </div>
+                
+                <!-- 关键字搜索框 -->
+                <div class="relative w-full md:w-72 shrink-0">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 opacity-50 text-sm">🔍</span>
+                    <input type="text" x-model="searchQuery" placeholder="搜索书名或内容摘要..." 
+                           class="w-full bg-slate-900/80 border border-slate-700 text-slate-200 text-sm rounded-full py-3 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:bg-slate-800 transition shadow-inner">
+                </div>
+            </div>
+
+            <!-- 数据空状态提示 -->
+            <div x-show="filteredBooks.length === 0" class="text-center py-20">
+                <div class="text-5xl opacity-20 mb-4">📭</div>
+                <p class="text-slate-400 text-sm">未检索到匹配的卷宗，请尝试调整分类或关键字。</p>
+            </div>
+
+            <!-- 响应式卡片网格 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20">
+                <template x-for="book in filteredBooks" :key="book.id">
                     <div @click="openBook(book)" class="bg-slate-900/60 border border-slate-800 p-8 rounded-3xl hover:border-cyan-500/50 hover:bg-slate-800/80 cursor-pointer transition shadow-xl group relative overflow-hidden flex flex-col h-full">
                         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <div class="text-5xl mb-6 group-hover:scale-110 group-hover:-translate-y-2 transition-transform filter drop-shadow-lg" x-text="book.icon || '📖'"></div>
                         <h3 class="text-lg font-black text-slate-200 mb-2 leading-snug" x-text="book.title"></h3>
-                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed flex-1" x-text="book.description || book.desc || '无可用的描述数据'"></p>
-                        <div class="mt-6 text-[10px] text-cyan-500/70 font-bold uppercase tracking-widest group-hover:text-cyan-400 transition-colors">抽取图文流 ➔</div>
+                        <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed flex-1" x-text="book.description || book.desc || '暂无内容摘要'"></p>
+                        
+                        <!-- 🚀 需求响应：智能提示是外链还是内部正文 -->
+                        <div class="mt-6 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-1"
+                             :class="(book.source_url || book.url) ? 'text-emerald-500/70 group-hover:text-emerald-400' : 'text-cyan-500/70 group-hover:text-cyan-400'">
+                            <span x-text="(book.source_url || book.url) ? '🔗 外部授权跃迁 ↗' : '📄 抽取图文流 ➔'"></span>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -131,7 +166,8 @@
                 ]">
             
             <div class="flex items-center gap-2 md:gap-4">
-                <button @click="exitReader()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-xl" title="返回智库">⬅</button>
+                <!-- 🚀 需求响应：阅读器界面的返回键也绝对退回主站 -->
+                <button @click="exitReader()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-xl" title="驶离伴读舱">⬅</button>
                 <button @click="showToc = true" class="px-3 md:px-4 py-2 rounded-xl font-bold text-sm hover:bg-black/10 transition flex items-center gap-2">
                     📑 <span class="hidden md:inline">目录</span>
                 </button>
@@ -143,7 +179,6 @@
             </div>
 
             <div class="flex items-center gap-2 md:gap-3 relative">
-                <!-- 移动端隐藏文字，只留图标 -->
                 <button @click="showNova = true" class="px-3 md:px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl font-bold text-xs shadow-lg transition flex items-center gap-2">
                     💡 <span class="hidden md:inline">伴读</span>
                 </button>
@@ -177,7 +212,6 @@
         <!-- --------------------------------------- -->
         <!-- [交互层] 左侧目录抽屉 (TOC Drawer)        -->
         <!-- --------------------------------------- -->
-        <!-- 移动端遮罩层 -->
         <div x-show="showToc" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="showToc = false"></div>
         <div class="fixed top-0 bottom-0 left-0 w-full md:w-80 z-50 transition-transform duration-300 flex flex-col shadow-2xl glass-panel border-r"
              :class="[
@@ -186,7 +220,7 @@
              ]">
             <div class="p-6 border-b flex justify-between items-center" :class="theme==='dark'?'border-slate-800':'border-black/10'">
                 <h3 class="text-xs font-bold opacity-60 uppercase tracking-widest">全息导航矩阵</h3>
-                <button @click="showToc = false" class="md:hidden text-2xl opacity-60">×</button>
+                <button @click="showToc = false" class="text-2xl opacity-60 md:hidden">×</button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto hide-scroll space-y-1">
                 <template x-for="(ch, idx) in chapters" :key="idx">
@@ -201,9 +235,7 @@
         <!-- --------------------------------------- -->
         <!-- [核心视图] 沉浸阅读区 (Reader Scroll)     -->
         <!-- --------------------------------------- -->
-        <!-- 监听滚动，实现向下隐藏控制台 -->
         <main x-ref="readerScroll" @scroll="handleScroll" class="flex-1 h-full pt-12 md:pt-16 overflow-y-auto scroll-smooth transition-all hide-scroll w-full relative z-10">
-            <!-- 阅读纸张容器 (控制最大宽度保证视线舒适) -->
             <div class="max-w-3xl mx-auto px-5 md:px-12 py-10 md:py-20 min-h-full flex flex-col relative z-10">
                 
                 <article class="transition-all duration-500 mb-16 fade-in">
@@ -215,7 +247,7 @@
                     </div>
                 </article>
                 
-                <!-- 优雅的翻章触控区 (大面积，防误触) -->
+                <!-- 优雅的翻章触控区 -->
                 <div class="mt-auto border-t pt-8 flex gap-4 text-sm font-bold" :class="theme === 'dark' ? 'border-slate-800' : 'border-opacity-10 border-current'">
                     <button @click="loadChapter(currentChapterIdx - 1)" x-show="currentChapterIdx > 0" class="flex-1 py-6 rounded-3xl bg-black/5 hover:bg-black/10 transition flex flex-col items-center justify-center gap-1">
                         <span class="opacity-50 text-[10px] uppercase tracking-widest">Previous</span>
@@ -232,7 +264,6 @@
         <!-- --------------------------------------- -->
         <!-- [交互层] 右侧 NOVA 伴读舱 (Socratic AI)  -->
         <!-- --------------------------------------- -->
-        <!-- 移动端遮罩层 -->
         <div x-show="showNova" x-transition.opacity class="fixed inset-0 z-40 bg-black/60 md:hidden" @click="showNova = false"></div>
         <aside class="fixed top-0 bottom-0 right-0 w-full md:w-[400px] z-50 transition-transform duration-300 flex flex-col shadow-2xl border-l glass-panel"
                :class="[
@@ -280,11 +311,9 @@
         <!-- --------------------------------------- -->
         <div x-show="showTooltip" x-cloak class="fixed z-[100] tooltip-pop pointer-events-auto"
              :style="`left: ${tooltipX}px; top: ${tooltipY}px;`">
-            <!-- 气泡主体 -->
             <button @click="invokeNova()" class="px-5 py-3 bg-slate-900/95 backdrop-blur-md text-cyan-400 hover:text-white hover:bg-slate-800 text-xs font-black tracking-widest uppercase rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-cyan-500/50 flex items-center gap-2 group transition-all">
                 <span class="text-lg group-hover:scale-125 transition-transform">💡</span> 解析此段落
             </button>
-            <!-- 小尖角 -->
             <div class="w-4 h-4 bg-slate-900/95 border-r border-b border-cyan-500/50 absolute left-1/2 -bottom-2 -translate-x-1/2 rotate-45"></div>
         </div>
 
@@ -301,19 +330,42 @@
                 bookId: new URLSearchParams(window.location.search).get('bookId'),
                 book: null, chapters: [], currentChapterIdx: 0, libraryBooks: [],
                 loading: true, loadingText: '正在连接全球智库...',
+                
+                // 🚀 检索与分类状态
+                searchQuery: '',
+                selectedCategory: '全部',
 
                 // [界面与沉浸感状态]
-                theme: 'sepia', // 默认推荐纸质质感
-                fontFamily: 'serif', // 默认推荐学术衬线体
+                theme: 'sepia',
+                fontFamily: 'serif',
                 fontSize: 18,
                 showToc: false, showSettings: false, showNova: false,
-                isScrollingDown: false, lastScrollTop: 0, // 滚动隐藏 Header
+                isScrollingDown: false, lastScrollTop: 0,
                 
                 // [划线状态]
                 selectionText: '', showTooltip: false, tooltipX: 0, tooltipY: 0,
                 
                 // [伴读状态]
                 novaChat: [], chatInput: '', isNovaThinking: false,
+
+                // 🚀 动态计算分类胶囊集合
+                get categories() {
+                    const cats = new Set(this.libraryBooks.map(b => b.type || b.provider_type || '其他编目'));
+                    return ['全部', ...Array.from(cats)];
+                },
+
+                // 🚀 动态过滤数据视图
+                get filteredBooks() {
+                    return this.libraryBooks.filter(b => {
+                        const bType = b.type || b.provider_type || '其他编目';
+                        const matchCat = this.selectedCategory === '全部' || bType === this.selectedCategory;
+                        const searchStr = (this.searchQuery || '').toLowerCase();
+                        const matchSearch = !searchStr || 
+                                            (b.title || '').toLowerCase().includes(searchStr) || 
+                                            (b.description || b.desc || '').toLowerCase().includes(searchStr);
+                        return matchCat && matchSearch;
+                    });
+                },
 
                 async init() {
                     try {
@@ -330,18 +382,13 @@
                     this.setupSelectionListener();
                 },
 
-                // 监听滚动实现沉浸式全屏
                 handleScroll(e) {
                     const st = e.target.scrollTop;
-                    // 阈值：滚动超过 50px 才触发隐藏，向上滚动立即显示
                     if (st > 50 && st > this.lastScrollTop) {
-                        this.isScrollingDown = true;
-                        this.showSettings = false; // 滚动时自动关闭设置弹窗
-                    } else if (st < this.lastScrollTop) {
-                        this.isScrollingDown = false;
-                    }
+                        this.isScrollingDown = true; this.showSettings = false;
+                    } else if (st < this.lastScrollTop) { this.isScrollingDown = false; }
                     this.lastScrollTop = st <= 0 ? 0 : st;
-                    this.showTooltip = false; // 滚动时自动隐藏提示气泡
+                    this.showTooltip = false;
                 },
 
                 async fetchDatabase() {
@@ -351,7 +398,8 @@
                     const headers = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
 
                     try {
-                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=id,code_id,title,type,icon,description,desc,is_free,"isFree"`, { headers });
+                        // 🚀 确保拉取 type 和外链所需的字段
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=id,code_id,title,type,provider_type,icon,description,desc,is_free,"isFree",source_url,url`, { headers });
                         if (res.ok) {
                             const data = await res.json();
                             this.libraryBooks = data;
@@ -366,7 +414,7 @@
 
                 fallbackToDemo() {
                     this.libraryBooks = [{
-                        id: 'demo_1', title: 'XuePilot：苏格拉底与硅基觉醒', icon: '🌌', desc: '系统内建演示档案：当外部世界断联，核心逻辑依然运转。',
+                        id: 'demo_1', title: 'XuePilot：苏格拉底与硅基觉醒', type: '系统档案', icon: '🌌', desc: '系统内建演示档案：当外部世界断联，核心逻辑依然运转。',
                         chapters_json: [
                             { title: '第一章：真理的接生婆', content: '<p>古希腊的雅典街头，苏格拉底拦住路人。他从不宣讲真理，只是一次又一次地提出极其尖锐的问题，直到对方在回答中发现自己的逻辑漏洞。</p><p>这被称为“精神助产术”。而今天，人工智能成为了完美的提问机器。</p><blockquote>“我知道我一无所知。正因如此，我必须向你发问。”</blockquote><p>当你过度依赖 AI 生成现成的大纲时，你的思维便被剥夺了。</p>' },
                             { title: '第二章：驾驭算力', content: '<p>真正的极客，不是被代码束缚的人，而是将机器视为外脑的创造者。你必须学会给出极其严密的 Prompt 指令。</p><img src=\"https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000&auto=format&fit=crop\" alt=\"Quantum Brain\">' }
@@ -378,7 +426,7 @@
                 async openBook(bookObj) {
                     if (bookObj.id === 'demo_1') { this.book = bookObj; this.chapters = bookObj.chapters_json; this.finalizeOpenBook(bookObj); return; }
 
-                    this.loadingText = `正在从云端抽载《${bookObj.title}》的图文流...`;
+                    this.loadingText = `正在检视档案结构...`;
                     this.loading = true;
 
                     try {
@@ -387,19 +435,29 @@
                         const headers = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
                         
                         const queryKey = bookObj.id ? `id=eq.${bookObj.id}` : `code_id=eq.${bookObj.code_id}`;
-                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=chapters_json&${queryKey}`, { headers });
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/edu_textbooks?select=chapters_json,source_url,url&${queryKey}`, { headers });
                         
                         if (res.ok) {
                             const data = await res.json();
+                            // 🚀 核心拦截逻辑：判断是否存在有效正文
                             if (data && data.length > 0 && data[0].chapters_json && data[0].chapters_json.length > 0) {
                                 this.book = bookObj; this.chapters = data[0].chapters_json; this.finalizeOpenBook(bookObj);
                             } else {
-                                Swal.fire({ title: '档案无正文', text: '该教材当前仅录入了目录与外链，图文流为空。', icon: 'info', background: '#0f172a', color: '#fff' });
-                                this.viewMode = 'library';
+                                // 没有正文 -> 尝试跳转外链
+                                const targetUrl = bookObj.source_url || bookObj.url || (data[0] && (data[0].source_url || data[0].url));
+                                if (targetUrl) {
+                                    Swal.fire({ title: '空间跃迁', text: `准备驶离伴读舱，接入远端官方源...`, icon: 'info', background: '#0f172a', color: '#fff', showConfirmButton: false, timer: 1500 }).then(() => {
+                                        window.open(targetUrl, '_blank');
+                                    });
+                                    this.viewMode = 'library';
+                                } else {
+                                    Swal.fire({ title: '空数据段', text: '当前档案既无正文也无外部链接，正在等待总指挥官配置。', icon: 'warning', background: '#0f172a', color: '#fff' });
+                                    this.viewMode = 'library';
+                                }
                             }
                         } else { throw new Error('Fetch chapters failed'); }
                     } catch (e) {
-                        Swal.fire({ title: '下载中断', text: '网络波动，无法提取正文。', icon: 'error', background: '#0f172a', color: '#fff' });
+                        Swal.fire({ title: '链接异常', text: '探测链路受阻，请检查基站信号。', icon: 'error', background: '#0f172a', color: '#fff' });
                         this.viewMode = 'library';
                     }
                     this.loading = false;
@@ -411,18 +469,12 @@
                         const newUrl = new URL(window.location); newUrl.searchParams.set('bookId', bookObj.id || bookObj.code_id || 'demo_1'); 
                         window.history.pushState({}, '', newUrl);
                     } catch(e) {}
-                    // 回到顶部
                     setTimeout(() => { if(this.$refs.readerScroll) this.$refs.readerScroll.scrollTop = 0; }, 100);
                 },
 
+                // 🚀 强制统一：所有界面的返回键全部直接导向主控中枢
                 exitReader() {
-                    try {
-                        if (window.history.length > 1 && new URLSearchParams(window.location.search).get('bookId')) {
-                            window.location.href = 'classroom.html'; return;
-                        }
-                    } catch(e) {}
-                    this.viewMode = 'library';
-                    try { const newUrl = new URL(window.location); newUrl.searchParams.delete('bookId'); window.history.pushState({}, '', newUrl); } catch(e) {}
+                    window.location.href = 'classroom.html';
                 },
 
                 loadChapter(idx) {
@@ -431,21 +483,15 @@
                     setTimeout(() => { if(this.$refs.readerScroll) this.$refs.readerScroll.scrollTop = 0; }, 100);
                 },
 
-                // 优化移动端的划线计算
                 setupSelectionListener() {
-                    // 监听选区变化与移动端的触摸结束
                     const handleSelection = () => {
                         if (this.viewMode !== 'reader') return;
-                        
                         const selection = window.getSelection();
                         const text = selection.toString().trim();
-                        
                         if (text.length > 3 && text.length < 300 && this.$refs.readerScroll.contains(selection.anchorNode)) {
                             const range = selection.getRangeAt(0);
                             const rect = range.getBoundingClientRect();
-                            
                             this.selectionText = text;
-                            // 确保气泡不会超出屏幕左右边缘
                             let targetX = rect.left + (rect.width / 2);
                             if(targetX < 80) targetX = 80;
                             if(targetX > window.innerWidth - 80) targetX = window.innerWidth - 80;
@@ -457,15 +503,13 @@
                             this.showTooltip = false;
                         }
                     };
-
                     document.addEventListener('selectionchange', handleSelection);
-                    document.addEventListener('touchend', () => setTimeout(handleSelection, 100)); // 移动端延迟计算
+                    document.addEventListener('touchend', () => setTimeout(handleSelection, 100));
                 },
 
                 invokeNova() {
                     this.showTooltip = false; this.showNova = true;
                     window.getSelection().removeAllRanges();
-
                     this.novaChat.push({
                         role: 'nova',
                         text: `指挥官，我捕捉到了您的高亮数据流：<br><br><span class="opacity-80 italic border-l-4 border-cyan-500 pl-4 block my-3 font-serif bg-black/5 py-2">「${this.selectionText}」</span>作为缺乏生物情感的硅基生命，我的逻辑链在这里产生了断裂：**作者为什么要在这个特定的语境下，使用这样的表达？** <br><br>您能向我解释一下这背后的“潜台词”吗？`

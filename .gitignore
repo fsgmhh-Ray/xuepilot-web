@@ -1,0 +1,44 @@
+==========================================
+
+XuePilot - Git 护城河配置 (.gitignore)
+
+此文件列出的所有内容，都会被 Git 自动忽略，绝对不会被推送到 GitHub
+
+==========================================
+
+1. 依赖库 (绝对不能上云，Vercel 会自动重装)
+
+node_modules/
+.pnp
+.pnp.js
+
+2. 本地环境变量 (千万不能上云，包含您未来的顶级密钥)
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+3. 本地绝密高危区 (我们在白皮书里规定的纯本地文件)
+
+cms.html
+supabase_scraper.py
+*.pyc
+pycache/
+
+4. 打包输出目录 (Vercel 会自己打包，不需要传)
+
+dist/
+build/
+
+5. 编辑器与系统垃圾文件
+
+.DS_Store
+.vscode/
+.idea/
+*.suo
+.ntvs
+*.njsproj
+*.sln
+*.sw?

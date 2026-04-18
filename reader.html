@@ -26,23 +26,24 @@
         .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 
         /* ========================================== */
-        /* 2. 视觉主题引擎与高对比度正文              */
+        /* 2. 视觉主题引擎与高对比度绝对统一          */
         /* ========================================== */
+        /* 🚀 架构师补丁：使用 !important 强制击穿所有外来脏代码的内联颜色，保证全文与标题色系绝对一致 */
         
-        /* 深邃宇宙 (Dark) - 极高对比度，正文与标题一致泛白 */
-        .theme-dark { background-color: #020617; color: #e2e8f0; } 
+        /* 深邃宇宙 (Dark) - 极高对比度，正文与标题一致纯白 */
+        .theme-dark { background-color: #020617; color: #f8fafc; } 
         .theme-dark .reader-bg { background-color: #020617; }
-        .theme-dark .content-engine h1, .theme-dark .content-engine h2, .theme-dark .content-engine h3 { color: #f8fafc; }
+        .theme-dark .content-engine * { color: #f8fafc !important; } 
         
         /* 泛黄卷宗 (Sepia) - 深褐色墨水质感 */
-        .theme-sepia { background-color: #f4ecd8; color: #291f13; }
+        .theme-sepia { background-color: #f4ecd8; color: #1a140b; }
         .theme-sepia .reader-bg { background-color: #f4ecd8; }
-        .theme-sepia .content-engine h1, .theme-sepia .content-engine h2, .theme-sepia .content-engine h3 { color: #1a140b; }
+        .theme-sepia .content-engine * { color: #1a140b !important; }
         
         /* 防反光纯净白 (Light) - 深沉石板灰 */
-        .theme-light { background-color: #ffffff; color: #1e293b; }
+        .theme-light { background-color: #ffffff; color: #0f172a; }
         .theme-light .reader-bg { background-color: #ffffff; }
-        .theme-light .content-engine h1, .theme-light .content-engine h2, .theme-light .content-engine h3 { color: #0f172a; }
+        .theme-light .content-engine * { color: #0f172a !important; }
 
         .glass-panel { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
 
@@ -53,8 +54,8 @@
         .content-engine p { margin-bottom: 2em; text-indent: 2em; line-height: inherit; font-weight: 500; } /* 提升了字重以增加清晰度 */
         .content-engine h1, .content-engine h2, .content-engine h3 { font-weight: 900; margin-top: 2.5em; margin-bottom: 1.2em; line-height: 1.4; text-indent: 0; }
         .content-engine blockquote { 
-            border-left: 4px solid #3b82f6; font-style: italic; opacity: 0.85; margin: 2em 0; 
-            background: rgba(59, 130, 246, 0.05); padding: 1.2em 1.5em; border-radius: 0 12px 12px 0; 
+            border-left: 4px solid #3b82f6 !important; font-style: italic; opacity: 0.85; margin: 2em 0; 
+            background: rgba(59, 130, 246, 0.05) !important; padding: 1.2em 1.5em; border-radius: 0 12px 12px 0; 
         }
         .content-engine img { max-width: 100%; border-radius: 12px; margin: 2.5em auto; display: block; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
         
@@ -150,7 +151,7 @@
                 ]">
             
             <div class="flex items-center gap-2 md:gap-4">
-                <!-- 🚀 需求 1 响应：返回键退回本页面的伴读舱大厅，而非主站 -->
+                <!-- 返回伴读舱大厅 -->
                 <button @click="exitReaderToLibrary()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/10 transition text-xl" title="返回伴读舱大厅">⬅</button>
                 <button @click="showToc = true" class="px-3 md:px-4 py-2 rounded-xl font-bold text-sm hover:bg-black/10 transition flex items-center gap-2">
                     📑 <span class="hidden md:inline">目录</span>
@@ -216,14 +217,14 @@
         </div>
 
         <!-- --------------------------------------- -->
-        <!-- 🚀 需求 3 响应：两侧浮动翻页键 (桌面/大屏专属) -->
+        <!-- 🚀 架构师补丁：全局浮动翻页键 (所有屏幕设备强制显示) -->
         <!-- --------------------------------------- -->
         <button @click="loadChapter(currentChapterIdx - 1)" x-show="currentChapterIdx > 0" 
-                class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 w-12 h-24 rounded-2xl glass-panel hidden md:flex items-center justify-center opacity-20 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-lg" title="上一章">
+                class="fixed left-2 md:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-16 md:w-12 md:h-24 rounded-2xl glass-panel flex items-center justify-center opacity-30 hover:opacity-100 hover:scale-110 transition-all text-xl md:text-2xl border border-current shadow-lg" title="上一章">
             〈
         </button>
         <button @click="loadChapter(currentChapterIdx + 1)" x-show="currentChapterIdx < chapters.length - 1" 
-                class="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 w-12 h-24 rounded-2xl glass-panel hidden md:flex items-center justify-center opacity-20 hover:opacity-100 hover:scale-110 transition-all text-2xl border border-current shadow-lg" title="下一章">
+                class="fixed right-2 md:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-16 md:w-12 md:h-24 rounded-2xl glass-panel flex items-center justify-center opacity-30 hover:opacity-100 hover:scale-110 transition-all text-xl md:text-2xl border border-current shadow-lg" title="下一章">
             〉
         </button>
 
@@ -238,7 +239,6 @@
             <div class="max-w-3xl mx-auto px-6 md:px-12 py-10 md:py-20 min-h-full flex flex-col relative z-10" :class="pageTurnAnim">
                 
                 <article class="mb-16">
-                    <!-- 🚀 需求 2 响应：正文与标题色系绝对统一，利用 CSS 继承强化对比度 -->
                     <h1 class="text-3xl md:text-5xl font-black mb-10 md:mb-16 pb-8 border-b opacity-90 leading-snug" :class="theme === 'dark' ? 'border-slate-800' : 'border-opacity-10 border-current'" x-text="chapters[currentChapterIdx]?.title"></h1>
                     
                     <div class="content-engine" 
@@ -332,7 +332,7 @@
                 theme: 'sepia', fontFamily: 'serif', fontSize: 18,
                 showToc: false, showSettings: false, showNova: false,
                 isScrollingDown: false, lastScrollTop: 0,
-                pageTurnAnim: 'fade-in', // 动态翻页动画类
+                pageTurnAnim: 'fade-in', 
                 
                 // 触控引擎状态
                 touchStartX: 0, touchEndX: 0, touchThreshold: 80,
@@ -381,7 +381,6 @@
                     this.showTooltip = false;
                 },
 
-                // 🚀 需求 3 响应：触控防呆滑动翻书引擎
                 handleTouchStart(e) {
                     this.touchStartX = e.changedTouches[0].screenX;
                 },
@@ -478,20 +477,16 @@
                     setTimeout(() => { if(this.$refs.readerScroll) this.$refs.readerScroll.scrollTop = 0; }, 100);
                 },
 
-                // 🚀 需求 1 响应：在阅读状态下，左上角返回键回到选书的目录大厅
                 exitReaderToLibrary() {
                     this.viewMode = 'library';
                     try { const newUrl = new URL(window.location); newUrl.searchParams.delete('bookId'); window.history.pushState({}, '', newUrl); } catch(e) {}
                 },
 
-                // 动态翻页方法 (支持手势和按键方向判断)
                 loadChapter(idx, direction = 'auto') {
                     if(idx < 0 || idx >= this.chapters.length) return;
                     
-                    // 计算动画方向
                     if (direction === 'auto') { direction = idx > this.currentChapterIdx ? 'next' : 'prev'; }
                     
-                    // 重置动画触发重新渲染
                     this.pageTurnAnim = '';
                     setTimeout(() => {
                         this.currentChapterIdx = idx; 
